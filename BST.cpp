@@ -31,6 +31,23 @@ int compare(struct site p1,struct site p2)
 		return -1;
 }
 
+void circlevent(struct node left,struct node middle,struct node right)
+{
+	float ax=middle->p.x-left->p.x;
+	float ay=middle->p.y-left->p.y;
+	float bx=right->p.x-left->p.x;
+	float by=right->p.y-left->p.y;
+	float A=ax*ax+ay*ay;
+	float B=bx*bx+by*by;
+	float x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
+	float y=-1.*ax/ay*x+A/(2.*ay);
+	if(y < ay)
+	{
+		include_circle_event();
+	}
+}
+		
+
 struct site cal_break_point(struct break_point B,float y)
 {
 	float h=B.p1.y-y;
