@@ -29,14 +29,35 @@ struct node
 	struct node *twin;
 	struct node *L_breakpoint;
 	struct node *R_breakpoint;
+	struct event *circle_event;
 	int isBP=0;
 }*root;
 
 struct event
 {
 	struct site p;
-	struct event *next;
-};
+	int circle_event=0;
+	struct node *circle_node;
+	struct event *next=NULL;
+	struct event *prev=NULL;
+}*start;
+class BST
+{
+	public:
+		void insert(node *, node *);
+		void delete_node(node *);
+		void display(node *,int);
+		void find(node *,int);
+		void disBeach(node *);
+}bst;
+
+class priority_list
+{
+	public:
+		void insert_event(event *,event *,node *);
+		void read_events(event *);
+		void delete_event(event *,event *);
+}P;
 /*
  * compare between two sites:
  * Two sites are compared using a convention adopted.
@@ -51,34 +72,6 @@ int compare(struct site p1,struct site p2)
 		return 0;
 	else 
 		return -1;
-}
-
-void circlevent(struct node *L,struct node *M,struct node *R)
-{
-	float ax=M->p.x-L->p.x;
-	float ay=M->p.y-L->p.y;
-	float bx=R->p.x-L->p.x;
-	float by=R->p.y-L->p.y;
-	float A=ax*ax+ay*ay;
-	float B=bx*bx+by*by;
-	float x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
-	float y=-1.*ax/ay*x+A/(2.*ay);
-////////if(y < ay)
-////////{
-////////	include_circle_event();
-////////}
-}
-		
-void display_BP(struct break_point B)
-{
-	cout<<"##########################\n";
-	cout<<B.p1.x<<" "<<B.p1.y<<"\n";
-	cout<<B.p2.x<<" "<<B.p2.y<<"\n";
-	cout<<"##########################\n";
-}
-void display_SITE(struct site p)
-{
-	cout<<"("<<p.x<<" "<<p.y<<")\n";
 }
 
 
@@ -126,15 +119,42 @@ struct site cal_break_point(struct break_point B,float y)
 /*
  * Defining a Class called Binary Search Tree
  */
-class BST
+void display_BP(struct break_point B)
 {
-	public:
-		void insert(node *, node *);
-		void delete_node(node *);
-		void display(node *,int);
-		void find(node *,int);
-		void disBeach(node *);
-};
+	cout<<"##########################\n";
+	cout<<B.p1.x<<" "<<B.p1.y<<"\n";
+	cout<<B.p2.x<<" "<<B.p2.y<<"\n";
+	cout<<"##########################\n";
+}
+void display_SITE(struct site p)
+{
+	cout<<"("<<p.x<<" "<<p.y<<")\n";
+}
+
+void circlevent(struct node *L,struct node *M,struct node *R)
+{
+	float ax=M->p.x-L->p.x;
+	float ay=M->p.y-L->p.y;
+	float bx=R->p.x-L->p.x;
+	float by=R->p.y-L->p.y;
+	float A=ax*ax+ay*ay;
+	float B=bx*bx+by*by;
+	float x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
+	float y=-1.*ax/ay*x+A/(2.*ay);
+	float dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
+        if(y < ay)
+        {
+		event *circle;
+		circle = new event;
+		circle->p.x=x+L->p.x;
+		circle->p.y=y+L->p.y-dis;
+		display_SITE(circle->p);
+		circle->circle_event=1;
+		circle->circle_node=M;
+		P.insert_event(start,circle,M);
+        }
+}
+		
 void BST::insert(node *tree, node *newnode)
 {
 	if(root==NULL)
@@ -150,6 +170,13 @@ void BST::insert(node *tree, node *newnode)
 	}
 	if( tree->left==NULL && tree->right == NULL )
 	{
+		if(tree->circle_event!=NULL)
+		{
+			cout<<"circle event is false alarm\n";	
+			P.delete_event(start,tree->circle_event);
+		}
+
+
 		//creating a new node at left
 		tree->left=new node;
 		//assigning the parent to be the tree
@@ -248,6 +275,10 @@ void BST::delete_node(node *leaf)
 	leaf->twin->parent=leaf->parent->parent;
 	leaf->adj_left->adj_right=leaf->adj_right;
 	leaf->adj_right->adj_left=leaf->adj_left;
+	if(leaf->adj_right->circle_event != NULL)
+		P.delete_event(start,leaf->adj_right->circle_event);
+	if(leaf->adj_left->circle_event != NULL)
+		P.delete_event(start,leaf->adj_left->circle_event);
 }
 
 
@@ -312,45 +343,109 @@ void BST::disBeach(node *tree)
 	else 
 	disBeach(tree->left);
 }
-int main()
+void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 {
-        BST bst;
+	int flag=0;
+	struct event *Nevent;
+	if(start==NULL)
+	{
+		start=new event;
+		start->p=newevent->p;
+	}
+        else
+        {
+        	flag=compare(EV->p,newevent->p);
+        	if(flag==-1)
+        	{
+        		Nevent=new event;
+        		Nevent->p=newevent->p;
+        		EV->prev->next=Nevent;
+        		Nevent->next=EV;
+        		EV->prev=Nevent;
+			if(newevent->circle_event)
+			{
+				Nevent->circle_event=1;
+				Nevent->circle_node=M;
+				M->circle_event=Nevent;
+			}
+        	}
+        	else if (flag==1)
+        	{
+			if(EV->next != NULL)
+        			insert_event(EV->next,newevent,M);
+			else 
+			{
+				EV->next=new event;
+				EV->next->p=newevent->p;
+				EV->next->prev=EV;
+			}
+        	}
+        	else if (flag==0)
+        		return;
+        }
+
+}
+void priority_list::delete_event(event *EV,event *eventtd)
+{
+	int flag;
+        flag=compare(EV->p,eventtd->p);
+	if(flag==0)
+	{
+		EV->next->prev=EV->prev;
+		EV->prev->next=EV->next;
+	}
+	else
+		delete_event(EV->next,eventtd);
+	return;
+}
+void priority_list::read_events(event *EV)
+{
 	node *temp;
 	temp = new node;
+	temp->p=EV->p;
+	if(EV->circle_event)
+	{
+		bst.delete_node(EV->circle_node);
+	}
+	else 
+		bst.insert(root,temp);
+	if(EV->next)
+		read_events(EV->next);
+	else 
+		cout<<"done bitches\n";
+}
+void display_events(struct event *start)
+{
+	display_SITE(start->p);
+	if(start->next!=NULL)
+	{
+		if(start->circle_event)
+			cout<<"circle event= ";
+		display_events(start->next);
+	}
+	else
+		cout<<"events over\n";
+}
+
+int main()
+{
+	node *temp;
+	temp = new node;
+	event *newevent;
+	newevent=new event;	
 	std::ifstream INFILE("sites");
 	float x,y;
 	while(INFILE>>x>>y)
 	{
-        	temp->p.x=x;
-		temp->p.y=y;
-        	bst.insert(root,temp);
+		newevent->p.x=x;
+		newevent->p.y=y;
+		P.insert_event(start,newevent);
+        ////////temp->p.x=x;
+	////////temp->p.y=y;
+//        	bst.insert(root,temp);
 	}
-
-//	cout<<temp->data<<"\n";
-      //temp->p.x=1.;
-      //temp->p.y=5.;
-////////cout<<"hello\n";
-//    //temp->p.x=1.0;
-//    //temp->p.y=1.0;
-      //bst.insert(root,temp);
-      //temp->p.x=0.;
-      //temp->p.y=4.;
-      //cout<<"hello\n";
-      //bst.insert(root,temp);
-      //temp->p.x=-1.;
-      //temp->p.y=1.;
-      //bst.insert(root,temp);
-      //bst.display(root);
-//	bst.disBeach(root);
-	//cout<<root->left->adj_right->p.x<<"\t";
-//	display_SITE(root->left->adj_right->adj_right->p);
-//        bst.display(root);
-        bst.display(root);
-	cout<<"######################\n";
-        bst.disBeach(root);
-        bst.delete_node(root->left->adj_right);//->adj_right->adj_right);
-        bst.display(root);
-     // cout<<"######################\n";
-        bst.disBeach(root);
+	display_events(start);
+	P.read_events(start);
+//	display_events(start);
 	return 0;
 }
