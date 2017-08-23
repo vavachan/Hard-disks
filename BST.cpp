@@ -1,10 +1,38 @@
 #include<iostream>
 #include<math.h>
 #include<fstream>
-/*
- * Program to implement a binary search tree 
- */
 using namespace std;
+//definition of half-edge 
+struct half_edge 
+{
+	struct half_edge *twin;
+	struct half_edge *next;
+	struct vertice *origin;
+	struct face *facing;
+};
+//definition of vertice
+struct vertice
+{
+	float x=0;
+	float y=0;
+	struct half_edge *leaving;
+};
+//definition of face
+struct face
+{
+	struct half_edge *edge;
+};
+//CLASS TO IMPLEMENT THE DCEL
+class DCEL
+{
+	public:
+		struct vertice *origin=NULL;
+		struct vertice create_vertex(float , float);
+		void create_edge(struct vertice *,struct vertice *);
+		
+}*vor;
+
+
 //Site is a point on the 2D surface
 struct site
 {
@@ -15,7 +43,11 @@ struct site
 struct break_point
 {
 	struct site p1,p2;
+	struct vertice *V=NULL;
 };
+
+
+
 //node definition 
 struct node 
 {
@@ -32,25 +64,29 @@ struct node
 	struct event *circle_event;
 	int isBP=0;
 }*root;
-
+//definition of an event 
 struct event
 {
 	struct site p;
+	struct site center;
 	int circle_event=0;
 	struct node *circle_node;
 	struct event *next=NULL;
 	struct event *prev=NULL;
 }*start;
+/*
+ * Defining a Class called Binary Search Tree
+ */
 class BST
 {
 	public:
 		void insert(node *, node *);
-		void delete_node(node *);
+		void delete_node(node *,site);
 		void display(node *,int);
 		void find(node *,int);
 		void disBeach(node *);
 }bst;
-
+//CLASS PRIORITY LIST
 class priority_list
 {
 	public:
@@ -74,6 +110,9 @@ int compare(struct site p1,struct site p2)
 		return -1;
 }
 
+/* cal_break_point calculates
+ * the break point defined by the variable break_point with respect to y
+ */
 
 struct site cal_break_point(struct break_point B,float y)
 {
@@ -82,21 +121,23 @@ struct site cal_break_point(struct break_point B,float y)
 	float x1=B.p2.x-B.p1.x;
 	int flag=compare(B.p1,B.p2);
 	struct site BP;
-////////cout<<B.p1.x<<"\t"<<B.p1.y<<"\n";
-////////cout<<B.p2.x<<"\t"<<B.p2.y<<"\n";
-////////cout<<x1<<"\t"<<h<<"\t"<<h1<<"\n";
+      //cout<<B.p1.x<<"\t"<<B.p1.y<<"\n";
+      //cout<<B.p2.x<<"\t"<<B.p2.y<<"\n";
+      //cout<<x1<<"\t"<<h<<"\t"<<h1<<"\n";
 	if(flag==1)
 	{
 		BP.x=(-2.*h*x1+sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
 		if(BP.x<B.p2.x)
 		{
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//cout<<"x1"<<BP.x<<"\n";
 			return BP;
 		}
 		else 
 		{
 			BP.x=(-2.*h*x1-sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//cout<<"x2"<<BP.x<<"\n";
 			return BP;
 		}
 	}
@@ -105,20 +146,19 @@ struct site cal_break_point(struct break_point B,float y)
 		BP.x=(-2.*h*x1+sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
 		if(BP.x>B.p1.x)
 		{
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//cout<<"x3"<<BP.x<<"\n";
 			return BP;
 		}
 		else 
 		{
 			BP.x=(-2.*h*x1-sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//cout<<"x4"<<BP.x<<"\n";
 			return BP;
 		}
 	}
 }
-/*
- * Defining a Class called Binary Search Tree
- */
 void display_BP(struct break_point B)
 {
 	cout<<"##########################\n";
@@ -130,7 +170,46 @@ void display_SITE(struct site p)
 {
 	cout<<"("<<p.x<<" "<<p.y<<")\n";
 }
-
+void create_edge(struct node *N1,struct node *N2,float y)
+{
+	struct site p;
+	p=cal_break_point(N1->B,y);
+//	cout<<y<<"\n";
+     // display_BP(N1->B);
+     // display_BP(N2->B);
+//	display_SITE(p);
+	if(N1->B.V==NULL)
+	{
+		N1->B.V= new vertice;
+	}
+	N1->B.V->x=p.x;
+	N1->B.V->y=p.y;
+	p=cal_break_point(N2->B,y);
+//	display_SITE(p);
+	if(N2->B.V==NULL)
+	{
+		N2->B.V= new vertice;
+	}
+	N2->B.V->x=p.x;
+	N2->B.V->y=p.y;
+	if(vor==NULL)
+	{
+		vor = new DCEL;
+		vor->origin=N1->B.V;
+		//cout<<N1->B.V->x<<" htis "<<N1->B.V->y<<"\n";
+	}
+//	cout<<"origin mana origin "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+	N1->B.V->leaving=new half_edge;
+	N1->B.V->leaving->origin=N1->B.V;
+	N2->B.V->leaving=new half_edge;
+	N2->B.V->leaving->origin=N2->B.V;
+	N1->B.V->leaving->twin=N2->B.V->leaving;
+	N2->B.V->leaving->twin=N1->B.V->leaving;
+	N1->B.V->leaving->facing=new face;
+	N2->B.V->leaving->facing=new face;
+}
+/* See if there is a circle event given three arcs
+ */
 void circlevent(struct node *L,struct node *M,struct node *R)
 {
 	float ax=M->p.x-L->p.x;
@@ -148,13 +227,17 @@ void circlevent(struct node *L,struct node *M,struct node *R)
 		circle = new event;
 		circle->p.x=x+L->p.x;
 		circle->p.y=y+L->p.y-dis;
-		display_SITE(circle->p);
+		circle->center.x=x+L->p.x;
+		circle->center.y=y+L->p.y;
+////////	cout<<"what?";
+////////	display_SITE(circle->p);
 		circle->circle_event=1;
 		circle->circle_node=M;
 		P.insert_event(start,circle,M);
         }
 }
-		
+/* function to inset a node into the tree
+ */		
 void BST::insert(node *tree, node *newnode)
 {
 	if(root==NULL)
@@ -175,8 +258,6 @@ void BST::insert(node *tree, node *newnode)
 			cout<<"circle event is false alarm\n";	
 			P.delete_event(start,tree->circle_event);
 		}
-
-
 		//creating a new node at left
 		tree->left=new node;
 		//assigning the parent to be the tree
@@ -204,8 +285,10 @@ void BST::insert(node *tree, node *newnode)
 		//assignging its parent to be the tree
 		tree->right->parent=tree;
 		//the right node also a breakpoint
+		//Here we need to put code which can make a new vertex whose edges should point at the vertex before. 
 		tree->right->B.p1=newnode->p;
 		tree->right->B.p2=tree->p;
+		create_edge(tree,tree->right,newnode->p.y);
 		tree->right->isBP=1;
 		//Creating children at left and right
 		tree->right->left=new node;
@@ -256,18 +339,68 @@ void BST::insert(node *tree, node *newnode)
 			insert(tree->right,newnode);
 	}
 }
-void BST::delete_node(node *leaf)
+void BST::delete_node(node *leaf, site center)
 {
 //	cout<<leaf->p.x<<" "<<leaf->p.y<<"\n";
 //	display_BP(leaf->L_breakpoint->B);
 //	display_SITE(leaf->adj_left->p);
+	//cout<<"welcome to the final frontier\n";
+	
 	leaf->L_breakpoint->B.p2=leaf->adj_right->p;
 	leaf->R_breakpoint->B.p1=leaf->adj_left->p;
+	struct vertice *temp_vert;
+	struct half_edge *temp_he;
+	struct half_edge *temp_he2;
+	temp_he = new half_edge;
+	temp_he2 = new half_edge;
+	temp_vert = new vertice;
+	temp_vert->x=center.x;
+	temp_vert->y=center.y;
+	temp_he->origin=temp_vert;
+	temp_he2->origin=temp_vert;
+	temp_vert->leaving= new half_edge;
+	temp_vert->leaving->origin=temp_vert;
+	temp_vert->leaving->twin=leaf->L_breakpoint->B.V->leaving->twin;
+	//cout<<"where are we \n";
+	leaf->L_breakpoint->B.V->leaving->twin->twin=temp_vert->leaving;
+	//cout<<"not here\n";
+	temp_he->twin=leaf->R_breakpoint->B.V->leaving->twin;
+	leaf->R_breakpoint->B.V->leaving->twin->twin=temp_he;
+	////////leaf->L_breakpoint->B.V->leaving->origin=temp_vert;
+////////leaf->L_breakpoint->B.V->leaving->origin->leaving=leaf->L_breakpoint->B.V->leaving;
+////////leaf->R_breakpoint->B.V->leaving->origin=temp_vert;
 //	display_BP(leaf->L_breakpoint->B);
+        if(vor)
+        {
+        	cout<<vor->origin<<"\n";
+        	cout<<"after "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+        }
+	//cout<<leaf->L_breakpoint->B.V<<"\n";
+	leaf->L_breakpoint->B.V->x=center.x;
+	leaf->L_breakpoint->B.V->y=center.y;
+        if(vor)
+        {
+        	//cout<<vor->origin<<"\n";
+        	cout<<"after2 "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+        }
+	leaf->L_breakpoint->B.V->leaving->origin=leaf->L_breakpoint->B.V;
+	leaf->L_breakpoint->B.V->leaving->twin=temp_he2;
+	temp_he2->twin = leaf->L_breakpoint->B.V->leaving;
+	
+	leaf->R_breakpoint->B.V->x=center.x;
+	leaf->R_breakpoint->B.V->y=center.y;
+	leaf->R_breakpoint->B.V->leaving->origin=leaf->R_breakpoint->B.V;
+	leaf->R_breakpoint->B.V->leaving->twin=temp_he2;
+	temp_he2->twin = leaf->R_breakpoint->B.V->leaving;
+
 	if(leaf->parent == leaf->adj_right->L_breakpoint)
+	{
 		leaf->adj_right->L_breakpoint=leaf->L_breakpoint;
+	}
 	else 
+	{
 		leaf->adj_left->R_breakpoint=leaf->R_breakpoint;
+	}
 	if(leaf->parent->parent->left==leaf->parent)
 		leaf->parent->parent->left=leaf->twin;
 	else
@@ -279,8 +412,15 @@ void BST::delete_node(node *leaf)
 		P.delete_event(start,leaf->adj_right->circle_event);
 	if(leaf->adj_left->circle_event != NULL)
 		P.delete_event(start,leaf->adj_left->circle_event);
+        if(leaf->adj_left->adj_left != NULL)
+        {
+        	circlevent(leaf->adj_left->adj_left,leaf->adj_left,leaf->adj_right);	
+        }
+        if(leaf->adj_right->adj_right!= NULL)
+        {
+        	circlevent(leaf->adj_left,leaf->adj_right,leaf->adj_right->adj_right);	
+        }
 }
-
 
 void BST::display(node *tree,int level=0)
 {
@@ -347,6 +487,9 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 {
 	int flag=0;
 	struct event *Nevent;
+////////cout<<newevent->circle_event<<"this is check\n";
+////////if(EV != NULL)
+////////	display_SITE(EV->p);
 	if(start==NULL)
 	{
 		start=new event;
@@ -364,6 +507,8 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
         		EV->prev=Nevent;
 			if(newevent->circle_event)
 			{
+////////			cout<<"this event?";
+////////			display_SITE(Nevent->p);
 				Nevent->circle_event=1;
 				Nevent->circle_node=M;
 				M->circle_event=Nevent;
@@ -377,6 +522,8 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 			{
 				EV->next=new event;
 				EV->next->p=newevent->p;
+				EV->next->circle_event=newevent->circle_event;
+				EV->next->circle_node=M;
 				EV->next->prev=EV;
 			}
         	}
@@ -398,29 +545,69 @@ void priority_list::delete_event(event *EV,event *eventtd)
 		delete_event(EV->next,eventtd);
 	return;
 }
+void update_dcel(node *tree,float y)
+{
+	if(tree->left!=NULL && tree->right!=NULL)
+		update_dcel(tree->left,y);
+	else 
+	{
+		struct site p;
+		if(tree->R_breakpoint)
+		{
+			p=cal_break_point(tree->R_breakpoint->B,y);
+			tree->R_breakpoint->B.V->x=p.x;
+			tree->R_breakpoint->B.V->y=p.y;
+			if(tree->adj_right)
+				update_dcel(tree->adj_right,y);
+		}
+	}
+}
 void priority_list::read_events(event *EV)
 {
 	node *temp;
 	temp = new node;
 	temp->p=EV->p;
+	if(root != NULL)
+	{
+		update_dcel(root,EV->p.y);
+	}
+        if(vor)
+        {
+        	//cout<<vor->origin<<"\n";
+        	cout<<"before "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+        }
 	if(EV->circle_event)
 	{
-		bst.delete_node(EV->circle_node);
+        	display_SITE(EV->p);
+////////	display_SITE(EV->circle_node->p);
+		bst.delete_node(EV->circle_node,EV->center);
+//		cout<<"is this where we die?\n";
 	}
 	else 
+	{
 		bst.insert(root,temp);
+	}
 	if(EV->next)
+	{
 		read_events(EV->next);
+	}
 	else 
+	{
+	        if(vor)
+		{
+			cout<<vor->origin<<"\n";
+	        	cout<<"origin "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+		}
 		cout<<"done bitches\n";
+	}
 }
 void display_events(struct event *start)
 {
+	if(start->circle_event)
+		cout<<"circle event= ";
 	display_SITE(start->p);
 	if(start->next!=NULL)
 	{
-		if(start->circle_event)
-			cout<<"circle event= ";
 		display_events(start->next);
 	}
 	else
@@ -445,7 +632,9 @@ int main()
 //        	bst.insert(root,temp);
 	}
 	display_events(start);
+	cout<<"over\n";
 	P.read_events(start);
-//	display_events(start);
+	cout<<vor->origin->x<<"\n";
+	display_events(start);
 	return 0;
 }
