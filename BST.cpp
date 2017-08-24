@@ -82,7 +82,7 @@ class BST
 	public:
 		void insert(node *, node *);
 		void delete_node(node *,site);
-		void display(node *,int);
+		void display(node *,float,int);
 		void find(node *,int);
 		void disBeach(node *);
 }bst;
@@ -129,14 +129,16 @@ struct site cal_break_point(struct break_point B,float y)
 		BP.x=(-2.*h*x1+sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
 		if(BP.x<B.p2.x)
 		{
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=(pow((BP.x-B.p1.x),2)+pow((B.p1.y-y),2))/(2.*(B.p1.y-y));
 			//cout<<"x1"<<BP.x<<"\n";
 			return BP;
 		}
 		else 
 		{
 			BP.x=(-2.*h*x1-sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=(pow((BP.x-B.p1.x),2)+pow((B.p1.y-y),2))/(2.*(B.p1.y-y));
 			//cout<<"x2"<<BP.x<<"\n";
 			return BP;
 		}
@@ -146,14 +148,16 @@ struct site cal_break_point(struct break_point B,float y)
 		BP.x=(-2.*h*x1+sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
 		if(BP.x>B.p1.x)
 		{
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=(pow((BP.x-B.p1.x),2)+pow((B.p1.y-y),2))/(2.*(B.p1.y-y));
 			//cout<<"x3"<<BP.x<<"\n";
 			return BP;
 		}
 		else 
 		{
 			BP.x=(-2.*h*x1-sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B.p1.x;
-			BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.+y;
+			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
+			BP.y=(pow((BP.x-B.p1.x),2)+pow((B.p1.y-y),2))/(2.*(B.p1.y-y));
 			//cout<<"x4"<<BP.x<<"\n";
 			return BP;
 		}
@@ -161,10 +165,8 @@ struct site cal_break_point(struct break_point B,float y)
 }
 void display_BP(struct break_point B)
 {
-	cout<<"##########################\n";
-	cout<<B.p1.x<<" "<<B.p1.y<<"\n";
-	cout<<B.p2.x<<" "<<B.p2.y<<"\n";
-	cout<<"##########################\n";
+	cout<<"("<<B.p1.x<<" "<<B.p1.y<<")+";
+	cout<<"("<<B.p2.x<<" "<<B.p2.y<<")\n";
 }
 void display_SITE(struct site p)
 {
@@ -216,23 +218,32 @@ void circlevent(struct node *L,struct node *M,struct node *R)
 	float ay=M->p.y-L->p.y;
 	float bx=R->p.x-L->p.x;
 	float by=R->p.y-L->p.y;
-	float A=ax*ax+ay*ay;
+	float A=ax*ax+ay*ay;				
+
 	float B=bx*bx+by*by;
 	float x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
 	float y=-1.*ax/ay*x+A/(2.*ay);
 	float dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
         if(y < ay)
         {
+		cout<<"begin\n";
+		display_SITE(L->p);
+		display_SITE(M->p);
+		display_SITE(R->p);
 		event *circle;
 		circle = new event;
 		circle->p.x=x+L->p.x;
 		circle->p.y=y+L->p.y-dis;
 		circle->center.x=x+L->p.x;
 		circle->center.y=y+L->p.y;
-////////	cout<<"what?";
-////////	display_SITE(circle->p);
+		cout<<"circle_event=";
+        	display_SITE(circle->p);
+		display_SITE(circle->center);
+		cout<<dis<<"\n";
+		cout<<"end\n";
 		circle->circle_event=1;
 		circle->circle_node=M;
+		//M->circle_event=circle;
 		P.insert_event(start,circle,M);
         }
 }
@@ -370,19 +381,19 @@ void BST::delete_node(node *leaf, site center)
 ////////leaf->L_breakpoint->B.V->leaving->origin->leaving=leaf->L_breakpoint->B.V->leaving;
 ////////leaf->R_breakpoint->B.V->leaving->origin=temp_vert;
 //	display_BP(leaf->L_breakpoint->B);
-        if(vor)
-        {
-        	cout<<vor->origin<<"\n";
-        	cout<<"after "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
-        }
+     // if(vor)
+     // {
+     // 	cout<<vor->origin<<"\n";
+     // 	cout<<"after "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+     // }
 	//cout<<leaf->L_breakpoint->B.V<<"\n";
 	leaf->L_breakpoint->B.V->x=center.x;
 	leaf->L_breakpoint->B.V->y=center.y;
-        if(vor)
-        {
-        	//cout<<vor->origin<<"\n";
-        	cout<<"after2 "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
-        }
+    //  if(vor)
+    //  {
+    //  	//cout<<vor->origin<<"\n";
+    //  	cout<<"after2 "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+    //  }
 	leaf->L_breakpoint->B.V->leaving->origin=leaf->L_breakpoint->B.V;
 	leaf->L_breakpoint->B.V->leaving->twin=temp_he2;
 	temp_he2->twin = leaf->L_breakpoint->B.V->leaving;
@@ -422,25 +433,32 @@ void BST::delete_node(node *leaf, site center)
         }
 }
 
-void BST::display(node *tree,int level=0)
+void BST::display(node *tree,float y,int level=0)
 {
 	if(tree==NULL)
 		return;
 	if(tree->right!=NULL)
 	{
-		display(tree->right,level+1);
+		display(tree->right,y,level+1);
 	}
 	for(int i=0;i<level;i++)
 	{
-		cout<<"      ";
+		cout<<"      		";
 	}
 	if( tree->left!=NULL && tree->right != NULL )
-		cout<<level<<"(X,X)\n";
+	{
+		struct site p;
+		p=cal_break_point(tree->B,y);
+                cout<<"("<<tree->B.p1.x<<" "<<tree->B.p1.y<<")";
+                cout<<"("<<tree->B.p2.x<<" "<<tree->B.p2.y<<")";
+		cout<<"("<<p.x<<","<<p.y<<")\n";
+		//cout<<level<<"(X,X)\n";
+	}
 	else
 		cout<<"("<<tree->p.x<<","<<tree->p.y<<")\n";
 	if(tree->left!=NULL)
 	{
-		display(tree->left,level+1);
+		display(tree->left,y,level+1);
 	}
 }
 void BST::disBeach(node *tree)
@@ -450,16 +468,18 @@ void BST::disBeach(node *tree)
 	{
 //		cout<<"("<<tree->p.x<<","<<tree->p.y<<")\n";
 		cout<<"#######\n";
+		if(tree->L_breakpoint)
+			display_BP(tree->L_breakpoint->B);
 	        display_SITE(tree->p);
 
 	//        display_BP(tree->parent->B);
-	        if(tree->adj_left!=NULL)
-		{
-			cout<<"reverse\n";
-	        	display_SITE(tree->adj_left->p);
-			if( tree->adj_left->left != NULL && tree->adj_left->right != NULL )
-				cout<<"nono\n";
-		}
+////////        if(tree->adj_left!=NULL)
+////////	{
+////////		cout<<"reverse\n";
+////////        	display_SITE(tree->adj_left->p);
+////////		if( tree->adj_left->left != NULL && tree->adj_left->right != NULL )
+////////			cout<<"nono\n";
+	//	}
 	////////display_SITE(tree->adj_right->p);
 	////////display_SITE(tree->adj_right->adj_right->p);
 	////////display_SITE(tree->adj_right->adj_right->adj_right->p);
@@ -468,15 +488,15 @@ void BST::disBeach(node *tree)
 	////////cout<<bp.x<<"\n";
 		if(tree->adj_right != NULL )
 		{
-			if( tree->adj_right->left != NULL && tree->adj_right->right != NULL )
-			{
-	        		display_SITE(tree->adj_right->p);
-	        		display_SITE(tree->adj_right->adj_left->p);
-	        		display_BP(tree->adj_right->B);
-				cout<<tree->adj_right->isBP<<"\n";
-				cout<<"error\n";
-				return;
-			}
+////////		if( tree->adj_right->left != NULL && tree->adj_right->right != NULL )
+////////		{
+////////        		display_SITE(tree->adj_right->p);
+////////        		display_SITE(tree->adj_right->adj_left->p);
+////////        		display_BP(tree->adj_right->B);
+////////			cout<<tree->adj_right->isBP<<"\n";
+////////			cout<<"error\n";
+////////			return;
+////////		}
 			disBeach(tree->adj_right);
 		}
 	}
@@ -524,7 +544,10 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 				EV->next->p=newevent->p;
 				EV->next->circle_event=newevent->circle_event;
 				EV->next->circle_node=M;
+				EV->next->center=newevent->center;
 				EV->next->prev=EV;
+				if(newevent->circle_event)
+					M->circle_event=EV->next;
 			}
         	}
         	else if (flag==0)
@@ -570,16 +593,21 @@ void priority_list::read_events(event *EV)
 	if(root != NULL)
 	{
 		update_dcel(root,EV->p.y);
+		cout<<"###################\n";
+		cout<<EV->p.y<<"\n";
+		bst.display(root,EV->p.y);
+		bst.disBeach(root);
 	}
-        if(vor)
-        {
-        	//cout<<vor->origin<<"\n";
-        	cout<<"before "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
-        }
+    //  if(vor)
+    //  {
+    //  	//cout<<vor->origin<<"\n";
+    //  	cout<<"before "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+    //  }
 	if(EV->circle_event)
 	{
-        	display_SITE(EV->p);
-////////	display_SITE(EV->circle_node->p);
+    //  	display_SITE(EV->p);
+    //  	cout<<"center\t";
+    //  	display_SITE(EV->center);
 		bst.delete_node(EV->circle_node,EV->center);
 //		cout<<"is this where we die?\n";
 	}
@@ -636,5 +664,6 @@ int main()
 	P.read_events(start);
 	cout<<vor->origin->x<<"\n";
 	display_events(start);
+	bst.disBeach(root);	
 	return 0;
 }
