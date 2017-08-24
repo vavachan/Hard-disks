@@ -2,6 +2,12 @@
 #include<math.h>
 #include<fstream>
 using namespace std;
+//Site is a point on the 2D surface
+struct site
+{
+	float x=0;
+	float y=0;
+};
 //definition of half-edge 
 struct half_edge 
 {
@@ -20,6 +26,7 @@ struct vertice
 //definition of face
 struct face
 {
+	struct site p;
 	struct half_edge *edge;
 };
 //CLASS TO IMPLEMENT THE DCEL
@@ -33,12 +40,6 @@ class DCEL
 }*vor;
 
 
-//Site is a point on the 2D surface
-struct site
-{
-	float x=0;
-	float y=0;
-};
 //Breakpoint definition
 struct break_point
 {
@@ -209,6 +210,10 @@ void create_edge(struct node *N1,struct node *N2,float y)
 	N2->B.V->leaving->twin=N1->B.V->leaving;
 	N1->B.V->leaving->facing=new face;
 	N2->B.V->leaving->facing=new face;
+	N1->B.V->leaving->facing->edge=N1->B.V->leaving;
+	N2->B.V->leaving->facing->edge=N2->B.V->leaving;
+	N1->B.V->leaving->facing->p=N1->B.p1;
+	N2->B.V->leaving->facing->p=N2->B.p1;
 }
 /* See if there is a circle event given three arcs
  */
@@ -222,25 +227,26 @@ void circlevent(struct node *L,struct node *M,struct node *R)
 
 	float B=bx*bx+by*by;
 	float x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
+	float denom=2.*(ay*bx-ax*by);
 	float y=-1.*ax/ay*x+A/(2.*ay);
 	float dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
-        if(y < ay)
+        if(denom > 0.)
         {
-		cout<<"begin\n";
-		display_SITE(L->p);
-		display_SITE(M->p);
-		display_SITE(R->p);
+	////////cout<<"begin\n";
+	////////display_SITE(L->p);
+	////////display_SITE(M->p);
+	////////display_SITE(R->p);
 		event *circle;
 		circle = new event;
 		circle->p.x=x+L->p.x;
 		circle->p.y=y+L->p.y-dis;
 		circle->center.x=x+L->p.x;
 		circle->center.y=y+L->p.y;
-		cout<<"circle_event=";
-        	display_SITE(circle->p);
-		display_SITE(circle->center);
-		cout<<dis<<"\n";
-		cout<<"end\n";
+	//	cout<<"circle_event=";
+        //	display_SITE(circle->p);
+	//	display_SITE(circle->center);
+	//	cout<<dis<<"\n";
+	//	cout<<"end\n";
 		circle->circle_event=1;
 		circle->circle_node=M;
 		//M->circle_event=circle;
@@ -357,6 +363,7 @@ void BST::delete_node(node *leaf, site center)
 //	display_SITE(leaf->adj_left->p);
 	//cout<<"welcome to the final frontier\n";
 	
+	//display_BP(leaf->L_breakpoint->B);
 	leaf->L_breakpoint->B.p2=leaf->adj_right->p;
 	leaf->R_breakpoint->B.p1=leaf->adj_left->p;
 	struct vertice *temp_vert;
@@ -372,11 +379,17 @@ void BST::delete_node(node *leaf, site center)
 	temp_vert->leaving= new half_edge;
 	temp_vert->leaving->origin=temp_vert;
 	temp_vert->leaving->twin=leaf->L_breakpoint->B.V->leaving->twin;
+	temp_vert->leaving->facing=leaf->L_breakpoint->B.V->leaving->facing;
+////////if(vor)
+////////	cout<<vor->origin->leaving->twin->origin->x<<" "<<vor->origin->leaving->twin->origin->y<<"\n";
 	//cout<<"where are we \n";
 	leaf->L_breakpoint->B.V->leaving->twin->twin=temp_vert->leaving;
 	//cout<<"not here\n";
 	temp_he->twin=leaf->R_breakpoint->B.V->leaving->twin;
+	temp_he->facing=leaf->R_breakpoint->B.V->leaving->facing;
+	temp_he->next = leaf->R_breakpoint->B.V->leaving->next;
 	leaf->R_breakpoint->B.V->leaving->twin->twin=temp_he;
+	temp_he2->facing = leaf->R_breakpoint->B.V->leaving->twin->facing;
 	////////leaf->L_breakpoint->B.V->leaving->origin=temp_vert;
 ////////leaf->L_breakpoint->B.V->leaving->origin->leaving=leaf->L_breakpoint->B.V->leaving;
 ////////leaf->R_breakpoint->B.V->leaving->origin=temp_vert;
@@ -387,30 +400,41 @@ void BST::delete_node(node *leaf, site center)
      // 	cout<<"after "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
      // }
 	//cout<<leaf->L_breakpoint->B.V<<"\n";
-	leaf->L_breakpoint->B.V->x=center.x;
-	leaf->L_breakpoint->B.V->y=center.y;
-    //  if(vor)
-    //  {
-    //  	//cout<<vor->origin<<"\n";
-    //  	cout<<"after2 "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
-    //  }
-	leaf->L_breakpoint->B.V->leaving->origin=leaf->L_breakpoint->B.V;
-	leaf->L_breakpoint->B.V->leaving->twin=temp_he2;
-	temp_he2->twin = leaf->L_breakpoint->B.V->leaving;
 	
-	leaf->R_breakpoint->B.V->x=center.x;
-	leaf->R_breakpoint->B.V->y=center.y;
-	leaf->R_breakpoint->B.V->leaving->origin=leaf->R_breakpoint->B.V;
-	leaf->R_breakpoint->B.V->leaving->twin=temp_he2;
-	temp_he2->twin = leaf->R_breakpoint->B.V->leaving;
+	temp_vert->leaving->twin->next=temp_he;
+	leaf->R_breakpoint->B.V->leaving->twin->next=temp_he2;
 
 	if(leaf->parent == leaf->adj_right->L_breakpoint)
 	{
 		leaf->adj_right->L_breakpoint=leaf->L_breakpoint;
+		//#################################//
+		leaf->L_breakpoint->B.V->x=center.x;
+		leaf->L_breakpoint->B.V->y=center.y;
+	    //  if(vor)
+	    //  {
+	    //  	//cout<<vor->origin<<"\n";
+	    //  	cout<<"after2 "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+	    //  }
+		leaf->L_breakpoint->B.V->leaving->origin=leaf->L_breakpoint->B.V;
+		leaf->L_breakpoint->B.V->leaving->twin=temp_he2;
+		temp_he2->twin = leaf->L_breakpoint->B.V->leaving;
+		leaf->L_breakpoint->B.V->leaving->next=temp_vert->leaving;
+	////////leaf->L_breakpoint->B.V->leaving->next=temp_vert->leaving;
+	////////temp_vert->leaving->twin->next=temp_he;
+	////////leaf->R_breakpoint->B.V->leaving->twin->next=temp_he2;
 	}
 	else 
 	{
 		leaf->adj_left->R_breakpoint=leaf->R_breakpoint;
+		//#################################//
+		leaf->R_breakpoint->B.V->x=center.x;
+		leaf->R_breakpoint->B.V->y=center.y;
+		leaf->R_breakpoint->B.V->leaving->origin=leaf->R_breakpoint->B.V;
+		leaf->R_breakpoint->B.V->leaving->twin=temp_he2;
+		leaf->R_breakpoint->B.V->leaving->facing=leaf->L_breakpoint->B.V->leaving->facing;
+		leaf->R_breakpoint->B.V->leaving->facing->edge=leaf->R_breakpoint->B.V->leaving;
+		temp_he2->twin = leaf->R_breakpoint->B.V->leaving;
+		leaf->R_breakpoint->B.V->leaving->next=temp_vert->leaving;
 	}
 	if(leaf->parent->parent->left==leaf->parent)
 		leaf->parent->parent->left=leaf->twin;
@@ -532,6 +556,7 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 				Nevent->circle_event=1;
 				Nevent->circle_node=M;
 				M->circle_event=Nevent;
+				Nevent->center=newevent->center;
 			}
         	}
         	else if (flag==1)
@@ -593,10 +618,11 @@ void priority_list::read_events(event *EV)
 	if(root != NULL)
 	{
 		update_dcel(root,EV->p.y);
-		cout<<"###################\n";
-		cout<<EV->p.y<<"\n";
-		bst.display(root,EV->p.y);
-		bst.disBeach(root);
+	cout<<"check this "<<EV->p.y<<"\n";
+	////////cout<<"###################\n";
+	////////cout<<EV->p.y<<"\n";
+	////////bst.display(root,EV->p.y);
+	////////bst.disBeach(root);
 	}
     //  if(vor)
     //  {
@@ -609,7 +635,7 @@ void priority_list::read_events(event *EV)
     //  	cout<<"center\t";
     //  	display_SITE(EV->center);
 		bst.delete_node(EV->circle_node,EV->center);
-//		cout<<"is this where we die?\n";
+		cout<<"is this where we die?\n";
 	}
 	else 
 	{
@@ -641,6 +667,15 @@ void display_events(struct event *start)
 	else
 		cout<<"events over\n";
 }
+void display_dcel(struct vertice *V)
+{
+	cout<<V->x<<" "<<V->y<<" "<<V->leaving->twin->origin->x<<" "<<V->leaving->twin->origin->y<<"\n"; 
+	if(V->leaving->next)
+		display_dcel(V->leaving->next->origin);
+	else
+		display_dcel(V->leaving->twin->next->origin);
+}
+
 
 int main()
 {
@@ -662,7 +697,38 @@ int main()
 	display_events(start);
 	cout<<"over\n";
 	P.read_events(start);
-	cout<<vor->origin->x<<"\n";
+	if(root != NULL)
+	{
+		update_dcel(root,0.0);
+	}
+	display_dcel(vor->origin);
+////////if(vor)
+////////{
+////////	cout<<vor->origin->leaving->twin->facing->p.x<<" "<<vor->origin->leaving->twin->facing->p.y<<"\n";
+////////	cout<<vor->origin->leaving->twin->facing->edge->origin->x<<" "<<vor->origin->leaving->twin->facing->edge->origin->y<<"\n";
+////////	cout<<vor->origin->leaving->twin->facing->edge->next->origin->x<<" "<<vor->origin->leaving->twin->facing->edge->next->origin->y<<"\n";
+////////	cout<<vor->origin->leaving->twin->facing->edge->next->next->origin->x<<" "<<vor->origin->leaving->twin->facing->edge->next->next->origin->y<<"\n";
+////////}
+        if(vor)
+        {
+        	cout<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+        	cout<<vor->origin->leaving->facing->p.x<<" "<<vor->origin->leaving->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->facing->p.x<<" "<<vor->origin->leaving->next->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->origin->y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->facing->p.x<<" "<<vor->origin->leaving->next->twin->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->origin->y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->origin->y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->origin->y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->next->twin->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->twin->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->facing->p.y<<"\n";
+        	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->twin->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->origin->y<<"\n";
+        }
 	display_events(start);
 	bst.disBeach(root);	
 	return 0;
