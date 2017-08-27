@@ -3,10 +3,12 @@
 #include<fstream>
 using namespace std;
 //Site is a point on the 2D surface
+struct face;
 struct site
 {
 	float x=0;
 	float y=0;
+	struct face *F;
 };
 //definition of half-edge 
 struct half_edge 
@@ -443,8 +445,12 @@ void BST::delete_node(node *leaf, site center)
 	leaf->twin->parent=leaf->parent->parent;
 	leaf->adj_left->adj_right=leaf->adj_right;
 	leaf->adj_right->adj_left=leaf->adj_left;
+//	cout<<"serio\n";
 	if(leaf->adj_right->circle_event != NULL)
+	{
+//		display_SITE(start->p);
 		P.delete_event(start,leaf->adj_right->circle_event);
+	}
 	if(leaf->adj_left->circle_event != NULL)
 		P.delete_event(start,leaf->adj_left->circle_event);
         if(leaf->adj_left->adj_left != NULL)
@@ -541,18 +547,32 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 	}
         else
         {
+		
         	flag=compare(EV->p,newevent->p);
         	if(flag==-1)
         	{
         		Nevent=new event;
         		Nevent->p=newevent->p;
-        		EV->prev->next=Nevent;
+	        	if(EV->prev)
+	        	{
+                		EV->prev->next=Nevent;
+				Nevent->prev=EV->prev;
+	        	}
+			else if (EV == start)
+				start=Nevent;
+	////////	else 
+	////////	{
+
+	////////		start=Nevent;
+	////////	}
         		Nevent->next=EV;
         		EV->prev=Nevent;
 			if(newevent->circle_event)
 			{
-////////			cout<<"this event?";
-////////			display_SITE(Nevent->p);
+				//cout<<"start(incide)=";
+				//display_SITE(start->p);
+        			//cout<<"this event?";
+        			//display_SITE(Nevent->p);
 				Nevent->circle_event=1;
 				Nevent->circle_node=M;
 				M->circle_event=Nevent;
@@ -576,7 +596,9 @@ void priority_list::insert_event(event *EV,event *newevent,node *M=NULL)
 			}
         	}
         	else if (flag==0)
+		{
         		return;
+		}
         }
 
 }
@@ -584,10 +606,20 @@ void priority_list::delete_event(event *EV,event *eventtd)
 {
 	int flag;
         flag=compare(EV->p,eventtd->p);
+////////cout<<"event=";
+////////display_SITE(EV->p);
+////////cout<<"tobedeleted=";
+////////display_SITE(eventtd->p);
 	if(flag==0)
 	{
-		EV->next->prev=EV->prev;
-		EV->prev->next=EV->next;
+		if(EV->next)
+		{
+			EV->next->prev=EV->prev;
+			EV->prev->next=EV->next;
+		}
+		else 
+			EV->prev->next=NULL;
+//		cout<<"what\n";
 	}
 	else
 		delete_event(EV->next,eventtd);
@@ -615,10 +647,12 @@ void priority_list::read_events(event *EV)
 	node *temp;
 	temp = new node;
 	temp->p=EV->p;
+	//cout<<"start=";
+	//display_SITE(start->p);
 	if(root != NULL)
 	{
 		update_dcel(root,EV->p.y);
-	cout<<"check this "<<EV->p.y<<"\n";
+		//display_SITE(EV->p);
 	////////cout<<"###################\n";
 	////////cout<<EV->p.y<<"\n";
 	////////bst.display(root,EV->p.y);
@@ -631,11 +665,11 @@ void priority_list::read_events(event *EV)
     //  }
 	if(EV->circle_event)
 	{
-    //  	display_SITE(EV->p);
+    	 // 	display_SITE(EV->p);
     //  	cout<<"center\t";
     //  	display_SITE(EV->center);
 		bst.delete_node(EV->circle_node,EV->center);
-		cout<<"is this where we die?\n";
+	//	cout<<"is this where we die?\n";
 	}
 	else 
 	{
@@ -655,14 +689,14 @@ void priority_list::read_events(event *EV)
 		cout<<"done bitches\n";
 	}
 }
-void display_events(struct event *start)
+void display_events(struct event *EV)
 {
-	if(start->circle_event)
+	if(EV->circle_event)
 		cout<<"circle event= ";
-	display_SITE(start->p);
-	if(start->next!=NULL)
+	display_SITE(EV->p);
+	if(EV->next!=NULL)
 	{
-		display_events(start->next);
+		display_events(EV->next);
 	}
 	else
 		cout<<"events over\n";
@@ -683,12 +717,13 @@ int main()
 	temp = new node;
 	event *newevent;
 	newevent=new event;	
-	std::ifstream INFILE("sites");
+	std::ifstream INFILE("dat");
 	float x,y;
 	while(INFILE>>x>>y)
 	{
 		newevent->p.x=x;
 		newevent->p.y=y;
+//		cout<<x<<"\t"<<y<<"\n";
 		P.insert_event(start,newevent);
         ////////temp->p.x=x;
 	////////temp->p.y=y;
@@ -696,12 +731,13 @@ int main()
 	}
 	display_events(start);
 	cout<<"over\n";
+	cout<<start<<"\n";
 	P.read_events(start);
 	if(root != NULL)
 	{
 		update_dcel(root,0.0);
 	}
-	display_dcel(vor->origin);
+//	display_dcel(vor->origin);
 ////////if(vor)
 ////////{
 ////////	cout<<vor->origin->leaving->twin->facing->p.x<<" "<<vor->origin->leaving->twin->facing->p.y<<"\n";
@@ -709,26 +745,26 @@ int main()
 ////////	cout<<vor->origin->leaving->twin->facing->edge->next->origin->x<<" "<<vor->origin->leaving->twin->facing->edge->next->origin->y<<"\n";
 ////////	cout<<vor->origin->leaving->twin->facing->edge->next->next->origin->x<<" "<<vor->origin->leaving->twin->facing->edge->next->next->origin->y<<"\n";
 ////////}
-        if(vor)
-        {
-        	cout<<vor->origin->x<<" "<<vor->origin->y<<"\n";
-        	cout<<vor->origin->leaving->facing->p.x<<" "<<vor->origin->leaving->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->facing->p.x<<" "<<vor->origin->leaving->next->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->origin->y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->facing->p.x<<" "<<vor->origin->leaving->next->twin->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->origin->y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->origin->y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->origin->y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->next->twin->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->twin->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->facing->p.y<<"\n";
-        	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->origin->y<<"\n";
+      //if(vor)
+      //{
+      //	cout<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->facing->p.x<<" "<<vor->origin->leaving->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->facing->p.x<<" "<<vor->origin->leaving->next->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->facing->p.x<<" "<<vor->origin->leaving->next->twin->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->origin->y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->twin->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->twin->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->facing->p.x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->facing->p.y<<"\n";
+      //	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->next->next->origin->y<<"\n";
       //	cout<<vor->origin->leaving->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->origin->y<<"\n";
       //	cout<<vor->origin->leaving->next->twin->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->twin->origin->y<<"\n";
       //	cout<<vor->origin->leaving->next->twin->next->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->origin->y<<"\n";
       //	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->origin->y<<"\n";
-        }
+      //}
 	display_events(start);
 	bst.disBeach(root);	
 	return 0;
