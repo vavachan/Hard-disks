@@ -135,7 +135,7 @@ struct site cal_break_point(struct break_point *B,float y)
 		if(BP.x<B->p2->x)
 		{
 			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
-			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y),2)-pow(y,2))/(2.*(B->p1->y-y));
 			//cout<<"x1"<<BP.x<<"\n";
 			return BP;
 		}
@@ -143,7 +143,8 @@ struct site cal_break_point(struct break_point *B,float y)
 		{
 			BP.x=(-2.*h*x1-sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B->p1->x;
 			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
-			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			//BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y),2)-pow(y,2))/(2.*(B->p1->y-y));
 			//cout<<"x2"<<BP.x<<"\n";
 			return BP;
 		}
@@ -154,7 +155,8 @@ struct site cal_break_point(struct break_point *B,float y)
 		if(BP.x>B->p1->x)
 		{
 			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
-			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			//BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y),2)-pow(y,2))/(2.*(B->p1->y-y));
 			//cout<<"x3"<<BP.x<<"\n";
 			return BP;
 		}
@@ -162,7 +164,8 @@ struct site cal_break_point(struct break_point *B,float y)
 		{
 			BP.x=(-2.*h*x1-sqrt(pow(2.*h*x1,2)-4.*(h1-h)*((h-h1)*h*h1-h*pow(x1,2))))/(2.*(h1-h))+B->p1->x;
 			//BP.y=pow(BP.x,2)/(2.*h)+2.*h/2.;
-			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			//BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y-y),2))/(2.*(B->p1->y-y));
+			BP.y=(pow((BP.x-B->p1->x),2)+pow((B->p1->y),2)-pow(y,2))/(2.*(B->p1->y-y));
 			//cout<<"x4"<<BP.x<<"\n";
 			return BP;
 		}
@@ -252,10 +255,10 @@ void circlevent(struct node *L,struct node *M,struct node *R)
 	float dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
         if(denom > 0. && y+L->p->y > 0.)
         {
-	////////cout<<"begin\n";
-	////////display_SITE(L->p);
-	////////display_SITE(M->p);
-	////////display_SITE(R->p);
+	     // cout<<"begin\n";
+	     // display_SITE(L->p);
+	     // display_SITE(M->p);
+	     // display_SITE(R->p);
 		event *circle;
 		circle = new event;
 		circle->p = new site;
@@ -264,11 +267,11 @@ void circlevent(struct node *L,struct node *M,struct node *R)
 		circle->p->y=y+L->p->y-dis;
 		circle->center->x=x+L->p->x;
 		circle->center->y=y+L->p->y;
-	//	cout<<"circle_event=";
-        //	display_SITE(circle->p);
-	//	display_SITE(circle->center);
-	//	cout<<dis<<"\n";
-	//	cout<<"end\n";
+	  //////cout<<"circle_event=";
+          //////display_SITE(circle->p);
+	  //////display_SITE(circle->center);
+	  //////cout<<dis<<"\n";
+	  //////cout<<"end\n";
 		circle->circle_event=1;
 		circle->circle_node=M;
 		//M->circle_event=circle;
@@ -294,8 +297,8 @@ void BST::insert(node *tree, node *newnode)
 	{
 		if(tree->circle_event!=NULL)
 		{
-			cout<<"circle event is false alarm\n";	
-			cout<<tree->circle_event->center->x<<" "<<tree->circle_event->center->y<<"\n";
+			//cout<<"circle event is false alarm\n";	
+			//cout<<tree->circle_event->center->x<<" "<<tree->circle_event->center->y<<"\n";
 			P.delete_event(start,tree->circle_event);
 		}
 		//creating a new node at left
@@ -365,9 +368,13 @@ void BST::insert(node *tree, node *newnode)
 		tree->right->right->left=NULL;
 		tree->right->right->right=NULL;
 		if(tree->right->left->adj_right->adj_right != NULL)
+		{
+			//cout<<"whodunnit1\n";
 			circlevent(tree->right->left,tree->right->left->adj_right,tree->right->left->adj_right->adj_right);
+		}
 		if(tree->right->left->adj_left->adj_left != NULL)
 		{
+			//cout<<"whodunnit2\n";
 			circlevent(tree->right->left->adj_left->adj_left,tree->right->left->adj_left,tree->right->left);
 		}
 		return;
@@ -393,6 +400,7 @@ void BST::delete_node(node *leaf, site *center)
 	//display_BP(leaf->L_breakpoint->B);
 	leaf->L_breakpoint->B->p2=leaf->adj_right->p;
 	leaf->R_breakpoint->B->p1=leaf->adj_left->p;
+	//DCEL STUFF
 	struct vertice *temp_vert;
 	struct half_edge *temp_he;
 	struct half_edge *temp_he2;
@@ -437,10 +445,10 @@ void BST::delete_node(node *leaf, site *center)
 	
 	temp_vert->leaving->twin->next=temp_he;
 	leaf->R_breakpoint->B->V->leaving->twin->next=temp_he2;
+	//DCEL STUFF ENDS
 
 	if(leaf->parent == leaf->adj_right->L_breakpoint)
-	{
-//		cout<<"left\n";
+	{	
 		leaf->adj_right->L_breakpoint=leaf->L_breakpoint;
 		//#################################//
 		leaf->L_breakpoint->B->V->x=center->x;
@@ -489,9 +497,30 @@ void BST::delete_node(node *leaf, site *center)
 ////////cout<<leaf->R_breakpoint->B->V->leaving->facing->edge->twin->origin->x<<" "<<leaf->R_breakpoint->B->V->leaving->facing->edge->twin->origin->y<<"\n";
 	}
 	if(leaf->parent->parent->left==leaf->parent)
+	{
+		//cout<<"this didn't happen\n";
+//		display(root,0.,0);
 		leaf->parent->parent->left=leaf->twin;
+		leaf->twin->twin=leaf->parent->parent->right;
+		leaf->parent->parent->right->twin=leaf->twin;
+////////	if(leaf->twin)
+////////	{
+////////		cout<<"really\n";
+////////		display_SITE(leaf->p);
+////////		cout<<leaf->twin->isBP<<"\n";
+////////		display_BP(leaf->twin->B);
+////////		display_SITE(leaf->twin->left->p);
+////////		display_SITE(leaf->twin->right->p);
+////////		display_SITE(leaf->twin->p);
+////////	}
+////////	display(root,0.,0);
+	}
 	else
+	{
 		leaf->parent->parent->right=leaf->twin;
+		leaf->twin->twin=leaf->parent->parent->left;
+		leaf->parent->parent->left->twin=leaf->twin;
+	}
 	leaf->twin->parent=leaf->parent->parent;
 	leaf->adj_left->adj_right=leaf->adj_right;
 	leaf->adj_right->adj_left=leaf->adj_left;
@@ -502,13 +531,17 @@ void BST::delete_node(node *leaf, site *center)
 		P.delete_event(start,leaf->adj_right->circle_event);
 	}
 	if(leaf->adj_left->circle_event != NULL)
+	{
 		P.delete_event(start,leaf->adj_left->circle_event);
+	}
         if(leaf->adj_left->adj_left != NULL)
         {
+		//cout<<"orthisguy?\n";
         	circlevent(leaf->adj_left->adj_left,leaf->adj_left,leaf->adj_right);	
         }
         if(leaf->adj_right->adj_right!= NULL)
         {
+		//cout<<"orthisguy2?\n";
         	circlevent(leaf->adj_left,leaf->adj_right,leaf->adj_right->adj_right);	
         }
 }
@@ -529,13 +562,27 @@ void BST::display(node *tree,float y,int level=0)
 	{
 		struct site p;
 		p=cal_break_point(tree->B,y);
-                cout<<std::setprecision(3)<<"("<<tree->B->p1->x<<" "<<tree->B->p1->y<<")";
-                cout<<std::setprecision(3)<<"("<<tree->B->p2->x<<" "<<tree->B->p2->y<<")";
-		cout<<std::setprecision(3)<<"("<<p.x<<","<<p.y<<")\n";
+                cout<<"("<<tree->B->p1->x<<" "<<tree->B->p1->y<<")";
+                cout<<"("<<tree->B->p2->x<<" "<<tree->B->p2->y<<")";
+		cout<<"("<<p.x<<","<<p.y<<")\n";
+
+        /////////out<<std::setprecision(3)<<"("<<tree->B->p1->x<<" "<<tree->B->p1->y<<")";
+        /////////out<<std::setprecision(3)<<"("<<tree->B->p2->x<<" "<<tree->B->p2->y<<")";
+	/////////out<<std::setprecision(3)<<"("<<p.x<<","<<p.y<<")\n";
 		//cout<<level<<"(X,X)\n";
 	}
 	else
-		cout<<"N("<<tree->p->x<<","<<tree->p->y<<")\n";
+	{
+		cout<<tree->circle_event<<" ";
+		cout<<"N("<<tree->p->x<<","<<tree->p->y<<")";
+		if(tree->twin)
+		{
+			if(!tree->twin->isBP)
+				cout<<"N("<<tree->twin->p->x<<","<<tree->twin->p->y<<")\n";
+			else
+				cout<<"bp\n";
+		}
+	}
 	if(tree->left!=NULL)
 	{
 		display(tree->left,y,level+1);
@@ -656,10 +703,10 @@ void priority_list::delete_event(event *EV,event *eventtd)
 {
 	int flag;
         flag=compare(EV->p,eventtd->p);
-////////cout<<"event=";
-////////display_SITE(EV->p);
-////////cout<<"tobedeleted=";
-////////display_SITE(eventtd->p);
+      //cout<<"event=";
+      //display_SITE(EV->p);
+      //cout<<"tobedeleted=";
+      //display_SITE(eventtd->p);
 	if(flag==0)
 	{
 		if(EV->next)
@@ -698,7 +745,11 @@ void update_dcel(node *tree,float y)
 }
 void display_a_edge(struct half_edge *first,struct half_edge *E)
 {
-	cout<<E->origin->x<<"\t"<<E->origin->y<<"\t"<<E->twin->origin->x<<"\t"<<E->twin->origin->y<<"\n";
+	ofstream DEL;
+	DEL.open("dcel",ios::app);
+	DEL<<"#"<<E->facing->p->x<<" "<<E->facing->p->y<<"\n";
+	DEL<<E->origin->x<<"\t"<<E->origin->y<<"\t"<<E->twin->origin->x<<"\t"<<E->twin->origin->y<<"\n";
+	DEL.close();
 	if(E->next)
 	{
 		if(first==E->next)
@@ -715,9 +766,9 @@ void display_dcel(struct event *EV)
 {
 	if(!(EV->circle_event))
 	{
-		cout<<"#";
-		//display_SITE(EV->p);
-		cout<<EV->p->x<<" "<<EV->p->y<<"\n";
+////////	cout<<"#";
+////////	//display_SITE(EV->p);
+////////	cout<<EV->p->x<<" "<<EV->p->y<<"\n";
 //		cout<<EV->p->F<<"\n";
 		if(EV->p->F)
 		{
@@ -730,6 +781,22 @@ void display_dcel(struct event *EV)
 		return;
 		
 }
+void display_events(struct event *EV)
+{
+	if(EV->circle_event)
+		cout<<"circle event= ";
+	else
+	{
+		//display_SITE(EV->p);
+	}
+	display_SITE(EV->p);
+	if(EV->next!=NULL)
+	{
+		display_events(EV->next);
+	}
+	else
+		cout<<"events over\n";
+}
 void priority_list::read_events(event *EV)
 {
 	node *temp;
@@ -741,14 +808,15 @@ void priority_list::read_events(event *EV)
 	{
 		update_dcel(root,EV->p->y);
 	//	display_dcel(start);
-		cout<<"######\n";
+		//display_events(start);
+		//cout<<"######\n";
 	////////if(start->p->F)
 	////////	display_a_edge(start->p->F->edge,start->p->F->edge);
 		//display_SITE(EV->p);
 	      //cout<<"###################\n";
-	      cout<<EV->p->y<<"\n";
-	      //bst.display(root,EV->p->y);
-	////////bst.disBeach(root);
+//	      	cout<<EV->p->y<<"\n";
+//	        bst.display(root,EV->p->y);
+	        //bst.disBeach(root);
 	}
         if(vor)
         {
@@ -758,7 +826,7 @@ void priority_list::read_events(event *EV)
 	if(EV->circle_event)
 	{
     	 // 	display_SITE(EV->p);
-	        display_SITE(EV->center);
+	        //display_SITE(EV->center);
 		bst.delete_node(EV->circle_node,EV->center);
 	}
 	else 
@@ -780,22 +848,6 @@ void priority_list::read_events(event *EV)
 	}
 }
 
-void display_events(struct event *EV)
-{
-	if(EV->circle_event)
-		cout<<"circle event= ";
-	else
-	{
-		//display_SITE(EV->p);
-	}
-	display_SITE(EV->p);
-	if(EV->next!=NULL)
-	{
-		display_events(EV->next);
-	}
-	else
-		cout<<"events over\n";
-}
 
 int main()
 {
@@ -818,8 +870,9 @@ int main()
 	}
 ////////cout<<"over\n";
 ////////cout<<start<<"\n";
+//        display_events(start);
 	P.read_events(start);
-        display_events(start);
+  //      display_events(start);
      // if(root != NULL)
      // {
      // 	update_dcel(root,-3.);
@@ -879,9 +932,9 @@ int main()
      // 	cout<<vor->origin->leaving->next->twin->next->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->origin->y<<"\n";
      // 	cout<<vor->origin->leaving->next->twin->next->next->twin->next->twin->origin->x<<" "<<vor->origin->leaving->next->twin->next->next->twin->next->twin->origin->y<<"\n";
     //        }
-////////display_events(start);
-        bst.disBeach(root);	
+        display_events(start);
+//        bst.disBeach(root);	
 	display_dcel(start);
-	bst.display(root,-4.34269);
+//	bst.display(root,-4.34269);
 	return 0;
 }
