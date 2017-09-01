@@ -529,10 +529,14 @@ void BST::delete_node(node *leaf, site *center)
 	{
 //		display_SITE(start->p);
 		P.delete_event(start,leaf->adj_right->circle_event);
+		leaf->adj_right->circle_event=NULL;
 	}
 	if(leaf->adj_left->circle_event != NULL)
 	{
+	//cout<<"where1\n";
 		P.delete_event(start,leaf->adj_left->circle_event);
+		leaf->adj_left->circle_event=NULL;
+	////cout<<"where2\n";
 	}
         if(leaf->adj_left->adj_left != NULL)
         {
@@ -814,24 +818,28 @@ void priority_list::read_events(event *EV)
 	////////	display_a_edge(start->p->F->edge,start->p->F->edge);
 		//display_SITE(EV->p);
 	      //cout<<"###################\n";
-//	      	cout<<EV->p->y<<"\n";
+	      	cout<<EV->p->y<<"\n";
 //	        bst.display(root,EV->p->y);
 	        //bst.disBeach(root);
 	}
-        if(vor)
-        {
-        	//cout<<vor->origin<<"\n";
-        	//cout<<"before "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
-        }
+  //    if(vor)
+  //    {
+  //    	//cout<<vor->origin<<"\n";
+  //    	//cout<<"before "<<vor->origin->x<<" "<<vor->origin->y<<"\n";
+  //    }
 	if(EV->circle_event)
 	{
     	 // 	display_SITE(EV->p);
 	        //display_SITE(EV->center);
+		//cout<<"here1\n";
 		bst.delete_node(EV->circle_node,EV->center);
+		//cout<<"here2\n";
 	}
 	else 
 	{
+		//cout<<"he1\n";
 		bst.insert(root,temp);
+		//cout<<"he2\n";
 	}
 	if(EV->next)
 	{
@@ -870,7 +878,7 @@ int main()
 	}
 ////////cout<<"over\n";
 ////////cout<<start<<"\n";
-//        display_events(start);
+        display_events(start);
 	P.read_events(start);
   //      display_events(start);
      // if(root != NULL)
