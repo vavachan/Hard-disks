@@ -104,7 +104,7 @@ void first_delunay(atom *ATOM,atom Atoms[])
 	ATOM->edge_index[ATOM->conti]++;
 	ATOM->conti++;
 	//cout<<"nea\t"<<nearest<<"\t"<<min<<"\n";
-	cout<<Atoms[nearest].x<<"\t"<<Atoms[nearest].y<<"\n";
+	//cout<<Atoms[nearest].x<<"\t"<<Atoms[nearest].y<<"\n";
 	double DIS_MIN=box;
 	int DIS_atom;
 	double dis;
@@ -148,9 +148,31 @@ void first_delunay(atom *ATOM,atom Atoms[])
 }
 void print_delunay(atom *ATOM,delunay *D,atom Atoms[])
 {
-	cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<Atoms[ATOM->contigous[D->A]].x<<"\t"<<Atoms[ATOM->contigous[D->A]].y<<"\n";
-	cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<Atoms[ATOM->contigous[D->B]].x<<"\t"<<Atoms[ATOM->contigous[D->B]].y<<"\n";
-	cout<<Atoms[ATOM->contigous[D->A]].x<<"\t"<<Atoms[ATOM->contigous[D->A]].y<<"\t"<<Atoms[ATOM->contigous[D->B]].x<<"\t"<<Atoms[ATOM->contigous[D->B]].y<<"\n";;
+	float Sx,Sy;
+	float Px,Py;
+	Sx=ATOM->x-Atoms[ATOM->contigous[D->A]].x;
+	Sy=ATOM->y-Atoms[ATOM->contigous[D->A]].y;
+	Sx=(Sx-(twob*lround(Sx/twob)));
+	Sy=(Sy-(twob*lround(Sy/twob)));
+	cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
+	Sx=ATOM->x-Atoms[ATOM->contigous[D->B]].x;
+	Sy=ATOM->y-Atoms[ATOM->contigous[D->B]].y;
+	Sx=(Sx-(twob*lround(Sx/twob)));
+	Sy=(Sy-(twob*lround(Sy/twob)));
+	cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
+	Sx=ATOM->x-Atoms[ATOM->contigous[D->B]].x;
+	Sy=ATOM->y-Atoms[ATOM->contigous[D->B]].y;
+	Sx=(Sx-(twob*lround(Sx/twob)));
+	Sy=(Sy-(twob*lround(Sy/twob)));
+	Px=ATOM->x-Atoms[ATOM->contigous[D->A]].x;
+	Py=ATOM->y-Atoms[ATOM->contigous[D->A]].y;
+	Px=(Px-(twob*lround(Px/twob)));
+	Py=(Py-(twob*lround(Py/twob)));
+	cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
+////////Sx=Atoms[ATOM->contigous[D->A]].x-Atoms[ATOM->contigous[D->B]].x;
+////////Sy=Atoms[ATOM->contigous[D->A]].y-Atoms[ATOM->contigous[D->B]].y;
+////////Sx=(Sx-(twob*lround(Sx/twob)));
+////////Sy=(Sy-(twob*lround(Sy/twob)));
 }
 
 int calculate_line(double a,double b,double c,double d,double x,double y)
@@ -195,6 +217,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 			}
 			if(i==D->A)
 			{
+				//cout<<"hereA\n";
 				double a=ATOM->x;
 				double b=ATOM->y;
 				double c=Atoms[ATOM->contigous[D->A]].x;	
@@ -208,13 +231,15 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 				double m=Y/X;
 				double C=0.;
 				int sign;
+				int flag=1;
+				int k;
 				if((Sy-(m*Sx+C))<0.)
 					sign=-1;
 				else
 					sign=1;
 				for(int j=0;j<ATOM->neighbours;j++)
 				{
-				//	cout<<"this is a neighbour="<<ATOM->neighlist[i]<<"\n";
+					//cout<<"this is a neighbour="<<ATOM->neighlist[j]<<"\n";
 					
 					int sign_N;
 					double x=Atoms[ATOM->neighlist[j]].x-a;
@@ -226,7 +251,22 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 					else
 						sign_N=1;
 				//		cout<<"sign_N="<<sign_N<<"\n";
-					if(sign!=sign_N)
+					flag=1;
+				        for(k=0;k<ATOM->conti;k++)
+				        {
+				        	if(ATOM->contigous[k]==ATOM->neighlist[j])
+				        	{
+				        		if(ATOM->edge_index[k]==2)
+				        		{
+				        			flag=0;
+				        			  //cout<<"when\t"<<j<<"\n";
+				        			  //cout<<Atoms[ATOM->neighlist[j]].x<<"\t"<<Atoms[ATOM->neighlist[j]].y<<"\n";
+				        			break;
+				        		}
+				        	}
+				        }
+					//cout<<j<<"\t"<<flag<<"\n";
+					if(sign!=sign_N && flag)
 					{
 						atom L=*ATOM;
 						atom M=Atoms[ATOM->contigous[D->A]];
@@ -246,24 +286,31 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						double y=-1.*ax/ay*x+A/(2.*ay);
 						double dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
 						double Y=sqrt(pow(x-ax/2.,2)+pow(y-ay/2.,2));
+						int sign_C;
+						if((y-(m*x+C))<0.)
+							sign_C=-1;
+						else
+							sign_C=1;
+						if(sign_C!=sign_N)
+							Y=-1.*Y;
 
-
-				//			cout<<"circum="<<dis<<"\n";
+					//			cout<<"circum="<<dis<<"\n";
 						if(Y<Y_MIN)
 						{
 							;
 							Y_MIN=Y;
 					////////	dis_MIN=dis;
+							//cout<<x+L.x<<"\t"<<y+L.y<<"\n";
 						        DIS_atom=ATOM->neighlist[j];
-			////////  			cout<<"circum="<<Y_MIN<<"\n";
+				        	        //cout<<Atoms[ATOM->neighlist[j]].x<<"\t"<<Atoms[ATOM->neighlist[j]].y<<"\n";
+			          			//cout<<"circum="<<Y_MIN<<"\n";
 			////////  			cout<<"circum_atom="<<DIS_atom<<"\n";
 
 						}
 					}
 					
 				}//j loop 
-				int flag=1;
-				int k;
+				flag=1;
 				for(k=0;k<ATOM->conti;k++)
 				{
 					if(ATOM->contigous[k]==DIS_atom)
@@ -308,6 +355,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 			}// D->A loop
 			else
 			{
+				//cout<<"hereb\n";
 				double a=ATOM->x;
 				double b=ATOM->y;
 				double c=Atoms[ATOM->contigous[D->B]].x;	
@@ -321,6 +369,8 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 				double m=Y/X;
 				double C=0.;
 				int sign;
+				int flag=1;
+				int k;
 				if((Sy-(m*Sx+C))<0.)
 					sign=-1;
 				else
@@ -338,7 +388,22 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 					else
 						sign_N=1;
 				//	cout<<"sign_N="<<sign_N<<"\n";
-					if(sign!=sign_N)
+				
+					flag=1;
+				        for(k=0;k<ATOM->conti;k++)
+				        {
+				        	if(ATOM->contigous[k]==ATOM->neighlist[j])
+				        	{
+				        		if(ATOM->edge_index[k]==2)
+				        		{
+				        			flag=0;
+				        			//cout<<Atoms[ATOM->neighlist[j]].x<<"\t"<<Atoms[ATOM->neighlist[j]].y<<"\n";
+				        			break;
+				        		}
+				        	}
+				        }
+					//cout<<j<<"\t"<<flag<<"\n";
+					if(sign!=sign_N && flag)
 					{
 						atom L=*ATOM;
 						atom M=Atoms[ATOM->contigous[D->B]];
@@ -358,6 +423,13 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						double y=-1.*ax/ay*x+A/(2.*ay);
 						double dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
 						double Y=sqrt(pow(x-ax/2.,2)+pow(y-ay/2.,2));
+						int sign_C;
+						if((y-(m*x+C))<0.)
+							sign_C=-1;
+						else
+							sign_C=1;
+						if(sign_C!=sign_N)
+							Y=-1.*Y;
 
 
 				//		cout<<"circum="<<dis<<"\n";
@@ -373,8 +445,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						}
 					}
 				}//j loop 
-				int flag=1;
-				int k;
+				flag=1;
 				for(k=0;k<ATOM->conti;k++)
 				{
 					if(ATOM->contigous[k]==DIS_atom)
@@ -430,6 +501,7 @@ int main()
         infile>>nAtoms;
         infile>>box;
 	twob=2*box;
+	int SAM=0;
         Atoms = new (nothrow) atom[nAtoms];
         long double b,c;				
         nAtoms=0;
@@ -447,23 +519,30 @@ int main()
 //////////	cout<<Atoms[83].neighlist[i]<<"\n";
 ////////	cout<<Atoms[Atoms[83].neighlist[i]].x<<"\t"<<Atoms[Atoms[83].neighlist[i]].y<<"\n";
 ////////}
-	first_delunay(&(Atoms[84]),Atoms);
-	//print_delunay(&(Atoms[83]),Atoms[83].D.initial,Atoms);
-	complete_del(&(Atoms[84]),Atoms,nAtoms);
-////////complete_delunay(&(Atoms[83]),Atoms[83].D.initial,Atoms,nAtoms);
-////////complete_delunay(&(Atoms[83]),Atoms[83].D.initial->next->next,Atoms,nAtoms);
-////////complete_delunay(&(Atoms[83]),Atoms[83].D.initial->next->next->next,Atoms,nAtoms);
-	delunay *D;
-	D=Atoms[84].D.initial;
-	while(1)
+	for(SAM=0;SAM<nAtoms;SAM++)
 	{
-		print_delunay(&(Atoms[84]),D,Atoms);
-		if(D->next)
+		first_delunay(&(Atoms[SAM]),Atoms);
+		//print_delunay(&(Atoms[83]),Atoms[83].D.initial,Atoms);
+		complete_del(&(Atoms[SAM]),Atoms,nAtoms);
+	////////complete_delunay(&(Atoms[83]),Atoms[83].D.initial,Atoms,nAtoms);
+	////////complete_delunay(&(Atoms[83]),Atoms[83].D.initial->next->next,Atoms,nAtoms);
+	////////complete_delunay(&(Atoms[83]),Atoms[83].D.initial->next->next->next,Atoms,nAtoms);
+////////	  for(int i=0;i<Atoms[SAM].conti;i++)
+////////	  	cout<<Atoms[SAM].edge_index[i]<<"\n";
+		delunay *D;
+		D=Atoms[SAM].D.initial;
+		int count=0;
+		while(1)
 		{
-			D=D->next;
+			print_delunay(&(Atoms[SAM]),D,Atoms);
+			count++;
+			if(D->next)
+			{
+				D=D->next;
+			}
+			else
+				break;
 		}
-		else
-			break;
 	}
 ////////print_delunay(&(Atoms[83]),Atoms[83].D.initial,Atoms);
 ////////print_delunay(&(Atoms[83]),Atoms[83].D.initial->next,Atoms);
