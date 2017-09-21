@@ -23,11 +23,12 @@ struct atom
 {
 	double x=0;
 	double y=0;
-	int neighlist[200];
-	int contigous[200];
-	int edge_index[100]={0};
+	int neighlist[500];
+	int contigous[500];
+	int edge_index[500]={0};
 	int neighbours=0;
 	int conti=0;
+	double radius=1.;
 	set_of_delunay D;
  	//delunay D[12];
 };
@@ -504,14 +505,16 @@ int main()
 	density=nAtoms/(twob*twob);
 	int SAM=0;
         Atoms = new (nothrow) atom[nAtoms];
-        long double b,c;				
+        long double b,c,d;				
         nAtoms=0;
 	ofstream vor;
 	vor.open("vor");
-        while(infile>>b>>c) 
+        while(infile>>b>>c>>d) 
 	{ 
             Atoms[nAtoms].x=b;
             Atoms[nAtoms].y=c;
+	    Atoms[nAtoms].radius=d;
+	    //cout<<nAtoms<<"\t"<<b<<"\t"<<c<<"\n";
             nAtoms++;
 	}
 	update_neighbours(Atoms,nAtoms);
@@ -545,11 +548,112 @@ int main()
         		{
         			if(D->A==i)
         			{
-        				vor<<D->circum_x<<"\t"<<D->circum_y<<"\t";
+
+					double rA,rS,rB;
+					double XA,YA,XB,YB;
+					double xA,yA,xB,yB;
+					double l;
+					double X,Y;
+					double DISA;
+					double DISB;
+					double MA,MB,INMA,INMB;
+					double CA,CB;
+					XA=Atoms[Atoms[SAM].contigous[D->A]].x-Atoms[SAM].x;
+					YA=Atoms[Atoms[SAM].contigous[D->A]].y-Atoms[SAM].y;
+					XB=Atoms[Atoms[SAM].contigous[D->B]].x-Atoms[SAM].x;
+					YB=Atoms[Atoms[SAM].contigous[D->B]].y-Atoms[SAM].y;
+					XA=(XA-(twob*lround(XA/twob)));
+					YA=(YA-(twob*lround(YA/twob)));
+					XB=(XB-(twob*lround(XB/twob)));
+					YB=(YB-(twob*lround(YB/twob)));
+				////////cout<<"xa=";
+				  //      cout<<XA<<"\t"<<YA<<"\n";
+				////////cout<<"xb=";
+				    //    cout<<XB<<"\t"<<YB<<"\n";
+					DISA=sqrt(XA*XA+YA*YA);
+					DISB=sqrt(XB*XB+YB*YB);
+				////////cout<<"dis="<<DISA<<"\n";
+				////////cout<<"dis="<<DISB<<"\n";
+					MA=YA/XA;
+					MB=YB/XB;
+					INMA=-1./MA;
+					INMB=-1./MB;
+					rA=Atoms[Atoms[SAM].contigous[D->A]].radius;
+					rB=Atoms[Atoms[SAM].contigous[D->B]].radius;
+				////////cout<<"radiusA="<<rA<<"\n";
+				////////cout<<"radiusb="<<rB<<"\n";
+					rS=Atoms[SAM].radius;
+					//cout<<"radiusS="<<rS<<"\n";
+					l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
+					xA=l/DISA*XA;
+					yA=l/DISA*YA;
+					l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
+					xB=l/DISB*XB;
+					yB=l/DISB*YB;
+					CA=yA-INMA*xA;
+					CB=yB-INMB*xB;
+					X=(CB-CA)/(INMA-INMB);
+					Y=INMA*X+CA;
+				//	cout<<"thisguy2=";
+				//	cout<<X<<"\t"<<Y<<"\n";
+					X=X+Atoms[SAM].x;
+					Y=Y+Atoms[SAM].y;
+				//	cout<<"thisguy=";
+				//	cout<<X<<"\t"<<Y<<"\n";
+					vor<<X<<"\t"<<Y<<"\t";
+
+
+        				//vor<<D->circum_x<<"\t"<<D->circum_y<<"\t";
         			}
         			if(D->B==i)
         			{
-        				vor<<D->circum_x<<"\t"<<D->circum_y<<"\t";
+					double rA,rS,rB;
+					double XA,YA,XB,YB;
+					double xA,yA,xB,yB;
+					double l;
+					double X,Y;
+					double DISA;
+					double DISB;
+					double MA,MB,INMA,INMB;
+					double CA,CB;
+					XA=Atoms[Atoms[SAM].contigous[D->A]].x-Atoms[SAM].x;
+					YA=Atoms[Atoms[SAM].contigous[D->A]].y-Atoms[SAM].y;
+					XB=Atoms[Atoms[SAM].contigous[D->B]].x-Atoms[SAM].x;
+					YB=Atoms[Atoms[SAM].contigous[D->B]].y-Atoms[SAM].y;
+					XA=(XA-(twob*lround(XA/twob)));
+					YA=(YA-(twob*lround(YA/twob)));
+					XB=(XB-(twob*lround(XB/twob)));
+					YB=(YB-(twob*lround(YB/twob)));
+				     // cout<<XA<<"\t"<<YA<<"\n";
+				////////cout<<"x
+				     // cout<<XB<<"\t"<<YB<<"\n";
+					DISA=sqrt(XA*XA+YA*YA);
+					DISB=sqrt(XB*XB+YB*YB);
+					MA=YA/XA;
+					MB=YB/XB;
+					INMA=-1./MA;
+					INMB=-1./MB;
+					rA=Atoms[Atoms[SAM].contigous[D->A]].radius;
+					rB=Atoms[Atoms[SAM].contigous[D->B]].radius;
+					rS=Atoms[SAM].radius;
+					l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
+					xA=l/DISA*XA;
+					yA=l/DISA*YA;
+					l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
+					xB=l/DISB*XB;
+					yB=l/DISB*YB;
+					CA=yA-INMA*xA;
+					CB=yB-INMB*xB;
+					X=(CB-CA)/(INMA-INMB);
+					Y=INMA*X+CA;
+				//	cout<<"thisguy2=";
+					//cout<<X<<"\t"<<Y<<"\n";
+					X=X+Atoms[SAM].x;
+					Y=Y+Atoms[SAM].y;
+					vor<<X<<"\t"<<Y<<"\t";
+				//	cout<<"thisguy=";
+				//	cout<<X<<"\t"<<Y<<"\n";
+        				//vor<<D->circum_x<<"\t"<<D->circum_y<<"\t";
         			}
         			if(D->next)
         				D=D->next;
