@@ -30,13 +30,7 @@ struct atom
 	int conti=0;
 	double radius=1.;
 	set_of_delunay D;
- 	//delunay D[12];
 };
-
-////////struct delunay
-////////{
-////////	atom A,B;
-////////};
 void update_neighbours(atom Atoms[],int nAtoms)
 {
 	double R_CUT;
@@ -70,17 +64,6 @@ void first_delunay(atom *ATOM,atom Atoms[])
 	int nearest,flag;
 	for(int i=0;i<ATOM->neighbours;i++)
 	{
-	////////drx=ATOM->x-Atoms[ATOM->neighlist[i]].x;
-	////////dry=ATOM->y-Atoms[ATOM->neighlist[i]].y;
-	////////drx=(drx-(twob*lround(drx/twob)));
-	////////dry=(dry-(twob*lround(dry/twob)));
-	////////dr=drx*drx+dry*dry;
-	//////////cout<<dr<<"\t"<<i<<"\n";
-	////////if(dr<min)
-	////////{
-	////////	min=dr;
-	////////	nearest=ATOM->neighlist[i];
-	////////}
 		double X,Y,x,y;
 		double rA,rS,DIS,l,dis_i,tan_sq;
 		X=Atoms[ATOM->neighlist[i]].x-ATOM->x;
@@ -127,12 +110,6 @@ void first_delunay(atom *ATOM,atom Atoms[])
 			ay=(ay-(twob*lround(ay/twob)));
 			bx=(bx-(twob*lround(bx/twob)));
 			by=(by-(twob*lround(by/twob)));
-	////////	double A=ax*ax+ay*ay;				
-	////////	double B=bx*bx+by*by;
-	////////	double x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
-	////////	double denom=2.*(ay*bx-ax*by);
-	////////	double y=-1.*ax/ay*x+A/(2.*ay);
-	////////	dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
 			double rA,rS,rB;
 			double XA,YA,XB,YB;
 			double xA,yA,xB,yB;
@@ -142,32 +119,19 @@ void first_delunay(atom *ATOM,atom Atoms[])
 			double MA,MB,INMA,INMB;
 			double CA,CB;
 			double tan_sq;
-			XA=ax;//Atoms[Atoms[SAM].contigous[D->A]].x-Atoms[SAM].x;
-			YA=ay;//Atoms[Atoms[SAM].contigous[D->A]].y-Atoms[SAM].y;
-			XB=bx;//Atoms[Atoms[SAM].contigous[D->B]].x-Atoms[SAM].x;
-			YB=by;//Atoms[Atoms[SAM].contigous[D->B]].y-Atoms[SAM].y;
-		////////XA=(XA-(twob*lround(XA/twob)));
-		////////YA=(YA-(twob*lround(YA/twob)));
-		////////XB=(XB-(twob*lround(XB/twob)));
-		////////YB=(YB-(twob*lround(YB/twob)));
-		////////cout<<"xa=";
-		  //      cout<<XA<<"\t"<<YA<<"\n";
-		////////cout<<"xb=";
-		    //    cout<<XB<<"\t"<<YB<<"\n";
+			XA=ax;
+			YA=ay;
+			XB=bx;
+			YB=by;
 			DISA=sqrt(XA*XA+YA*YA);
 			DISB=sqrt(XB*XB+YB*YB);
-		////////cout<<"dis="<<DISA<<"\n";
-		////////cout<<"dis="<<DISB<<"\n";
 			MA=YA/XA;
 			MB=YB/XB;
 			INMA=-1./MA;
 			INMB=-1./MB;
 			rA=M.radius;
 			rB=R.radius;
-		////////cout<<"radiusA="<<rA<<"\n";
-		////////cout<<"radiusb="<<rB<<"\n";
 			rS=L.radius;
-			//cout<<"radiusS="<<rS<<"\n";
 			l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
 			xA=l/DISA*XA;
 			yA=l/DISA*YA;
@@ -178,14 +142,9 @@ void first_delunay(atom *ATOM,atom Atoms[])
 			CB=yB-INMB*xB;
 			X=(CB-CA)/(INMA-INMB);
 			Y=INMA*X+CA;
-		//	cout<<"thisguy2=";
-		//	cout<<X<<"\t"<<Y<<"\n";
 			tan_sq=X*X+Y*Y-rS*rS;
 			X=X+L.x;
 			Y=Y+L.y;
-////////  		cout<<Atoms[ATOM->neighlist[i]].x<<"\t"<<Atoms[ATOM->neighlist[i]].y<<"\n";
-////////  		cout<<"DIS_MIN="<<DIS_MIN<<"tan="<<tan_sq<<"\n";
-////////		cout<<X<<"\t"<<Y<<"\n";
 			if(DIS_MIN > tan_sq)
 			{
                 		DIS_MIN=tan_sq;
@@ -196,11 +155,7 @@ void first_delunay(atom *ATOM,atom Atoms[])
 		}
 
 	}
-////////cout<<Atoms[ATOM->neighlist[101]].x<<"\t"<<Atoms[ATOM->neighlist[101]].y<<"\n";
-////////cout<<ATOM->neighlist[101]<<"\n";
 	ATOM->contigous[ATOM->conti]=DIS_atom;
-////////cout<<Atoms[ATOM->neighlist[101]].x<<"\t"<<Atoms[ATOM->neighlist[101]].y<<"\n";
-////////cout<<ATOM->neighlist[101]<<"\n";
 	ATOM->edge_index[ATOM->conti]++;
 	ATOM->conti++;
 	ATOM->D.initial= new delunay;
@@ -208,8 +163,6 @@ void first_delunay(atom *ATOM,atom Atoms[])
 	ATOM->D.initial->B=1;
 	ATOM->D.initial->circum_x=circx;
 	ATOM->D.initial->circum_y=circy;
-	//cout<<ATOM->D.initial->A<<"\n";
-	//cout<<ATOM->D.initial<<"\n";
 }
 void print_delunay(atom *ATOM,delunay *D,atom Atoms[])
 {
@@ -234,10 +187,6 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[])
 	Px=(Px-(twob*lround(Px/twob)));
 	Py=(Py-(twob*lround(Py/twob)));
 	cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
-////////Sx=Atoms[ATOM->contigous[D->A]].x-Atoms[ATOM->contigous[D->B]].x;
-////////Sy=Atoms[ATOM->contigous[D->A]].y-Atoms[ATOM->contigous[D->B]].y;
-////////Sx=(Sx-(twob*lround(Sx/twob)));
-////////Sy=(Sy-(twob*lround(Sy/twob)));
 }
 void print_edge(atom *ATOM,delunay *D,atom Atoms[])
 {
@@ -360,32 +309,19 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						double MA,MB,INMA,INMB;
 						double CA,CB;
 						double tan_sq;
-						XA=ax;//Atoms[Atoms[SAM].contigous[D->A]].x-Atoms[SAM].x;
-						YA=ay;//Atoms[Atoms[SAM].contigous[D->A]].y-Atoms[SAM].y;
-						XB=bx;//Atoms[Atoms[SAM].contigous[D->B]].x-Atoms[SAM].x;
-						YB=by;//Atoms[Atoms[SAM].contigous[D->B]].y-Atoms[SAM].y;
-					////////XA=(XA-(twob*lround(XA/twob)));
-					////////YA=(YA-(twob*lround(YA/twob)));
-					////////XB=(XB-(twob*lround(XB/twob)));
-					////////YB=(YB-(twob*lround(YB/twob)));
-					////////cout<<"xa=";
-					  //      cout<<XA<<"\t"<<YA<<"\n";
-					////////cout<<"xb=";
-					    //    cout<<XB<<"\t"<<YB<<"\n";
+						XA=ax;
+						YA=ay;
+						XB=bx;
+						YB=by;
 						DISA=sqrt(XA*XA+YA*YA);
 						DISB=sqrt(XB*XB+YB*YB);
-					////////cout<<"dis="<<DISA<<"\n";
-					////////cout<<"dis="<<DISB<<"\n";
 						MA=YA/XA;
 						MB=YB/XB;
 						INMA=-1./MA;
 						INMB=-1./MB;
 						rA=M.radius;
 						rB=R.radius;
-					////////cout<<"radiusA="<<rA<<"\n";
-					////////cout<<"radiusb="<<rB<<"\n";
 						rS=L.radius;
-						//cout<<"radiusS="<<rS<<"\n";
 						l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
 						xA=l/DISA*XA;
 						yA=l/DISA*YA;
@@ -399,13 +335,6 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 					//	cout<<"thisguy2=";
 					//	cout<<X<<"\t"<<Y<<"\n";
 						tan_sq=X*X+Y*Y-rS*rS;
-				////////	double A=ax*ax+ay*ay;				
-				////////	double B=bx*bx+by*by;
-				////////	double x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
-				////////	double denom=2.*(ay*bx-ax*by);
-				////////	double y=-1.*ax/ay*x+A/(2.*ay);
-				////////	double dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
-				////////	double Y=sqrt(pow(x-ax/2.,2)+pow(y-ay/2.,2));
 						double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
 						int sign_C;
 						if((Y-(m*X+C))<0.)
@@ -547,32 +476,19 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						double MA,MB,INMA,INMB;
 						double CA,CB;
 						double tan_sq;
-						XA=ax;//Atoms[Atoms[SAM].contigous[D->A]].x-Atoms[SAM].x;
-						YA=ay;//Atoms[Atoms[SAM].contigous[D->A]].y-Atoms[SAM].y;
-						XB=bx;//Atoms[Atoms[SAM].contigous[D->B]].x-Atoms[SAM].x;
-						YB=by;//Atoms[Atoms[SAM].contigous[D->B]].y-Atoms[SAM].y;
-					////////XA=(XA-(twob*lround(XA/twob)));
-					////////YA=(YA-(twob*lround(YA/twob)));
-					////////XB=(XB-(twob*lround(XB/twob)));
-					////////YB=(YB-(twob*lround(YB/twob)));
-					////////cout<<"xa=";
-					  //      cout<<XA<<"\t"<<YA<<"\n";
-					////////cout<<"xb=";
-					    //    cout<<XB<<"\t"<<YB<<"\n";
+						XA=ax;
+						YA=ay;
+						XB=bx;
+						YB=by;
 						DISA=sqrt(XA*XA+YA*YA);
 						DISB=sqrt(XB*XB+YB*YB);
-					////////cout<<"dis="<<DISA<<"\n";
-					////////cout<<"dis="<<DISB<<"\n";
 						MA=YA/XA;
 						MB=YB/XB;
 						INMA=-1./MA;
 						INMB=-1./MB;
 						rA=M.radius;
 						rB=R.radius;
-					////////cout<<"radiusA="<<rA<<"\n";
-					////////cout<<"radiusb="<<rB<<"\n";
 						rS=L.radius;
-						//cout<<"radiusS="<<rS<<"\n";
 						l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
 						xA=l/DISA*XA;
 						yA=l/DISA*YA;
@@ -583,16 +499,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						CB=yB-INMB*xB;
 						X=(CB-CA)/(INMA-INMB);
 						Y=INMA*X+CA;
-					//	cout<<"thisguy2=";
-					//	cout<<X<<"\t"<<Y<<"\n";
 						tan_sq=X*X+Y*Y-rS*rS;
-				////////	double A=ax*ax+ay*ay;				
-				////////	double B=bx*bx+by*by;
-				////////	double x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
-				////////	double denom=2.*(ay*bx-ax*by);
-				////////	double y=-1.*ax/ay*x+A/(2.*ay);
-				////////	double dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
-				////////	double Y=sqrt(pow(x-ax/2.,2)+pow(y-ay/2.,2));
 						double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
 						int sign_C;
 						if((Y-(m*X+C))<0.)
@@ -613,33 +520,6 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 							circy=Y;
 
 						}
-					////////double A=ax*ax+ay*ay;				
-					////////double B=bx*bx+by*by;
-					////////double x=0.5*(ay*B-by*A)/(ay*bx-ax*by);
-					////////double denom=2.*(ay*bx-ax*by);
-					////////double y=-1.*ax/ay*x+A/(2.*ay);
-					////////double dis=sqrt(pow(x-ax,2)+pow(y-ay,2));
-					////////double Y=sqrt(pow(x-ax/2.,2)+pow(y-ay/2.,2));
-					////////int sign_C;
-					////////if((y-(m*x+C))<0.)
-					////////	sign_C=-1;
-					////////else
-					////////	sign_C=1;
-					////////if(sign_C!=sign_N)
-					////////	Y=-1.*Y;
-
-				        //////////cout<<j<<"\t"<<Atoms[ATOM->neighlist[j]].x<<"\t"<<Atoms[ATOM->neighlist[j]].y<<"\t";
-					//////////cout<<Y<<"\n";
-
-					////////if(Y<Y_MIN)
-					////////{
-					////////	;
-					////////	Y_MIN=Y;
-					////////        DIS_atom=ATOM->neighlist[j];
-					////////	circx=x+L.x;
-					////////	circy=y+L.y;
-
-					////////}
 					}
 				}//j loop 
 				flag=1;
