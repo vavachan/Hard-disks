@@ -666,6 +666,7 @@ int main()
 			//cout<<a<<"\t"<<b<<"\t"<<p<<"\t"<<q<<"\n";
                 	
                 }
+                D=Atoms[SAM].D.initial;
 
 		while(1)
 		{
