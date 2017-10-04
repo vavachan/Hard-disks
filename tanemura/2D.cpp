@@ -7,6 +7,7 @@ double twob;
 double density;
 struct atom;
 struct face;
+struct vertice;
 struct site
 {
 	double x=0;
@@ -26,40 +27,70 @@ struct half_edge
 	struct face *facing=NULL;
 };
 //definition of vertice
-struct vertice
-{
-	struct site *p=NULL;
-	struct half_edge *leaving=NULL;
-	struct vertice *next=NULL;
-	struct vertice *prev=NULL;
-}*start;
 //definition of face
 struct face
 {
 	struct site *p=NULL;
 	struct half_edge *edge=NULL;
 };
-//CLASS TO IMPLEMENT THE DCEL
-class DCEL
-{
-	public:
-		struct vertice *origin=NULL;
-		
-}*vor;
 
 class vert_list
 {
 	public:
 		vertice* insert_vertice(vertice *,vertice *);
+		void display_vertex(vertice *);
+		void display_conn(vertice *ve);
 }*V;
+struct vertice
+{
+	struct site *p=NULL;
+	struct half_edge *leaving=NULL;
+	struct vertice *next=NULL;
+	struct vertice *prev=NULL;
+	//vert_list *V;
+	vertice *neib_vert[10];
+	int v_neigh_count=0;
+}*start;
+void add_connected(vertice *focus,vertice *add)
+{
+	int flag=1;
+	for(int i=0;i<focus->v_neigh_count;i++)
+	{
+		if(focus->neib_vert[i]==add)
+		{
+			flag=0;
+			break;
+		}
+	}
+	if(flag)
+	{
+		focus->neib_vert[focus->v_neigh_count]=add;
+		focus->v_neigh_count=focus->v_neigh_count+1;
+	}
+
+}
 int compare(struct site *p1,struct site *p2)
 {
-	if( p1->y > p2->y )
-		return 1;
+        double DX,DY;
+        DX=p1->x-p2->x;
+        DY=p1->y-p2->y;
+	//cout<<DX<<"\t"<<DY<<"\n";	
+        DX=(DX-(twob*lround(DX/twob)));
+        DY=(DY-(twob*lround(DY/twob)));
+////////if( DY > 0.  )
+////////	return 1;
+////////else if ((  DY == 0. ) && ( DX > 0. ) )
+////////	return 1;
+////////else if ( ( DY==0.) && ( DX == 0. ) )
+////////	return 0;
+////////else 
+////////	return -1;
+	if( abs(DY) <0.0001  && abs(DX) <0.0001 )
+		return 0;
 	else if ( (p1->y == p2->y) && ( p1->x > p2->x ) )
 		return 1;
-	else if ( (p1->y == p2->y) && ( p1->x == p2->x ) )
-		return 0;
+	else if( p1->y > p2->y ) 
+		return 1;
 	else 
 		return -1;
 }
@@ -67,11 +98,11 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v)
 {
 	int flag;
 	flag=compare(EV->p,v->p);
-	//cout<<"insert\n";
-	//display_SITE(v->p);
-	//cout<<"vetfoc\n";
-	//display_SITE(EV->p);
-	//cout<<"flag\t"<<flag<<"\n";
+      //cout<<"insert\n";
+      //display_SITE(v->p);
+      //cout<<"vetfoc\n";
+      //display_SITE(EV->p);
+      //cout<<"flag\t"<<flag<<"\n";
 	if(flag==1)
 	{
 		if(EV->next)
@@ -103,36 +134,50 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v)
 	}
 	else if (flag==0)
 	{
-	//	cout<<"vertice already exists\n";
+		//cout<<"vertice already exists\n";
 		delete v;
 		return EV;
 	}
-////////if(EV->next)
-////////{
-////////	flag=compare(EV->next->p,v->p);
-////////	if(flag==1)
-////////		insert_vertice(EV->next,v);
-////////	else if (flag == -1)
-////////	{
-////////	}
-////////	else if(flag==0)
-////////	{
-////////	}
-////////		
-////////}
-////////else
-////////{
-////////	EV->next=v;
-////////	return v;
-////////}
+}
+void vert_list::display_vertex(vertice *start)
+{
+	display_SITE(start->p);
+	if(start->next)
+		display_vertex(start->next);
+	else 
+		return;
+	;
+}
+void vert_list::display_conn(vertice *ve)
+{
+	if(ve->v_neigh_count==3)
+	{
+		cout<<"#"<<ve->v_neigh_count<<"\n";
+		for(int i=0;i<ve->v_neigh_count;i++)
+		{
+			double Sx,Sy;
+			Sx=ve->neib_vert[i]->p->x-ve->p->x;
+			Sy=ve->neib_vert[i]->p->y-ve->p->y;
+			Sx=(Sx-(twob*lround(Sx/twob)));
+			Sy=(Sy-(twob*lround(Sy/twob)));
+			cout<<ve->p->x<<"\t"<<ve->p->y<<"\t"<<Sx+ve->p->x<<"\t"<<Sy+ve->p->y<<"\n";
+		}
+	}
+        if(ve->next)
+        	display_conn(ve->next);
+        else 
+		return;
+
 }
 void display_a_edge(struct half_edge *first,struct half_edge *E)
 {
 	ofstream DEL;
-	///cout<<"d therer ana\n";
+	//cout<<"d therer ana\n";
 	DEL.open("dcel",ios::app);
 	//DEL<<"#"<<E->facing->p->x<<" "<<E->facing->p->y<<"\n";
+	//cout<<E->origin->p<<"\n";
 	DEL<<E->origin->p->x<<"\t"<<E->origin->p->y<<"\t"<<E->twin->origin->p->x<<"\t"<<E->twin->origin->p->y<<"\n";
+	//cout<<"d trer ana\n";
 	DEL.close();
 	if(E->next)
 	{
@@ -740,10 +785,10 @@ int main()
 	}
 	update_neighbours(Atoms,nAtoms);
 	double area=0;
-	for(SAM=2;SAM<3;SAM++)
+	vertice *save;
+	for(SAM=0;SAM<nAtoms;SAM++)
 	{
-	    //  for(int i=0;i<Atoms[SAM].neighbours;i++)
-	    //  	cout<<i<<"\t"<<Atoms[Atoms[SAM].neighlist[i]].x<<"\t"<<Atoms[Atoms[SAM].neighlist[i]].y<<"\n";
+		{	
 		first_delunay(&(Atoms[SAM]),Atoms);
 		complete_del(&(Atoms[SAM]),Atoms,nAtoms);
 		delunay *D;
@@ -761,15 +806,15 @@ int main()
 				break;
 		}
 		D=Atoms[SAM].D.initial;
-		if(!Atoms[SAM].F)
-			Atoms[SAM].F=new face;
-		//cout<<"here\n";
 		double area_s=0;
+		//cout<<SAM<<"sam\n";
                 for(int i=0;i<Atoms[SAM].conti;i++)
                 {
+			//cout<<"what\n";
                 	D=Atoms[SAM].D.initial;
                 	vor<<"\n";
-                	cout<<i<<"\n";
+		        //cout<<Atoms[SAM].contigous[i]<<"\n";
+		////////cout<<Atoms[Atoms[SAM].contigous[i]].x<<"\t"<<Atoms[Atoms[SAM].contigous[i]].y<<"\n";
 			double a,b,p,q,x,y;
 			x=Atoms[SAM].x;
 			y=Atoms[SAM].y;
@@ -808,126 +853,47 @@ int main()
                 		}
                 		
                 	}
-			cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t";
-			vertice *temp_vert_o;
-			vertice *temp_vert_d;
-			if(!start)
-			{
-				start=new vertice;
-				start->p=new site;
-				start->p->x=D_ONE->circum_x;
-				start->p->y=D_ONE->circum_y;
-				temp_vert_o=start;
-			}
-			else 
-			{
-				vertice *temp;
-				temp=new vertice;
-				temp->p=new site;
-				temp->p->x=D_ONE->circum_x;
+	        	//cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t";
+	        	vertice *temp_vert_o;
+	        	vertice *temp_vert_d;
+	        	if(!start)
+	        	{
+	        		start=new vertice;
+	        		start->p=new site;
+	        		start->p->x=D_ONE->circum_x;
+	        		start->p->y=D_ONE->circum_y;
+	        		temp_vert_o=start;
+	        	}
+	        	else 
+	        	{
+	        		vertice *temp;
+	        		temp=new vertice;
+	        		temp->p=new site;
+	        		temp->p->x=D_ONE->circum_x;
                                 temp->p->y=D_ONE->circum_y;
-				temp=V->insert_vertice(start,temp);
-				///display_SITE(temp->p);
-				temp_vert_o=temp;
-			}
-			cout<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n";
-			vertice *temp;
-			temp=new vertice;
-			temp->p=new site;
-			temp->p->x=D_TWO->circum_x;
+	        		temp=V->insert_vertice(start,temp);
+	        		//display_SITE(temp->p);
+	        		temp_vert_o=temp;
+	        	}
+	        	//cout<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n";
+	        	vertice *temp;
+	        	temp=new vertice;
+	        	temp->p=new site;
+	        	temp->p->x=D_TWO->circum_x;
                         temp->p->y=D_TWO->circum_y;
-			temp=V->insert_vertice(start,temp);
-			//display_SITE(temp->p);
-			temp_vert_d=temp;
-			half_edge *temp_edge;
-			temp_edge=new half_edge;
-			temp_edge->origin=temp_vert_o;
-			temp_edge->twin= new half_edge;
-			temp_edge->twin->origin=temp_vert_d;
-			temp_edge->twin->twin=temp_edge;
-			half_edge *temp_face_edge;
-			half_edge *temp_face_edge_twin;
-			if(!Atoms[SAM].F->edge)
-			{
-				Atoms[SAM].F->edge=temp_edge;
-			}
-			else 
-			{
-				temp_face_edge=Atoms[SAM].F->edge;
-	////////		cout<<"about to be added\n";
-	////////		display_SITE(temp_edge->twin->origin->p);
-	////////		cout<<"ein\n";
-				if(Atoms[SAM].F->edge->origin==temp_edge->twin->origin)
-				{
-					temp_edge->next=Atoms[SAM].F->edge;
-					Atoms[SAM].F->edge=temp_edge;
-				////////if(!Atoms[Atoms[SAM].contigous[i]].F)
-				////////{
-				////////	Atoms[Atoms[SAM].contigous[i]].F=new face;
-				////////	Atoms[Atoms[SAM].contigous[i]].F->edge=temp_edge->twin;
-				////////}
-				////////else 
-				////////{
-				////////	temp_face_edge_twin=Atoms[Atoms[SAM].contigous[i]].F->edge->next;
-				////////	//if(Atoms[Atoms[SAM].contigous[i]].F->edge->origin=tempI
-
-				////////}
-				}
-				else if(Atoms[SAM].F->edge->origin==temp_edge->origin)
-				{
-					//cout<<"why not here ?";
-					temp_edge->twin->next=Atoms[SAM].F->edge;
-					Atoms[SAM].F->edge=temp_edge->twin;
-				}
-				else 
-				{
-					while(1)
-					{
-					//	cout<<"edge in consideration\n";
-						//display_SITE(temp_face_edge->origin->p);
-					//	display_SITE(temp_face_edge->twin->origin->p);
-					//	display_SITE(temp_edge->origin->p);
-					//	cout<<temp_face_edge->twin->origin<<"\n";
-					//	cout<<temp_edge->origin<<"\n";
-						
-					//	cout<<"end\n";
-						if(temp_face_edge->next)
-						{
-					//		cout<<"never here?";
-							temp_face_edge=temp_face_edge->next;
-							//cout<<"here\n";
-						}
-						else if (temp_face_edge->twin->origin==temp_edge->origin)
-						{
-					//		cout<<"why not\n";
-							temp_face_edge->next=temp_edge;
-							break;
-						}
-						else if (temp_face_edge->twin->origin==temp_edge->twin->origin)
-						{
-							temp_face_edge->next=temp_edge->twin;
-							break;
-						}
-						else
-						{
-					//		cout<<"this guy\n";
-							break;
-						}
-					}
-				}
-				//cout<<"here2\n";
-			}
-				//cout<<"here3\n";
-	////////	if(!Atoms[SAM].F->edge)
-	////////		Atoms[SAM].F->edge=temp_vert_o;
-	////////	else
-	////////	{
-
-	////////	}
+	        	temp=V->insert_vertice(start,temp);
+	        	//display_SITE(temp->p);
+	        	temp_vert_d=temp;
+	        	half_edge *temp_edge;
+	        	temp_edge=new half_edge;
+	        	temp_edge->origin=temp_vert_o;
+	        	temp_edge->twin= new half_edge;
+	        	temp_edge->twin->origin=temp_vert_d;
+	        	temp_edge->twin->twin=temp_edge;
+			add_connected(temp_vert_o,temp_vert_d);
+			add_connected(temp_vert_d,temp_vert_o);
                 }
                 D=Atoms[SAM].D.initial;
-		display_a_edge(Atoms[SAM].F->edge,Atoms[SAM].F->edge);
-		//cout<<"here4\n";
 		while(1)
 		{
 			delunay *temp;
@@ -944,7 +910,10 @@ int main()
 			}
 
 		}
+		
+		}
 	}
+	V->display_conn(start);
 	delete[] Atoms;
 	return 0;
 }
