@@ -5,6 +5,7 @@ using namespace std;
 double box=0;
 double twob;
 double density;
+double r_cut=0.5;
 struct atom;
 struct face;
 struct vertice;
@@ -47,11 +48,15 @@ struct vertice
 	struct half_edge *leaving=NULL;
 	struct vertice *next=NULL;
 	struct vertice *prev=NULL;
+	int A,B,C,D;
+	int is_void=0;
+	int cluster_index=-1;
 	//vert_list *V;
 	vertice *neib_vert[10];
+	int neib_ed[10];
 	int v_neigh_count=0;
 }*start;
-void add_connected(vertice *focus,vertice *add)
+void add_connected(vertice *focus,vertice *add,int binv)
 {
 	int flag=1;
 	for(int i=0;i<focus->v_neigh_count;i++)
@@ -65,6 +70,7 @@ void add_connected(vertice *focus,vertice *add)
 	if(flag)
 	{
 		focus->neib_vert[focus->v_neigh_count]=add;
+		focus->neib_ed[focus->v_neigh_count]=binv;
 		focus->v_neigh_count=focus->v_neigh_count+1;
 	}
 
@@ -77,6 +83,7 @@ int compare(struct site *p1,struct site *p2)
 	//cout<<DX<<"\t"<<DY<<"\n";	
         DX=(DX-(twob*lround(DX/twob)));
         DY=(DY-(twob*lround(DY/twob)));
+	//cout<<DX<<"\t"<<DY<<"\n";	
 ////////if( DY > 0.  )
 ////////	return 1;
 ////////else if ((  DY == 0. ) && ( DX > 0. ) )
@@ -98,11 +105,11 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v)
 {
 	int flag;
 	flag=compare(EV->p,v->p);
-      //cout<<"insert\n";
-      //display_SITE(v->p);
-      //cout<<"vetfoc\n";
-      //display_SITE(EV->p);
-      //cout<<"flag\t"<<flag<<"\n";
+//      cout<<"insert\n";
+//      display_SITE(v->p);
+//      cout<<"vetfoc\n";
+//      display_SITE(EV->p);
+//      cout<<"flag\t"<<flag<<"\n";
 	if(flag==1)
 	{
 		if(EV->next)
@@ -135,6 +142,7 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v)
 	else if (flag==0)
 	{
 		//cout<<"vertice already exists\n";
+		delete v->p;
 		delete v;
 		return EV;
 	}
@@ -150,7 +158,7 @@ void vert_list::display_vertex(vertice *start)
 }
 void vert_list::display_conn(vertice *ve)
 {
-	if(ve->v_neigh_count==3)
+	if(ve->v_neigh_count==2)
 	{
 		cout<<"#"<<ve->v_neigh_count<<"\n";
 		for(int i=0;i<ve->v_neigh_count;i++)
@@ -198,6 +206,7 @@ struct delunay
 {
 	int A;
 	int B;
+	int C;
 	double circum_x=0.;
 	double circum_y=0.;
 	delunay *next=NULL;
@@ -213,6 +222,7 @@ struct atom
 	double y=0;
 	int neighlist[500];
 	int contigous[500];
+	int bondinvoid[500];
 	int edge_index[500]={0};
 	int neighbours=0;
 	int conti=0;
@@ -251,6 +261,7 @@ void first_delunay(atom *ATOM,atom Atoms[])
 	double drx,dry,dr;
 	double min=2.*twob*twob;
 	int nearest,flag;
+	int binv=0;
 	for(int i=0;i<ATOM->neighbours;i++)
 	{
 		double X,Y,x,y;
@@ -271,9 +282,15 @@ void first_delunay(atom *ATOM,atom Atoms[])
 		{
 			min=tan_sq;
 	        	nearest=ATOM->neighlist[i];
+			binv=0;
+			if(l>rS+r_cut && l<DIS-(rA+r_cut))
+			{
+				binv=1;
+			}
 		}
 
 	}
+	ATOM->bondinvoid[ATOM->conti]=binv;
 	ATOM->contigous[ATOM->conti]=nearest;
 	ATOM->edge_index[ATOM->conti]++;
 	ATOM->conti++;
@@ -340,10 +357,16 @@ void first_delunay(atom *ATOM,atom Atoms[])
                 		DIS_atom=ATOM->neighlist[i];
 	        		circx=X;
 	        		circy=Y;
+				binv=0;
+				if(l>(rS+r_cut) && l<DISB-(rB+r_cut))
+				{
+					binv=1;
+				}
 			}
 		}
 
 	}
+	ATOM->bondinvoid[ATOM->conti]=binv;
 	ATOM->contigous[ATOM->conti]=DIS_atom;
 	ATOM->edge_index[ATOM->conti]++;
 	ATOM->conti++;
@@ -396,6 +419,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 {
 	double Y_MIN=box*box;
 	int DIS_atom;
+	int binv;
 	for(int i=0;i<ATOM->conti;i++)
 	{
 		Y_MIN=box*box;
@@ -542,6 +566,11 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						        DIS_atom=ATOM->neighlist[j];
 							circx=X;
 							circy=Y;
+							binv=0;
+							if(l>rS+r_cut && l<DISB-(rB+r_cut))
+							{
+								binv=1;
+							}
 
 						}
 					}
@@ -559,6 +588,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 
 				if(flag)
 				{
+					ATOM->bondinvoid[ATOM->conti]=binv;
 					ATOM->contigous[ATOM->conti]=DIS_atom;
 					ATOM->edge_index[D->A]++;
 					ATOM->edge_index[ATOM->conti]++;
@@ -707,6 +737,11 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						        DIS_atom=ATOM->neighlist[j];
 							circx=X;
 							circy=Y;
+							binv=0;
+							if(l>rS+r_cut && l<DISB-(rB+r_cut))
+							{
+								binv=1;
+							}
 
 						}
 					}
@@ -723,6 +758,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 
 				if(flag)
 				{
+					ATOM->bondinvoid[ATOM->conti]=binv;
 					ATOM->contigous[ATOM->conti]=DIS_atom;
 					ATOM->edge_index[D->B]++;
 					ATOM->edge_index[ATOM->conti]++;
@@ -771,11 +807,11 @@ int main()
 	density=nAtoms/(twob*twob);
 	int SAM=0;
         Atoms = new (nothrow) atom[nAtoms];
-        long double b,c,d;				
+        long double b,c,d,e;				
         nAtoms=0;
 	ofstream vor;
 	vor.open("vor");
-        while(infile>>b>>c>>d) 
+        while(infile>>b>>c>>d>>e) 
 	{ 
             Atoms[nAtoms].x=b;
             Atoms[nAtoms].y=c;
@@ -786,6 +822,7 @@ int main()
 	update_neighbours(Atoms,nAtoms);
 	double area=0;
 	vertice *save;
+		//cout<<"here\n";
 	for(SAM=0;SAM<nAtoms;SAM++)
 	{
 		{	
@@ -871,6 +908,9 @@ int main()
 	        		temp->p=new site;
 	        		temp->p->x=D_ONE->circum_x;
                                 temp->p->y=D_ONE->circum_y;
+				temp->A=SAM;
+				temp->B=D_ONE->A;
+				temp->C=D_ONE->B;
 	        		temp=V->insert_vertice(start,temp);
 	        		//display_SITE(temp->p);
 	        		temp_vert_o=temp;
@@ -881,17 +921,14 @@ int main()
 	        	temp->p=new site;
 	        	temp->p->x=D_TWO->circum_x;
                         temp->p->y=D_TWO->circum_y;
+			temp->A=SAM;
+			temp->B=D_TWO->A;
+			temp->C=D_TWO->B;
 	        	temp=V->insert_vertice(start,temp);
 	        	//display_SITE(temp->p);
 	        	temp_vert_d=temp;
-	        	half_edge *temp_edge;
-	        	temp_edge=new half_edge;
-	        	temp_edge->origin=temp_vert_o;
-	        	temp_edge->twin= new half_edge;
-	        	temp_edge->twin->origin=temp_vert_d;
-	        	temp_edge->twin->twin=temp_edge;
-			add_connected(temp_vert_o,temp_vert_d);
-			add_connected(temp_vert_d,temp_vert_o);
+			add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i]);
+			add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i]);
                 }
                 D=Atoms[SAM].D.initial;
 		while(1)
@@ -913,7 +950,160 @@ int main()
 		
 		}
 	}
-	V->display_conn(start);
+	vertice *temp_start;
+	temp_start=start;
+	double r_cut_sq=0.5*0.5;
+	int void_vert_count=0;
+	while(1)
+	{
+		int flag=1;
+		for(int i=0;i<nAtoms;i++)
+		{
+			double AX,AY,BX,BY;
+			AX=Atoms[i].x;
+			AY=Atoms[i].y;
+			BX=temp_start->p->x;
+			BY=temp_start->p->y;
+			double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+			if(dis<r_cut+Atoms[i].radius)
+			{
+				flag=0;
+				break;
+			}
+			
+		}	
+		if(flag)
+		{
+			temp_start->is_void=1;
+			temp_start->cluster_index=void_vert_count;
+			void_vert_count=void_vert_count+1;
+			//cout<<temp_start->p->x<<"\t"<<temp_start->p->y<<"\n";
+		}
+		if(temp_start->next)
+			temp_start=temp_start->next;
+		else
+			break;
+	}
+	vertice **cavity_list;
+	cavity_list = new (nothrow) vertice*[void_vert_count];
+	temp_start=start;
+	int i=0;
+	while(1)
+	{
+		if(temp_start->is_void)
+		{
+			cavity_list[i]=temp_start;
+			i++;
+			//cout<<i<<"\t"<<cavity_list[i]<<"\t"<<temp_start<<"\n";;
+		}
+		if(temp_start->next)
+			temp_start=temp_start->next;
+		else
+			break;
+
+	}
+////////for(int i=0;i<void_vert_count;i++)
+////////{
+////////	cout<<cavity_list[i]<<"\n";
+////////	cout<<cavity_list[i]->p->x<<"\t"<<cavity_list[i]->p->y<<"\n";
+////////}
+	//return 0;
+	int change=1;
+	int *old_label;
+	old_label=new (nothrow) int[void_vert_count];
+	int min;
+//	cout<<void_vert_count<<"\n";
+	while(change)
+	{
+			//cout<<cavity_list[0]<<"\n";
+        	for(int i=0;i<void_vert_count;i++)
+        	{
+			//cout<<i<<"\t"<<cavity_list[0]<<"\n";
+        		old_label[i]=cavity_list[i]->cluster_index;
+        		//cout<<i<<"\t"<<old_label[i]<<"\n";
+        	}
+			//cout<<cavity_list[0]<<"\n";
+		for(int i=0;i<void_vert_count;i++)
+		{
+			//cout<<i<<"\n";
+			min=cavity_list[i]->cluster_index;
+////////		cout<<i<<"\n";
+////////		cout<<cavity_list[i]->v_neigh_count<<"\n";
+			for(int n=0;n<cavity_list[i]->v_neigh_count;n++)
+			{
+				//cout<<"n="<<n<<"\n";
+				//if(cavity_list[i]->neib_vert[n]->cluster_index==751)
+				//cout<<i<<"\t"<<n<<"\t"<<cavity_list[i]->neib_ed[n]<<"\n";
+				if(cavity_list[i]->neib_vert[n]->cluster_index != -1 && cavity_list[i]->neib_ed[n])
+				{
+					if(min>cavity_list[i]->neib_vert[n]->cluster_index)
+						min=cavity_list[i]->neib_vert[n]->cluster_index;
+				}
+				else
+				{
+					//cout<<"these guys\n";
+				}
+
+			}
+			for(int n=0;n<cavity_list[i]->v_neigh_count;n++)
+			{
+				if(cavity_list[i]->neib_vert[n]->cluster_index != -1 && cavity_list[i]->neib_ed[n])
+					cavity_list[i]->neib_vert[n]->cluster_index=min;
+			}
+
+		}
+		//cout<<"here1\n";
+		change=0;
+		int flag=0;
+		for(int i=0; i<void_vert_count; i++) 
+		{
+		    flag=(old_label[i]!=cavity_list[i]->cluster_index);
+		    if(flag) 
+		    {
+			change=1;
+			break;
+		    }
+		}
+
+	}
+        for(int i=0;i<void_vert_count;i++)
+	{
+		cout<<"#"<<i<<"\n";
+		for(int j=0;j<void_vert_count;j++)
+			if(cavity_list[j]->cluster_index==i)
+			{
+		        	cout<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\n";
+			}
+
+	}
+	temp_start=start;
+	while(1)
+	{
+		vertice *temp;
+		temp=temp_start;
+		if(temp_start->next)
+		{
+			temp_start=temp_start->next;
+			delete temp->p;
+			delete temp;
+		}
+		else
+		{
+			delete temp->p;
+			delete temp;
+			break;
+		}
+		
+	}
+
+	//cout<<void_vert_count<<"\n";
+	
+
+	//V->display_conn(start);
+	//V->display_vertex(start);
+	
 	delete[] Atoms;
+	delete[] cavity_list;
+	delete[] old_label;
 	return 0;
 }
