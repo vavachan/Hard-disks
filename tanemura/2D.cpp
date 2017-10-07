@@ -5,7 +5,7 @@ using namespace std;
 double box=0;
 double twob;
 double density;
-double r_cut=0.5;
+double r_cut=0.0;
 struct atom;
 struct face;
 struct vertice;
@@ -382,8 +382,10 @@ void first_delunay(atom *ATOM,atom Atoms[])
 	        		circx=X;
 	        		circy=Y;
 				binv1=0;
+				//cout<<DIS_atom<<"\n";
 				if(DISB>(rB+rS+2*r_cut))
 				{
+					//cout<<"here\n";
 					binv1=1;
 				}
 			////////if(Y_AXIS < 0.)
@@ -490,7 +492,8 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 			}
 			if(i==D->A)
 			{
-				//cout<<"hereA\n";
+			////////cout<<"hereA\n";
+			////////cout<<i<<"\n";
 				double a=ATOM->x;
 				double b=ATOM->y;
 				double c=Atoms[ATOM->contigous[D->A]].x;	
@@ -686,7 +689,8 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 			}// D->A loop
 			else
 			{
-				//cout<<"hereb\n";
+			////////cout<<"hereb\n";
+			////////cout<<i<<"\n";
 				double a=ATOM->x;
 				double b=ATOM->y;
 				double c=Atoms[ATOM->contigous[D->B]].x;	
@@ -806,7 +810,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 							{
 								binv=1;
 							}
-							if((D->circum_y-(m*D->circum_x+C))<0.)
+							if(((D->circum_y-L.y)-(m*(D->circum_x-L.x)+C))<0.)
 								sign_circ=-1;
 							else
 								sign_circ=1;
@@ -829,6 +833,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 					}
 				}//j loop 
 				flag=1;
+				//cout<<ATOM->contigous[D->B]<<"\n";
 				if(temp1)
 					ATOM->bondinvoid[D->B]=1;
 				for(k=0;k<ATOM->conti;k++)
@@ -899,7 +904,7 @@ int main()
 	{ 
             Atoms[nAtoms].x=b;
             Atoms[nAtoms].y=c;
-	    Atoms[nAtoms].radius=d;
+	    Atoms[nAtoms].radius=e;
 	    //cout<<nAtoms<<"\t"<<b<<"\t"<<c<<"\n";
             nAtoms++;
 	}
@@ -1017,14 +1022,14 @@ int main()
 	        	temp_vert_d=temp;
 			add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i]);
 			add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i]);
-		      //if(SAM==1756 )
-		      //{
-		      //	cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\n";
-		      //	cout<<Atoms[SAM].contigous[i]<<"\t"<<Atoms[SAM].bondinvoid[i]<<"\n";
-		      //	cout<<Atoms[Atoms[SAM].contigous[i]].x<<"\t"<<Atoms[Atoms[SAM].contigous[i]].y<<"\n";
-		      //	display_SITE(temp_vert_o->p);
-		      //	display_SITE(temp_vert_d->p);
-		      //}
+	////////        if(SAM==430 )
+	////////        {
+	////////        	cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\n";
+	////////        	cout<<Atoms[SAM].contigous[i]<<"\t"<<Atoms[SAM].bondinvoid[i]<<"\n";
+	////////        	cout<<Atoms[Atoms[SAM].contigous[i]].x<<"\t"<<Atoms[Atoms[SAM].contigous[i]].y<<"\n";
+	////////        	display_SITE(temp_vert_o->p);
+	////////        	display_SITE(temp_vert_d->p);
+	////////        }
 
                 }
 		
@@ -1160,6 +1165,17 @@ int main()
 
 	}
 	//V->display_conn(start);
+	//CALCULATING THE VOID VOLUME IN A GIVEN CAVITY
+	double *cav_vol;
+	cav_vol= new (nothrow) double[void_vert_count]; 
+	for(int i=0;i<void_vert_count;i++)
+	{
+		cav_vol[i]=0;
+		for(int j=0;j<void_vert_count;j++)
+		{
+
+		}
+	}
 	temp_start=start;
 	while(1)
 	{
