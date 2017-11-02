@@ -251,12 +251,9 @@ double perimeter(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay
 	dis=sqrt(distance((E12x-Ax),(E12y-Ay)));
 	if(dis<Arad)
 	{
-		//cout<<dis<<"\t"<<Arad<<"\n";
 		disint=sqrt(Arad*Arad-dis*dis);
 		dise=sqrt(distance(E12x,E12y));
 		disv=sqrt(distance(Ax,Ay));
-		//E12x=(E12x-(twob*lround(E12x/twob)));
-		//E12y=(E12y-(twob*lround(E12y/twob)));
 		double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
 		Aintx=(dise-disint)/dise*E12x;
 		Ainty=(dise-disint)/dise*E12y;
@@ -269,57 +266,24 @@ double perimeter(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay
 		double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
 		if((X2*X1+Y1*Y2)/(Arad*Arad)>1.)
 			theta=0.;
-		//cout<<theta<<"=theta\n";
 		perimeter=2.*M_PI*Arad*(theta/(2.*M_PI));
 		return perimeter;
-	////////double a,b,p,q;
-	////////a=Ax;
-	////////b=Ay;
-	////////p=Aintx;
-	////////q=Ainty;
-	////////areat=0.5*abs(a*q-b*p);
-	//////////cout<<areat-areac<<"\n";
-	////////return areat-areac;
 	}
 	else
 	{
-		//double X1,X2;
-		//dise=sqrt(distance(E12x,E12y));
 		disv=sqrt(distance(Ax,Ay));
-		//E12x=(E12x-(twob*lround(E12x/twob)));
-		//E12y=(E12y-(twob*lround(E12y/twob)));
 		double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
-	////////Aintx=Arad/dis*E12x;
-	////////Ainty=Arad/dis*E12y;
 		Aint1x=(disv-Arad)/disv*Ax;
 		Aint1y=(disv-Arad)/disv*Ay;
-		//cout<<Aint1x<<"\t"<<Aint1y<<"\n";
 		X1=E12x-Ax;
 		Y1=E12y-Ay;
 		X2=Aint1x-Ax;
 		Y2=Aint1y-Ay;
-		//cout<<X1<<"\t"<<Y1<<"\n";
-		//cout<<X2<<"\t"<<Y2<<"\n";
-		//cout<<sqrt(distance(X1,Y1))<<"\t"<<dis<<"\n";;
-		//cout<<(X1*X2+Y1*Y2)/(Arad*dis)<<"\n";
 		double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
 		if((X2*X1+Y1*Y2)/(Arad*dis)>1.)
 			theta=0.;
-		//cout<<"theta="<<theta<<"\n";
 		perimeter=2.*M_PI*Arad*(theta/(2.*M_PI));
 		return perimeter;
-////////	areac=M_PI*Arad*Arad*(theta/(2.*M_PI));
-////////	//cout<<"areacircle="<<areac<<"\n";
-////////	double a,b,p,q;
-////////	a=Ax;
-////////	b=Ay;
-////////	p=E12x;
-////////	q=E12y;
-////////	areat=0.5*abs(a*q-b*p);
-////////	//cout<<"areat="<<areat<<"\n";
-////////	return areat-areac;
-
-
 	}
 
 }
@@ -396,7 +360,7 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
 		//cout<<"theta="<<theta<<"\n";
 	        if((X2*X1+Y1*Y2)/(Arad*dis)>1.)
 		{
-			cout<<theta<<"\n";
+			//cout<<theta<<"\n";
 	        	theta=0.;
 		}
 		areac=M_PI*Arad*Arad*(theta/(2.*M_PI));
@@ -952,6 +916,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 					//cout<<j<<"\t"<<flag<<"\n";
 					if(sign!=sign_N && flag)
 					{
+						double c,C;
 						atom L=*ATOM;
 						atom M=Atoms[ATOM->contigous[D->B]];
 						atom R=Atoms[ATOM->neighlist[j]];
@@ -1295,47 +1260,47 @@ int main()
 		int flag=1;
 		double AX,AY,BX,BY;
 		//cout<<"ver\t"<<temp_start->p->x<<"\t"<<temp_start->p->y<<"\n";
-	////////for(int i=0;i<nAtoms;i++)
+	        for(int i=0;i<nAtoms;i++)
+	        {
+	        	//double AX,AY,BX,BY;
+	        	AX=Atoms[i].x;
+	        	AY=Atoms[i].y;
+	        	BX=temp_start->p->x ;
+	        	BY=temp_start->p->y;
+	        	double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	        	if(dis<r_cut+Atoms[i].radius)
+	        	{
+	        		flag=0;
+	        		break;
+	        	}
+	        	
+	        }	
+	////////BX=temp_start->p->x ;
+	////////BY=temp_start->p->y;
+	////////AX=Atoms[temp_start->A].x;
+	////////AY=Atoms[temp_start->A].y;
+	////////double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	////////if(dis<r_cut+Atoms[temp_start->A].radius)
 	////////{
-	////////	//double AX,AY,BX,BY;
-	////////	AX=Atoms[i].x;
-	////////	AY=Atoms[i].y;
-	////////	BX=temp_start->p->x ;
-	////////	BY=temp_start->p->y;
-	////////	double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-	////////	if(dis<r_cut+Atoms[i].radius)
-	////////	{
-	////////		flag=0;
-	////////		break;
-	////////	}
-	////////	
-	////////}	
-		BX=temp_start->p->x ;
-		BY=temp_start->p->y;
-		AX=Atoms[temp_start->A].x;
-		AY=Atoms[temp_start->A].y;
-		double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-		if(dis<r_cut+Atoms[temp_start->A].radius)
-		{
-			flag=0;
-			//break;
-		}
-		AX=Atoms[temp_start->D->A].x;
-		AY=Atoms[temp_start->D->A].y;
-		dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-		if(dis<r_cut+Atoms[temp_start->D->A].radius)
-		{
-			flag=0;
-			//break;
-		}
-		AX=Atoms[temp_start->D->B].x;
-		AY=Atoms[temp_start->D->B].y;
-		dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-		if(dis<r_cut+Atoms[temp_start->D->B].radius)
-		{
-			flag=0;
-			//break;
-		}
+	////////	flag=0;
+	////////	//break;
+	////////}
+	////////AX=Atoms[temp_start->D->A].x;
+	////////AY=Atoms[temp_start->D->A].y;
+	////////dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	////////if(dis<r_cut+Atoms[temp_start->D->A].radius)
+	////////{
+	////////	flag=0;
+	////////	//break;
+	////////}
+	////////AX=Atoms[temp_start->D->B].x;
+	////////AY=Atoms[temp_start->D->B].y;
+	////////dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	////////if(dis<r_cut+Atoms[temp_start->D->B].radius)
+	////////{
+	////////	flag=0;
+	////////	//break;
+	////////}
 		if(flag )//&& temp_start->v_neigh_count == 3)
 		{
 			temp_start->is_void=1;
@@ -1456,7 +1421,7 @@ int main()
 	double *cav_lenght;
 	cav_lenght= new (nothrow) double[void_vert_count]; 
 	for(int i=0;i<void_vert_count;i++)
-	//for(int i=0;i<1;i++)
+	//for(int i=47;i<48;i++)
 	{
 		cav_area[i]=0;
 		cav_lenght[i]=0;
@@ -1564,21 +1529,29 @@ int main()
 				}
 				else
 					sign1=-1;
-				if((Vy-m*Vx) > 0. )
+				//cout<<sign1<<"\n";
+				if((Vy-m*Vx-C) > 0. )
 				{
 					sign2=1;
 				}
 				else
 					sign2=-1;
+				//cout<<sign2<<"\n";
 				if(sign1!=sign2)
 				{
-					S23=1;
+					S23=-1;
 				}
 				else 
-					S23=-1;
-			////////cout<<Vx+A1x<<"\t"<<Vy+A1y<<"\n";
-			////////cout<<E12x+A1x<<"\t"<<E12y+A1y<<"\n";
-			////////cout<<A2x+A1x<<"\t"<<A2y+A1y<<"\n";
+					S23=1;
+				
+			      //cout<<Vx+A1x<<"\t"<<Vy+A1y<<"\n";
+			      //cout<<E12x+A1x<<"\t"<<E12y+A1y<<"\n";
+			      //cout<<E13x+A1x<<"\t"<<E13y+A1y<<"\n";
+			      //cout<<E23x+A1x<<"\t"<<E23y+A1y<<"\n";
+			        //cout<<A1x<<"\t"<<A1y<<"\n";
+			        //cout<<A2x+A1x<<"\t"<<A2y+A1y<<"\n";
+			        //cout<<A3x+A1x<<"\t"<<A3y+A1y<<"\n";
+				//cout<<"begin\n";
 				cav_area[i]=cav_area[i]+S12*area_trangle(Vx,Vy,E12x,E12y,A2x,A2y,A2r,A1x,A1y);
 			        cav_area[i]=cav_area[i]+S12*area_trangle(Vx,Vy,E12x,E12y,0.,0.,A1r,A1x,A1y);
 			        cav_area[i]=cav_area[i]+S13*area_trangle(Vx,Vy,E13x,E13y,A3x,A3y,A3r,A1x,A1y);
@@ -1591,12 +1564,11 @@ int main()
 			        cav_lenght[i]=cav_lenght[i]+S13*perimeter(Vx,Vy,E13x,E13y,0.,0.,A1r);
 			        cav_lenght[i]=cav_lenght[i]+S23*perimeter(Vx,Vy,E23x,E23y,A3x,A3y,A3r);
 			        cav_lenght[i]=cav_lenght[i]+S23*perimeter(Vx,Vy,E23x,E23y,A2x,A2y,A2r);
-				//cout<<cav_area[i]<<"\n";
 
 			//0.5*abs((x-p)*(b-y)-(x-a)*(q-y))
-			//      cout<<"S12="<<S12<<"\n";
-			//      cout<<"S13="<<S13<<"\n";
-			//      cout<<"S23="<<S23<<"\n";
+			      //  cout<<"S12="<<S12<<"\n";
+			      //  cout<<"S13="<<S13<<"\n";
+			      //  cout<<"S23="<<S23<<"\n";
 			      //cout<<E12x+A1x<<"\t"<<E12y+A1y<<"\n";
 			      //cout<<E13x+A1x<<"\t"<<E13y+A1y<<"\n";
 			      //cout<<E23x+A1x<<"\t"<<E23y+A1y<<"\n";
