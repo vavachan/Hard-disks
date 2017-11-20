@@ -43,7 +43,7 @@ class vert_list
 {
 public:
     void delete_vertice(vertice *,vertice *,int type);
-    vertice* insert_vertice(vertice *,vertice *,int);
+    vertice* insert_vertice(vertice *,vertice *,int,int);
     void display_vertex(vertice *);
     void display_conn(vertice *ve);
 }*V;
@@ -257,27 +257,33 @@ int insert_cvertice(container_vertice *EV,container_vertice *v,container_vertice
         return flag;
     }
 }
-vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type)
+vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
 {
     int flag;
+    //cout<<"here\n";
+    if(debug)
+    {
+    cout<<"insert\n";
+    display_SITE(v->p);
+    cout<<"vetfoc\n"<<flush;
+    display_SITE(EV->p);
+    }
     flag=compare(EV->p,v->p);
-//      cout<<"insert\n";
-//      display_SITE(v->p);
-//      cout<<"vetfoc\n";
-//      display_SITE(EV->p);
-//      cout<<"flag\t"<<flag<<"\n";
+    if(debug)
+    {
+  cout<<"flag\t"<<flag<<"\n";
+    }
     if(flag==1)
     {
         if(EV->next)
         {
-            //		cout<<"everytime?\n";
-            insert_vertice(EV->next,v,type);
+            insert_vertice(EV->next,v,type,debug);
         }
         else
         {
             EV->next=v;
             v->prev=EV;
-            ///		cout<<"here?\n";
+	    v->next=NULL;
             return v;
         }
     }
@@ -1517,6 +1523,7 @@ int main()
         vertice *temp_start;
         temp_start=start[TYPE];
         int void_vert_count=0;
+	cout<<"after  first tessellation \t"<<TYPE<<"\n";;
         while(1)
         {
 	    if(temp_start->v_neigh_count == 2)
@@ -1524,6 +1531,10 @@ int main()
 	    	V->delete_vertice(start[TYPE],temp_start,TYPE);
 	    	temp_start=temp_start->next;
 	    	continue;	
+	    }
+	    if(TYPE==0)
+	    {
+	    display_SITE(temp_start->p);
 	    }
             int flag=1;
             double AX,AY,BX,BY,X,Y;
@@ -1590,11 +1601,11 @@ int main()
   //{
   //    cout<<k<<"\t"<<Atoms[35].contigous[k][TYPE]<<"\n";
   //}
-    for(int i=0; i<1; i++)
+    for(int i=0; i<nAtoms; i++)
     {
         container_vertice *new_vert;
         //set_of_delunay D;
-        cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
+        //cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
         r_cut=Atoms[i].radius;
         cout<<i<<" Atoms NO \n";
         for(int t=0; t<ntypes; t++)
@@ -1606,32 +1617,17 @@ int main()
             }
         }
         cout<<TYPE<<"\t"<<"TYPE"<<"\n";
-            container_vertice *ctemp;
-            ctemp=Atoms[i].Cstart[TYPE];
-            while(1)
-            {
-                //display_SITE(ctemp->V->p);
-                V->delete_vertice(start[TYPE],ctemp->V,TYPE);
-                if(ctemp->next)
-                    ctemp=ctemp->next;
-                else
-                    break;
-            }
-        //if(i==8)
-        //{
-        //    delunay *D;
-        //    D=Atoms[2].D[1].initial;
-        //    while(1)
-        //    {
-        //        print_delunay(&(Atoms[2]),D,Atoms,1);
-        //        if(D->next)
-        //        {
-        //            D=D->next;
-        //        }
-        //        else
-        //            break;
-        //    }
-        //}
+        container_vertice *ctemp;
+        ctemp=Atoms[i].Cstart[TYPE];
+        while(1)
+        {
+            //display_SITE(ctemp->V->p);
+            V->delete_vertice(start[TYPE],ctemp->V,TYPE);
+            if(ctemp->next)
+                ctemp=ctemp->next;
+            else
+                break;
+        }
         snprintf(buffer,sizeof(char)*64,"vor_%d",int(TYPE));//_%d_%f.dat",int(nAtoms),Press);
         vor.open(buffer,std::ios_base::app);
         CSTART[TYPE]=NULL;
@@ -1643,36 +1639,12 @@ int main()
             int SAM=Atoms[i].contigous[j][TYPE];
             container_vertice *ctemp;
             ctemp=Atoms[SAM].Cstart[TYPE];
-          //while(1)
-          //{
-          //    //display_SITE(ctemp->V->p);
-          //    V->delete_vertice(start[TYPE],ctemp->V,TYPE);
-          //    if(ctemp->next)
-          //        ctemp=ctemp->next;
-          //    else
-          //        break;
-          //}
-            //cout<<"here\n";
             save_atom(&(Atoms[SAM]),TYPE);
             delunay *D;
             D=Atoms[SAM].D[TYPE].initial;
             delunay *temp;
             temp=Atoms[SAM].D[TYPE].initial;
             Atoms[SAM].save_D[TYPE].initial=temp;
-            //while(1)
-            //{
-            //    temp=D;
-            //    if(D->next)
-            //    {
-            //        D=D->next;
-            //        //delete temp;
-            //    }
-            //    else
-            //    {
-            //        //delete temp;
-            //        break;
-            //    }
-            //}
             for(int k=0; k<Atoms[Atoms[i].contigous[j][TYPE]].neighbours-1; k++)
             {
                 if(Atoms[Atoms[i].contigous[j][TYPE]].neighlist[k]==i)
@@ -1776,7 +1748,10 @@ int main()
                 temp->A=SAM;
                 temp->D=D_TWO;
                 temp_o=temp;
+		//cout<<"here\n";
+		//display_SITE(temp->p);
                 temp=V->insert_vertice(start[TYPE],temp,TYPE);
+		//cout<<"here2\n";
                 if(temp_o==temp)
                 {
                     container_vertice *ctemp;
@@ -2000,7 +1975,6 @@ int main()
                 change=1;
         }
         cstart=CSTART[TYPE];
-        //cout<<"here\n";
         void_vert_count=0;
         while(1)
         {
@@ -2240,17 +2214,29 @@ int main()
       //for(int j=0; j<Atoms[i].conti[TYPE]; j++)
       //{
       //    int SAM=Atoms[i].contigous[j][TYPE];
-      //    ctemp=Atoms[SAM].Cstart[TYPE];
-      //    while(1)
-      //    {
-      //        //display_SITE(ctemp->V->p);
-      //        V->insert_vertice(start[TYPE],ctemp->V,TYPE);
-      //        //V->delete_vertice(start[TYPE],ctemp->V,TYPE);
-      //        if(ctemp->next)
-      //            ctemp=ctemp->next;
-      //        else
-      //            break;
-      //    }
+        ctemp=Atoms[i].Cstart[TYPE];
+        while(1)
+        {
+            //display_SITE(ctemp->V->p);
+            V->insert_vertice(start[TYPE],ctemp->V,TYPE);
+            //V->delete_vertice(start[TYPE],ctemp->V,TYPE);
+            if(ctemp->next)
+                ctemp=ctemp->next;
+            else
+                break;
+        }
+	//cout<<"after insertion\n";
+////////temp_start=start[TYPE];
+////////while(1)
+////////{
+////////	display_SITE(temp_start->p);
+////////	if(temp_start->next)
+////////	{
+////////		temp_start=temp_start->next;
+////////	}
+////////	else
+////////		break;
+////////}
       //}
         for(int j=0; j<Atoms[i].conti[TYPE]; j++)
         {
@@ -2335,9 +2321,9 @@ int main()
 
 /////////   }
     }
-    cout<<"ahere\n";
+    //cout<<"ahere\n";
 
-    return 0;
+    //return 0;
     for(int t=0; t<ntypes; t++)
     {
 	cout<<t<<"\n";    
