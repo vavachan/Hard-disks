@@ -72,7 +72,7 @@ struct vertice
     struct vertice *next=NULL;
     struct vertice *prev=NULL;
     int A,B,C;
-    delunay *D;
+    delunay *D=nullptr;
     int is_void=0;
     int cluster_index=-1;
     double r;
@@ -83,7 +83,7 @@ struct vertice
 }**start,*s_temp,*sites;
 struct container_vertice
 {
-    struct vertice *V;
+    struct vertice *V=nullptr;
     struct container_vertice *next=NULL;
     struct container_vertice *prev=NULL;
 }**CSTART,*VOID_START;
@@ -193,16 +193,16 @@ struct atom
     struct face *F=NULL;
     double radius=1.;
     double ignore=0;
-    container_vertice **Cstart;
-    set_of_delunay *D;
+    container_vertice **Cstart=nullptr;
+    set_of_delunay *D=nullptr;
     int save_neighlist[500];
     int *save_contigous[500];
     int *save_bondinvoid[500];
     int *save_edge_index[500];
     int save_neighbours=0;
-    int *save_conti;
+    int *save_conti=nullptr;
     int type;
-    set_of_delunay *save_D;
+    set_of_delunay *save_D=nullptr;
 };
 void save_atom(atom *Atom,int TYPE)
 {
@@ -1138,7 +1138,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 
                 //cout<<DIS_atom<<"\n";
                 //cout<<Atoms[DIS_atom].x<<"\t"<<Atoms[DIS_atom].y<<"\n";
-                delunay *temp;
+                delunay *temp=nullptr;
                 temp=D;
                 while(1)
                 {
@@ -1337,7 +1337,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 
                 //cout<<DIS_atom<<"\n";
                 //cout<<Atoms[DIS_atom].x<<"\t"<<Atoms[DIS_atom].y<<"\n";
-                delunay *temp;
+                delunay *temp=nullptr;
                 temp=D;
                 while(1)
                 {
@@ -1378,15 +1378,15 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 int main()
 {
     int nAtoms=0;
-    atom *Atoms;
+    atom *Atoms=NULL;
     int counter=0;
     int config_count=0;
     //cout << "Maximum value for dou: " << std::numeric_limits<double>::min() << '\n';
-    std::ifstream infile("config_256_0.38_2_0.70.dat");//dat_save");//config_2000_0.38_2_0.70.dat");
+    std::ifstream infile("config_2000_0.38_2_0.70.dat");
     infile>>nAtoms;
     infile>>box;
     cout<<nAtoms<<"\t"<<box<<"\n";
-    config_count=3;
+    config_count=100;
     int ntypes=2;
     twob=2*box;
     density=nAtoms/(twob*twob);
@@ -1399,7 +1399,7 @@ int main()
     }
     //nAtoms=0;
     char buffer[64];
-    vertice *temp_site;
+    vertice *temp_site=nullptr;
     temp_site=sites;
     double free_dist[1000]={0.};
     double max_free_area=0.;
@@ -1468,7 +1468,7 @@ int main()
 	//return 0;
 	update_neighbours(Atoms,nAtoms);
 	double area=0;
-	vertice *save;
+	vertice *save=nullptr;
 	//cout<<"here\n";
 	for(int i=0; i<nAtoms; i++)
 	{
@@ -1520,7 +1520,7 @@ int main()
 	        {
 	    	first_delunay(&(Atoms[SAM]),Atoms,TYPE);
 	    	complete_del(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
-	    	delunay *D;
+	    	delunay *D=nullptr;
 	    	int count=0;
 	    	double area_s=0;
 	    	//cout<<SAM<<"\n";
@@ -1584,8 +1584,8 @@ int main()
 
 	    	    }
 	    	    //cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t";
-	    	    vertice *temp_vert_o;
-	    	    vertice *temp_vert_d;
+	    	    vertice *temp_vert_o=nullptr;
+	    	    vertice *temp_vert_d=nullptr;
 	    	    if(!start[TYPE])
 	    	    {
 	    		start[TYPE]=new vertice;
@@ -1598,7 +1598,7 @@ int main()
 	    	    }
 	    	    else
 	    	    {
-	    		vertice *temp;
+	    		vertice *temp=nullptr;
 	    		temp=new vertice;
 	    		temp->p=new site;
 	    		temp->p->x=D_ONE->circum_x;
@@ -1610,7 +1610,7 @@ int main()
 	    		temp_vert_o=temp;
 	    	    }
 	    	    //cout<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n";
-	    	    vertice *temp;
+	    	    vertice *temp=nullptr;
 	    	    temp=new vertice;
 	    	    temp->p=new site;
 	    	    temp->p->x=D_TWO->circum_x;
@@ -1655,7 +1655,7 @@ int main()
 	    	    temp_vert_d=temp;
 	    	    add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i][TYPE]);
 	    	    add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i][TYPE]);
-	    	    container_vertice *temp_cvert;
+	    	    container_vertice *temp_cvert=nullptr;
 	    	    if(Atoms[SAM].Cstart[TYPE]==NULL)
 	    	    {
 	    		Atoms[SAM].Cstart[TYPE]=new container_vertice;
@@ -1677,7 +1677,7 @@ int main()
 
 	        }
 	    }
-	    vertice *temp_start;
+	    vertice *temp_start=nullptr;
 	    temp_start=start[TYPE];
 	    int void_vert_count=0;
 	    //cout<<"after  first tessellation \t"<<TYPE<<"\n";;
@@ -1688,7 +1688,7 @@ int main()
 		      //display_SITE(temp_start->p);
 		      //cout<<std::flush;
 	          V->delete_vertice(start[TYPE],temp_start,TYPE);
-	          vertice *temp;
+	          vertice *temp=nullptr;
 	          temp=temp_start;
 	          temp_start=temp_start->next;
 	          delete temp->p;
@@ -1773,8 +1773,8 @@ int main()
 	//    cout<<k<<"\t"<<Atoms[35].contigous[k][TYPE]<<"\n";
 	//}
 	//LOOP OVER ALL ATOMS , CALCULATE THE FREE VOL FOR EACH ATOM
-	double *freearea;
-	double *freeperi;
+	double *freearea=nullptr;
+	double *freeperi=nullptr;
 	freearea=new (nothrow) double [nAtoms];
 	freeperi=new (nothrow) double [nAtoms];
 	for(int i=0; i<nAtoms; i++)
@@ -1804,7 +1804,7 @@ int main()
 	//      }
 	//  }
 	    //cout<<TYPE<<"\t"<<"TYPE"<<"\n";
-	    container_vertice *ctemp;
+	    container_vertice *ctemp=nullptr;
 	    ctemp=Atoms[i].Cstart[TYPE];
 	    //REMOVE THE VERTICES WHICH BELONGED TO THE VORONOI CELL OF THE ATOM IN CONSIDERATIO (i)
 	  //while(1)
@@ -1840,13 +1840,13 @@ int main()
 	        int flag=0;
 	        //FIND THE ATOM INDEX OF THE CONTIGUOUS ATOM
 	        int SAM=Atoms[i].contigous[j][TYPE];
-	        container_vertice *ctemp;
+	        container_vertice *ctemp=nullptr;
 	        //SAVE THE DETAILS OF THE ATOM 'SAM' BECAUSE THEY ARE GOING TO BE RETESSELLATED
 	        ctemp=Atoms[SAM].Cstart[TYPE];
 	        save_atom(&(Atoms[SAM]),TYPE);
-	        delunay *D;
+	        delunay *D=nullptr;
 	        D=Atoms[SAM].D[TYPE].initial;
-	        delunay *temp;
+	        delunay *temp=nullptr;
 	        temp=Atoms[SAM].D[TYPE].initial;
 	        Atoms[SAM].save_D[TYPE].initial=temp;
 	        //cout<<"nearest\t"<<Atoms[SAM].contigous[0][TYPE]<<"\n";
@@ -1909,8 +1909,8 @@ int main()
 	    	    }
 
 	    	}
-	    	vertice *temp_vert_o;
-	    	vertice *temp_vert_d;
+	    	vertice *temp_vert_o=nullptr;
+	    	vertice *temp_vert_d=nullptr;
 	    	if(!start[TYPE])
 	    	{
 	    	    start[TYPE]=new vertice;
@@ -1923,8 +1923,8 @@ int main()
 	    	}
 	    	else
 	    	{
-	    	    vertice *temp;
-	    	    vertice *temp_o;
+	    	    vertice *temp=nullptr;
+	    	    vertice *temp_o=nullptr;
 	    	    temp=new vertice;
 	    	    temp->p=new site;
 	    	    temp->p->x=D_ONE->circum_x;
@@ -2031,7 +2031,7 @@ int main()
 	    		    flag=0;
 	    		if(flag)
 	    		{
-	    		    container_vertice *ctemp;
+	    		    container_vertice *ctemp=nullptr;
 	    		    ctemp = new container_vertice;
 	    		    ctemp->V=temp;
 	    		    if(!CSTART[TYPE])
@@ -2039,7 +2039,7 @@ int main()
 	    		    else
 	    			insert_cvertice(CSTART[TYPE],ctemp,CSTART[TYPE]);
 	    		}
-	    		container_vertice *ctemp;
+	    		container_vertice *ctemp=nullptr;
 	    		ctemp = new container_vertice;
 	    		ctemp->V=temp;
 	    		if(!new_vert)
@@ -2058,8 +2058,8 @@ int main()
 	    	    //display_SITE(temp->p);
 	    	    temp_vert_o=temp;
 	    	}
-	    	vertice *temp;
-	    	vertice *temp_o;
+	    	vertice *temp=nullptr;
+	    	vertice *temp_o=nullptr;
 	    	temp=new vertice;
 	    	temp->p=new site;
 	    	temp->p->x=D_TWO->circum_x;
@@ -2178,7 +2178,7 @@ int main()
 	    	    //cout<<flag<<"\n";
 	    	    if(flag)
 	    	    {
-	    		container_vertice *ctemp;
+	    		container_vertice *ctemp=nullptr;
 	    		ctemp = new container_vertice;
 	    		ctemp->V=temp;
 	    		if(!CSTART[TYPE])
@@ -2186,7 +2186,7 @@ int main()
 	    		else
 	    		    insert_cvertice(CSTART[TYPE],ctemp,CSTART[TYPE]);
 	    	    }
-	    	    container_vertice *ctemp;
+	    	    container_vertice *ctemp=nullptr;
 	    	    ctemp = new container_vertice;
 	    	    ctemp->V=temp;
 	    	    //display_SITE(ctemp->V->p);
@@ -2258,9 +2258,9 @@ int main()
 	    //              break;
 	    //      }
 	    //  }
-	    container_vertice *cstart;
+	    container_vertice *cstart=nullptr;
 	    cstart=CSTART[TYPE];
-	    container_vertice *temp_new_vert;
+	    container_vertice *temp_new_vert=nullptr;
 	    temp_new_vert=new_vert;
 	    while(1)
 	    {
@@ -2299,15 +2299,19 @@ int main()
 		else
 			break;
 	    }
-	    vertice *temp_start;
-	    container_vertice *temp_new_vert1;
+	    vertice *temp_start=nullptr;
+	    container_vertice *temp_new_vert1=nullptr;
 	    temp_new_vert=new_vert;
+	    int flag1=1,flag2=1;
 	    int rep;
+	    //cout<<"this starts\n";
 	    while(1)
 	    {
 	    	    temp_new_vert1=new_vert;
+		    flag1=1;
 		    while(1)
 		    {
+			    flag2=1;
 	//		    cout<<"####\n";
 	//		                display_SITE(temp_new_vert->V->p);
 	//		        	display_SITE(temp_new_vert1->V->p);
@@ -2341,9 +2345,11 @@ int main()
 					        }
 
 	        				V->delete_vertice(start[TYPE],temp_new_vert->V,TYPE);
+						//display_SITE(temp_new_vert->V->p);
 					        delete temp_new_vert->V->p;
 					        delete temp_new_vert->V;
-					        delete temp_new_vert;
+						flag1=0;
+					        //delete temp_new_vert;
 					}
 					else
 					{
@@ -2372,28 +2378,66 @@ int main()
 					        {
 					        	new_vert=temp_new_vert1->next;
 					        }
-						container_vertice *temp;
+						container_vertice *temp=nullptr;
 						temp=temp_new_vert1;
 	        				V->delete_vertice(start[TYPE],temp_new_vert1->V,TYPE);
+						//display_SITE(temp_new_vert1->V->p);
 					        delete temp->V->p;
 					        delete temp->V;
+						flag2=0;
 						
 					}
 				}
 		        }
 			if(temp_new_vert1->next)
 			{
-				temp_new_vert1=temp_new_vert1->next;
+				if(flag2==0)
+				{
+					//cout<<"here I am1\n";
+					container_vertice *temp=nullptr;
+					temp=temp_new_vert1;
+					temp_new_vert1=temp_new_vert1->next;
+					delete temp;
+				}
+				else 
+					temp_new_vert1=temp_new_vert1->next;
 			}
 			else 
+			{
+				if(flag2==0)
+				{
+				//	cout<<"here I am1\n";
+					container_vertice *temp=nullptr;
+					temp=temp_new_vert1;
+					delete temp;
+				}
 				break;
+			}
 		    }
 		    if(temp_new_vert->next)
 		    {
-		        temp_new_vert=temp_new_vert->next;
+			if(flag1==0)
+			{
+				//cout<<"here I am\n";
+				container_vertice *temp=nullptr;
+				temp=temp_new_vert;
+				temp_new_vert=temp_new_vert->next;
+				delete temp;
+			}
+			else 
+		        	temp_new_vert=temp_new_vert->next;
 		    }
 		    else 
+		    {
+			if(flag1==0)
+			{
+				//cout<<"here I am\n";
+				container_vertice *temp=nullptr;
+				temp=temp_new_vert;
+				delete temp;
+			}
 		    	break;
+		    }
 	    }
 	    //cout<<r_cut<<"\n";
 	    temp_new_vert=new_vert;
@@ -2531,7 +2575,7 @@ int main()
 	    			////////display_SITE(cstart->V->neib_vert[i]->p);
 	    			////////cout<<"here2\n";
 	    			int flag;
-	    			container_vertice *ctemp;
+	    			container_vertice *ctemp=nullptr;
 	    			ctemp=new container_vertice;
 	    			ctemp->V=cstart->V->neib_vert[i];
 	    			flag=insert_cvertice(CSTART[TYPE],ctemp,CSTART[TYPE]);
@@ -2576,7 +2620,7 @@ int main()
 	            break;
 	    }
 	    //cout<<void_vert_count<<"void_count\n"<<std::flush;
-	    vertice **cavity_list;
+	    vertice **cavity_list=nullptr;
 	    cavity_list = new (nothrow) vertice*[void_vert_count];
 	    cstart=CSTART[TYPE];
 	    {
@@ -2601,9 +2645,9 @@ int main()
 	    }
 	    //return 0;
 	    //CALCULATING THE VOID VOLUME IN A GIVEN CAVITY
-	    double *void_area;
+	    double *void_area=nullptr;
 	    void_area= new (nothrow) double[void_vert_count];
-	    double *void_length;
+	    double *void_length=nullptr;
 	    void_length= new (nothrow) double[void_vert_count];
 	    //return 0;
 	    for(int j=0 ; j<void_vert_count; j++)
@@ -2827,7 +2871,7 @@ int main()
 	    //for(int j=0; j<Atoms[i].conti[TYPE]; j++)
 	    //{
 	    //    int SAM=Atoms[i].contigous[j][TYPE];
-            delunay *D;
+            delunay *D=nullptr;
             for(int j=0; j<Atoms[i].conti[TYPE]; j++)
             {
         	  //  cout<<j<<"\n"<<std::flush;
@@ -2866,8 +2910,8 @@ int main()
 
                 }
         	///cout<<"her1\n"<<std::flush;
-        	vertice *temp1;
-        	vertice *temp2;
+        	vertice *temp1=nullptr;
+        	vertice *temp2=nullptr;
         	temp1=new vertice;
         	temp2=new vertice;
         	temp1->p=new site;
@@ -2929,21 +2973,24 @@ int main()
 	    {
 	        int flag=0;
 	        int SAM=Atoms[i].contigous[j][TYPE];
-	        delunay *D;
+	        delunay *D=nullptr;
 	        D=Atoms[SAM].D[TYPE].initial;
 	        ////////cout<<n<<"\n";
-	        delunay *temp;
-	        temp=D;
-	        if(D->next)
-	        {
-	    	D=D->next;
-	    	delete temp;
-	        }
-	        else
-	        {
-	    	delete temp;
-	    	break;
-	        }
+		while(1)
+		{
+			delunay *temp=nullptr;
+			temp=D;
+			if(D->next)
+			{
+			D=D->next;
+			delete temp;
+			}
+			else
+			{
+			delete temp;
+			break;
+			}
+		}
 	        reset_atom(&(Atoms[SAM]),TYPE);
 	    }
 	    delete[] void_area;
@@ -2954,7 +3001,7 @@ int main()
 	        cstart=new_vert;
 	        while(1)
 	        {
-	    	container_vertice *ctemp;
+	    	container_vertice *ctemp=nullptr;
 	    	ctemp=cstart;
 	    	if(cstart->next)
 	    	{
@@ -2978,7 +3025,7 @@ int main()
 	        cstart=CSTART[TYPE];
 	        while(1)
 	        {
-	    	container_vertice *ctemp;
+	    	container_vertice *ctemp=nullptr;
 	    	ctemp=cstart;
 	    	if(cstart->next)
 	    	{
@@ -2995,6 +3042,7 @@ int main()
 	    }
 	    vor.close();
 	}
+	delete [] CSTART;
 	//DISTRIBUTION CALCULATION
 	cout<<"are we here3\n"<<std::flush;
 	if(nconfig==0)
@@ -3062,12 +3110,12 @@ int main()
 cout<<"are we here5\n"<<std::flush;
 	for(int t=0; t<ntypes; t++)
 	{
-	    container_vertice *cstart;
-	    vertice *temp_start;
+	    container_vertice *cstart=nullptr;
+	    vertice *temp_start=nullptr;
 	    temp_start=start[t];
 	    while(1)
 	    {
-	        vertice *temp;
+	        vertice *temp=nullptr;
 	        temp=temp_start;
 	        if(temp_start->next)
 	        {
@@ -3088,7 +3136,7 @@ cout<<"are we here5\n"<<std::flush;
 	        cstart=Atoms[SAM].Cstart[t];
 	        while(1)
 	        {
-	    	container_vertice *temp_c;
+	    	container_vertice *temp_c=nullptr;
 	    	temp_c=cstart;
 	    	if(cstart->next)
 	    	{
@@ -3103,27 +3151,31 @@ cout<<"are we here5\n"<<std::flush;
 	        }
 	    }
 	}
+	delete [] start;
 	cout<<"are we here4\n"<<std::flush;
 	for(int n=0; n<nAtoms; n++)
 	{
 	    delete[] Atoms[n].Cstart;
-	    delunay *D;
+	    delunay *D=nullptr;
 	    for(int t=0; t<ntypes; t++)
 	    {
 	        D=Atoms[n].D[t].initial;
 	        ////////cout<<n<<"\n";
-	        delunay *temp;
-	        temp=D;
-	        if(D->next)
-	        {
-	    	D=D->next;
-	    	delete temp;
-	        }
-	        else
-	        {
-	    	delete temp;
-	    	break;
-	        }
+		while(1)
+		{
+		    delunay *temp=nullptr;
+		    temp=D;
+		    if(D->next)
+		    {
+		        D=D->next;
+		        delete temp;
+		    }
+		    else
+		    {
+		        delete temp;
+		        break;
+		    }
+		}
 	    }
 	    delete [] Atoms[n].D;
 	    delete [] Atoms[n].save_D;
@@ -3135,7 +3187,7 @@ cout<<"are we here5\n"<<std::flush;
 	vertice	*temp_start=sites;
 	while(1)
 	{
-	    vertice *temp;
+	    vertice *temp=nullptr;
 	    temp=temp_start;
 	    //display_SITE(temp->p);
 	    if(temp_start->next)
