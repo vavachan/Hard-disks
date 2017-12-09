@@ -8,18 +8,19 @@
 using namespace std;
 #define distance(x,y) x*x+y*y
 int dim=3;
-double box=0;
-double twob;
-double density;
-double r_cut=0.0;
-double DMIN=0.00000001;//std::numeric_limits<double>::min();
+long double box=0;
+long double twob;
+long double density;
+long double r_cut=0.0;
+long double tilt;
+long double DMIN=0.000000000000001;//std::numeric_limits<long double>::min();
 struct atom;
 struct face;
 struct vertice;
 struct site
 {
-    double x=0;
-    double y=0;
+    long double x=0;
+    long double y=0;
     struct face *F=NULL;
 };
 void display_SITE(struct site *p)
@@ -57,12 +58,12 @@ struct delunay
     int C;
     int a;
     int b;
-    double circum_x=0.;
-    double circum_y=0.;
-    double Ax=0.;
-    double Ay=0.;
-    double Bx=0.;
-    double By=0.;
+    long double circum_x=0.;
+    long double circum_y=0.;
+    long double Ax=0.;
+    long double Ay=0.;
+    long double Bx=0.;
+    long double By=0.;
     delunay *next=NULL;
 };
 struct vertice
@@ -75,7 +76,7 @@ struct vertice
     delunay *D=nullptr;
     int is_void=0;
     int cluster_index=-1;
-    double r;
+    long double r;
     //vert_list *V;
     vertice *neib_vert[10]={NULL};
     int neib_ed[10];
@@ -89,12 +90,13 @@ struct container_vertice
 }**CSTART,*VOID_START;
 int compare(struct site *p1,struct site *p2,int del=0)
 {
-    double DX,DY;
+    long double DX,DY;
     DX=p1->x-p2->x;
     DY=p1->y-p2->y;
     //cout<<DX<<"\t"<<DY<<"\n";
     if(!del)
     {
+	    DX=(DX-(tilt*lround(DY/twob)));
 	    DX=(DX-(twob*lround(DX/twob)));
 	    DY=(DY-(twob*lround(DY/twob)));
     }
@@ -113,7 +115,11 @@ int compare(struct site *p1,struct site *p2,int del=0)
         cout<<p2->x<<"\t"<<p2->y<<"\n";
     }
     if( abs(DY) <DMIN  && abs(DX) <DMIN )
+    {
+	  //cout<<std::setprecision(26)<<"\n"; 
+	  //cout<<abs(DY)<<"\t"<<abs(DX)<<"\n";
         return 0;
+    }
     else if ( (p1->y == p2->y) && ( p1->x > p2->x ) )
         return 1;
     else if( p1->y > p2->y )
@@ -167,9 +173,9 @@ public :
 };
 struct atom3D
 {
-    double x=0;
-    double y=0;
-    double z=0;
+    long double x=0;
+    long double y=0;
+    long double z=0;
     int neighlist[500];
     int contigous[500];
     int bondinvoid[500];
@@ -177,13 +183,13 @@ struct atom3D
     int neighbours=0;
     int conti=0;
     struct face *F=NULL;
-    double radius=1.;
+    long double radius=1.;
     set_of_delunay D;
 };
 struct atom
 {
-    double x=0;
-    double y=0;
+    long double x=0;
+    long double y=0;
     int neighlist[500];
     int *contigous[500];
     int *bondinvoid[500];
@@ -191,8 +197,8 @@ struct atom
     int neighbours=0;
     int *conti;
     struct face *F=NULL;
-    double radius=1.;
-    double ignore=0;
+    long double radius=1.;
+    long double ignore=0;
     container_vertice **Cstart=nullptr;
     set_of_delunay *D=nullptr;
     int save_neighlist[500];
@@ -433,8 +439,6 @@ void vert_list::delete_vertice(vertice *EV,vertice *v,int type,int debug=0)
                 }
 	    }
         }
-        //delete v->p;
-        //delete v;
     }
     else
     {
@@ -460,9 +464,10 @@ void vert_list::display_conn(vertice *ve)
         cout<<"#"<<ve->v_neigh_count<<"\n";
         for(int i=0; i<ve->v_neigh_count; i++)
         {
-            double Sx,Sy;
+            long double Sx,Sy;
             Sx=ve->neib_vert[i]->p->x-ve->p->x;
             Sy=ve->neib_vert[i]->p->y-ve->p->y;
+            Sx=(Sx-(tilt*lround(Sy/twob)));
             Sx=(Sx-(twob*lround(Sx/twob)));
             Sy=(Sy-(twob*lround(Sy/twob)));
             cout<<ve->p->x<<"\t"<<ve->p->y<<"\t"<<Sx+ve->p->x<<"\t"<<Sy+ve->p->y<<"\n";
@@ -548,22 +553,22 @@ void display_a_edge(struct half_edge *first,struct half_edge *E)
     }
 
 }
-double perimeter(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay,double Arad)
+long double perimeter(long double Vx,long double Vy,long double E12x,long double E12y,long double Ax,long double Ay,long double Arad)
 {
     E12x=E12x-Vx;
     E12y=E12y-Vy;
     Ax=Ax-Vx;
     Ay=Ay-Vy;
-    double areac,areat;
-    double perimeter;
-    double dis,disint,dise,disv;
+    long double areac,areat;
+    long double perimeter;
+    long double dis,disint,dise,disv;
     dis=sqrt(distance((E12x-Ax),(E12y-Ay)));
     if(dis<Arad)
     {
         disint=sqrt(Arad*Arad-dis*dis);
         dise=sqrt(distance(E12x,E12y));
         disv=sqrt(distance(Ax,Ay));
-        double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
+        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
         Aintx=(dise-disint)/dise*E12x;
         Ainty=(dise-disint)/dise*E12y;
         Aint1x=(disv-Arad)/disv*Ax;
@@ -572,7 +577,7 @@ double perimeter(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay
         Y1=Ainty-Ay;
         X2=Aint1x-Ax;
         Y2=Aint1y-Ay;
-        double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
+        long double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
         if((X2*X1+Y1*Y2)/(Arad*Arad)>1.)
             theta=0.;
         perimeter=2.*M_PI*Arad*(theta/(2.*M_PI));
@@ -581,14 +586,14 @@ double perimeter(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay
     else
     {
         disv=sqrt(distance(Ax,Ay));
-        double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
+        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
         Aint1x=(disv-Arad)/disv*Ax;
         Aint1y=(disv-Arad)/disv*Ay;
         X1=E12x-Ax;
         Y1=E12y-Ay;
         X2=Aint1x-Ax;
         Y2=Aint1y-Ay;
-        double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
+        long double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
         if((X2*X1+Y1*Y2)/(Arad*dis)>1.)
             theta=0.;
         perimeter=2.*M_PI*Arad*(theta/(2.*M_PI));
@@ -596,14 +601,14 @@ double perimeter(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay
     }
 
 }
-double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double Ay,double Arad,double originx=0.,double originy=0.)
+long double area_trangle(long double Vx,long double Vy,long double E12x,long double E12y,long double Ax,long double Ay,long double Arad,long double originx=0.,long double originy=0.)
 {
     E12x=E12x-Vx;
     E12y=E12y-Vy;
     Ax=Ax-Vx;
     Ay=Ay-Vy;
-    double areac,areat;
-    double dis,disint,dise,disv;
+    long double areac,areat;
+    long double dis,disint,dise,disv;
     dis=sqrt(distance((E12x-Ax),(E12y-Ay)));
     if(dis<Arad)
     {
@@ -613,7 +618,7 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
         disv=sqrt(distance(Ax,Ay));
         //E12x=(E12x-(twob*lround(E12x/twob)));
         //E12y=(E12y-(twob*lround(E12y/twob)));
-        double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
+        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
         Aintx=(dise-disint)/dise*E12x;
         Ainty=(dise-disint)/dise*E12y;
         //cout<<Aintx+Vx+originx<<"\t"<<Ainty+Vy+originy<<"\n";
@@ -623,15 +628,15 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
         Y1=Ainty-Ay;
         X2=Aint1x-Ax;
         Y2=Aint1y-Ay;
-        double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
+        long double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
         if((X2*X1+Y1*Y2)/(Arad*Arad)>1.)
             theta=0.;
-        //double theta=acos(-1.0);
+        //long double theta=acos(-1.0);
 
         //cout<<theta<<"=theta\t"<<(X2*X1+Y1*Y2)/(Arad*Arad)+Y1*Y2<<"\n";
         //cout<<Arad<<"\n";
         areac=M_PI*Arad*Arad*(theta/(2.*M_PI));
-        double a,b,p,q;
+        long double a,b,p,q;
         a=Ax;
         b=Ay;
         p=Aintx;
@@ -650,7 +655,7 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
         disv=sqrt(distance(Ax,Ay));
         //E12x=(E12x-(twob*lround(E12x/twob)));
         //E12y=(E12y-(twob*lround(E12y/twob)));
-        double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
+        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
         ////////Aintx=Arad/dis*E12x;
         ////////Ainty=Arad/dis*E12y;
         Aint1x=(disv-Arad)/disv*Ax;
@@ -665,7 +670,7 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
         //cout<<X2<<"\t"<<Y2<<"\n";
         //cout<<sqrt(distance(X1,Y1))<<"\t"<<dis<<"\n";;
         //cout<<(X1*X2+Y1*Y2)/(Arad*dis)<<"\n";
-        double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
+        long double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
         //cout<<"theta="<<theta<<"\n";
         if((X2*X1+Y1*Y2)/(Arad*dis)>1.)
         {
@@ -674,7 +679,7 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
         }
         areac=M_PI*Arad*Arad*(theta/(2.*M_PI));
         //cout<<"areacircle="<<areac<<"\n";
-        double a,b,p,q;
+        long double a,b,p,q;
         a=Ax;
         b=Ay;
         p=E12x;
@@ -687,19 +692,25 @@ double area_trangle(double Vx,double Vy,double E12x,double E12y,double Ax,double
 }
 void update_neighbours(atom Atoms[],int nAtoms)
 {
-    double R_CUT;
+    long double R_CUT;
     R_CUT=sqrt(200./(4*3.14*density));
     //cout<<R_CUT<<"\n";
     for(int i=0; i<nAtoms-1; i++)
     {
         for(int j=i+1; j<nAtoms; j++)
         {
-            double drx,dry,dr;
+            long double drx,dry,dr;
             drx=Atoms[i].x-Atoms[j].x;
             dry=Atoms[i].y-Atoms[j].y;
+            drx=(drx-(tilt*lround(dry/twob)));
             drx=(drx-(twob*lround(drx/twob)));
             dry=(dry-(twob*lround(dry/twob)));
             dr=drx*drx+dry*dry;
+	  //if(i==1)
+	  //{
+	  //        cout<<j<<"\t"<<Atoms[i].x-drx<<"\t"<<Atoms[i].y-dry<<"\n";
+	  //        //cout<<j<<"\t"<<dr<<"\t"<<R_CUT*R_CUT<<"\n";
+	  //}
             if(dr<R_CUT*R_CUT)
             {
                 Atoms[i].neighlist[Atoms[i].neighbours]=j;
@@ -715,47 +726,52 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
 {
     //cout<<"what\n";
     cout<<"#\n";
-    double Sx,Sy;
-    double Px,Py;
+    long double Sx,Sy;
+    long double Px,Py;
     Sx=ATOM->x-Atoms[D->a].x;
     Sy=ATOM->y-Atoms[D->a].y;
+    Sx=(Sx-(tilt*lround(Sy/twob)));
     Sx=(Sx-(twob*lround(Sx/twob)));
     Sy=(Sy-(twob*lround(Sy/twob)));
     cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
     Sx=ATOM->x-Atoms[D->b].x;
     Sy=ATOM->y-Atoms[D->b].y;
+    Sx=(Sx-(tilt*lround(Sy/twob)));
     Sx=(Sx-(twob*lround(Sx/twob)));
     Sy=(Sy-(twob*lround(Sy/twob)));
     cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
     Sx=ATOM->x-Atoms[D->b].x;
     Sy=ATOM->y-Atoms[D->b].y;
+    Sx=(Sx-(tilt*lround(Sy/twob)));
     Sx=(Sx-(twob*lround(Sx/twob)));
     Sy=(Sy-(twob*lround(Sy/twob)));
     Px=ATOM->x-Atoms[D->a].x;
     Py=ATOM->y-Atoms[D->a].y;
+    Px=(Px-(tilt*lround(Py/twob)));
     Px=(Px-(twob*lround(Px/twob)));
     Py=(Py-(twob*lround(Py/twob)));
     cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\n";
 }
 void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
 {
-    double drx,dry,dr;
-    double min=2.*twob*twob;
+    long double drx,dry,dr;
+    long double min=2.*twob*twob;
     int nearest,flag;
     int binv1=0;
     int binv2=0;
-    double midax=0.;
-    double miday=0.;
-    double midbx=0.;
-    double midby=0.;
-    double lmin=0;
+    long double midax=0.;
+    long double miday=0.;
+    long double midbx=0.;
+    long double midby=0.;
+    long double lmin=0;
     ATOM->conti[TYPE]=0;
     for(int i=0; i<ATOM->neighbours; i++)
     {
-        double X,Y,x,y;
-        double rA,rS,DIS,l,dis_i,tan_sq;
+        long double X,Y,x,y;
+        long double rA,rS,DIS,l,dis_i,tan_sq;
         X=Atoms[ATOM->neighlist[i]].x-ATOM->x;
         Y=Atoms[ATOM->neighlist[i]].y-ATOM->y;
+        X=(X-(tilt*lround(Y/twob)));
         X=(X-(twob*lround(X/twob)));
         Y=(Y-(twob*lround(Y/twob)));
         DIS=sqrt(X*X+Y*Y);
@@ -794,11 +810,11 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
 ////////cout<<Atoms[nearest].x<<"\t"<<Atoms[nearest].y<<"\n";
 ////////cout<<"nea\t"<<nearest<<"\t"<<min<<"\n";
 ////////cout<<Atoms[nearest].x<<"\t"<<Atoms[nearest].y<<"\n";
-    double DIS_MIN=box*box;
+    long double DIS_MIN=box*box;
     int DIS_atom;
-    double dis;
-    double X,Y;
-    double circx,circy;
+    long double dis;
+    long double X,Y;
+    long double circx,circy;
     int temp;
     for(int i=0; i<ATOM->neighbours; i++)
     {
@@ -807,23 +823,25 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             atom L=*ATOM;
             atom M=Atoms[ATOM->contigous[0][TYPE]];
             atom R=Atoms[ATOM->neighlist[i]];
-            double ax=M.x-L.x;
-            double ay=M.y-L.y;
-            double bx=R.x-L.x;
-            double by=R.y-L.y;
+            long double ax=M.x-L.x;
+            long double ay=M.y-L.y;
+            long double bx=R.x-L.x;
+            long double by=R.y-L.y;
+            ax=(ax-(tilt*lround(ay/twob)));
             ax=(ax-(twob*lround(ax/twob)));
             ay=(ay-(twob*lround(ay/twob)));
+            bx=(bx-(tilt*lround(by/twob)));
             bx=(bx-(twob*lround(bx/twob)));
             by=(by-(twob*lround(by/twob)));
-            double rA,rS,rB;
-            double XA,YA,XB,YB;
-            double xA,yA,xB,yB;
-            double l;
-            double DISA;
-            double DISB;
-            double MA,MB,INMA,INMB;
-            double CA,CB;
-            double tan_sq;
+            long double rA,rS,rB;
+            long double XA,YA,XB,YB;
+            long double xA,yA,xB,yB;
+            long double l;
+            long double DISA;
+            long double DISB;
+            long double MA,MB,INMA,INMB;
+            long double CA,CB;
+            long double tan_sq;
             XA=ax;
             YA=ay;
             XB=bx;
@@ -848,10 +866,10 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             X=(CB-CA)/(INMA-INMB);
             Y=INMA*X+CA;
             tan_sq=X*X+Y*Y-rS*rS;
-            double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
+            long double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
             int sign_C;
             int sign_N;
-            double m;
+            long double m;
             m=YA/XA;
             if((by-(m*bx))<0.)
                 sign_N=-1;
@@ -947,10 +965,10 @@ void print_edge(atom *ATOM,delunay *D,atom Atoms[])
 
 }
 
-int calculate_line(double a,double b,double c,double d,double x,double y)
+int calculate_line(long double a,long double b,long double c,long double d,long double x,long double y)
 {
-    double m=(d-b)/(c-a);
-    double C=b-m*a;
+    long double m=(d-b)/(c-a);
+    long double C=b-m*a;
     if((y-(m*x+C))<0.)
         return -1;
     else
@@ -958,11 +976,11 @@ int calculate_line(double a,double b,double c,double d,double x,double y)
 }
 void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 {
-    double Y_MIN=box*box;
+    long double Y_MIN=box*box;
     int DIS_atom;
     int binv;
     int binv2;
-    double lmin;
+    long double lmin;
     //loop over all contiguos atom so far
     for(int i=0; i<ATOM->conti[TYPE]; i++)
     {
@@ -1014,26 +1032,28 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                 //the next section is basically a copy with D->B
                 //cout<<"hereA\n";
                 //cout<<i<<"\n";
-                double a=ATOM->x;
-                double b=ATOM->y;
-                double c=Atoms[ATOM->contigous[D->A][TYPE]].x;
-                double d=Atoms[ATOM->contigous[D->A][TYPE]].y;
-                double Sx=Atoms[ATOM->contigous[D->B][TYPE]].x-a;
-                double Sy=Atoms[ATOM->contigous[D->B][TYPE]].y-b;
+                long double a=ATOM->x;
+                long double b=ATOM->y;
+                long double c=Atoms[ATOM->contigous[D->A][TYPE]].x;
+                long double d=Atoms[ATOM->contigous[D->A][TYPE]].y;
+                long double Sx=Atoms[ATOM->contigous[D->B][TYPE]].x-a;
+                long double Sy=Atoms[ATOM->contigous[D->B][TYPE]].y-b;
+                Sx=(Sx-(tilt*lround(Sy/twob)));
                 Sx=(Sx-(twob*lround(Sx/twob)));
                 Sy=(Sy-(twob*lround(Sy/twob)));
-                double Y=((d-b)-(twob*lround((d-b)/twob)));
-                double X=((c-a)-(twob*lround((c-a)/twob)));
-                double m=Y/X;
-                double C=0.;
+                long double X=((c-a)-(tilt*lround((d-b)/twob)));
+                X=(X-(twob*lround(X/twob)));
+                long double Y=((d-b)-(twob*lround((d-b)/twob)));
+                long double m=Y/X;
+                long double C=0.;
                 int sign;
                 int flag=1;
                 int k;
-                double circx;
-                double circy;
+                long double circx;
+                long double circy;
                 int temp1;
-                double midbx=0.;
-                double midby=0.;
+                long double midbx=0.;
+                long double midby=0.;
                 if((Sy-(m*Sx+C))<0.)
                     sign=-1;
                 else
@@ -1041,10 +1061,10 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                 for(int j=0; j<ATOM->neighbours; j++)
                 {
                     //cout<<"this is a neighbour="<<ATOM->neighlist[j]<<"\n";
-
                     int sign_N;
-                    double x=Atoms[ATOM->neighlist[j]].x-a;
-                    double y=Atoms[ATOM->neighlist[j]].y-b;
+                    long double x=Atoms[ATOM->neighlist[j]].x-a;
+                    long double y=Atoms[ATOM->neighlist[j]].y-b;
+                    x=(x-(tilt*lround(y/twob)));
                     x=(x-(twob*lround(x/twob)));
                     y=(y-(twob*lround(y/twob)));
                     if((y-(m*x+C))<0.)
@@ -1070,26 +1090,29 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                     //cout<<j<<"\t"<<flag<<"\n";
                     if(sign!=sign_N && flag)
                     {
+			    //cout<<j<<"\n";
                         atom L=*ATOM;
                         atom M=Atoms[ATOM->contigous[D->A][TYPE]];
                         atom R=Atoms[ATOM->neighlist[j]];
-                        double ax=M.x-L.x;
-                        double ay=M.y-L.y;
-                        double bx=R.x-L.x;
-                        double by=R.y-L.y;
+                        long double ax=M.x-L.x;
+                        long double ay=M.y-L.y;
+                        long double bx=R.x-L.x;
+                        long double by=R.y-L.y;
+                        ax=(ax-(tilt*lround(ay/twob)));
                         ax=(ax-(twob*lround(ax/twob)));
                         ay=(ay-(twob*lround(ay/twob)));
+                        bx=(bx-(tilt*lround(by/twob)));
                         bx=(bx-(twob*lround(bx/twob)));
                         by=(by-(twob*lround(by/twob)));
-                        double rA,rS,rB;
-                        double XA,YA,XB,YB;
-                        double xA,yA,xB,yB;
-                        double l;
-                        double DISA;
-                        double DISB;
-                        double MA,MB,INMA,INMB;
-                        double CA,CB;
-                        double tan_sq;
+                        long double rA,rS,rB;
+                        long double XA,YA,XB,YB;
+                        long double xA,yA,xB,yB;
+                        long double l;
+                        long double DISA;
+                        long double DISB;
+                        long double MA,MB,INMA,INMB;
+                        long double CA,CB;
+                        long double tan_sq;
                         XA=ax;
                         YA=ay;
                         XB=bx;
@@ -1115,7 +1138,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                         Y=INMA*X+CA;
                         //	cout<<"thisguy2=";
                         tan_sq=X*X+Y*Y-rS*rS;
-                        double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
+                        long double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
                         int sign_C;
                         if((Y-(m*X+C))<0.)
                             sign_C=-1;
@@ -1131,6 +1154,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                         {
                             ;
                             Y_MIN=Y_AXIS;
+			    //cout<<DIS_atom<<"this\n";
                             DIS_atom=ATOM->neighlist[j];
                             circx=X;
                             circy=Y;
@@ -1196,7 +1220,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                 }
 
                 //cout<<DIS_atom<<"\n";
-                //cout<<Atoms[DIS_atom].x<<"\t"<<Atoms[DIS_atom].y<<"\n";
+                //cout<<Atoms[DIS_atom].x<<"\t"<<Atoms[DIS_atom].y<<"this\n";
                 delunay *temp=nullptr;
                 temp=D;
                 while(1)
@@ -1234,37 +1258,42 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
             else
             {
                 //cout<<"hereb\n";
-                ///cout<<i<<"\n";
-                double a=ATOM->x;
-                double b=ATOM->y;
-                double c=Atoms[ATOM->contigous[D->B][TYPE]].x;
-                double d=Atoms[ATOM->contigous[D->B][TYPE]].y;
-                double Sx=Atoms[ATOM->contigous[D->A][TYPE]].x-a;
-                double Sy=Atoms[ATOM->contigous[D->A][TYPE]].y-b;
+                //cout<<i<<"\n";
+                long double a=ATOM->x;
+                long double b=ATOM->y;
+                long double c=Atoms[ATOM->contigous[D->B][TYPE]].x;
+                long double d=Atoms[ATOM->contigous[D->B][TYPE]].y;
+                long double Sx=Atoms[ATOM->contigous[D->A][TYPE]].x-a;
+                long double Sy=Atoms[ATOM->contigous[D->A][TYPE]].y-b;
+	////////cout<<a<<"\t"<<b<<"\n";
+	////////cout<<Sx+a<<"\t"<<Sy+b<<"\n";
+                Sx=(Sx-(tilt*lround(Sy/twob)));
                 Sx=(Sx-(twob*lround(Sx/twob)));
                 Sy=(Sy-(twob*lround(Sy/twob)));
-                double Y=((d-b)-(twob*lround((d-b)/twob)));
-                double X=((c-a)-(twob*lround((c-a)/twob)));
-                double m=Y/X;
-                double C=0.;
+                long double X=((c-a)-(tilt*lround((d-b)/twob)));
+                X=(X-(twob*lround((X)/twob)));
+                long double Y=((d-b)-(twob*lround((d-b)/twob)));
+                long double m=Y/X;
+                long double C=0.;
                 int sign;
                 int flag=1;
                 int k;
-                double circx;
-                double circy;
+                long double circx;
+                long double circy;
                 int temp1;
-                double midbx=0.;
-                double midby=0.;
+                long double midbx=0.;
+                long double midby=0.;
                 if((Sy-(m*Sx+C))<0.)
                     sign=-1;
                 else
                     sign=1;
                 for(int j=0; j<ATOM->neighbours; j++)
                 {
-                    //	cout<<"this is a neighbour="<<ATOM->neighlist[i]<<"\n";
+                    	//cout<<"this is a neighbour="<<ATOM->neighlist[j]<<"\n";
                     int sign_N;
-                    double x=Atoms[ATOM->neighlist[j]].x-a;
-                    double y=Atoms[ATOM->neighlist[j]].y-b;
+                    long double x=Atoms[ATOM->neighlist[j]].x-a;
+                    long double y=Atoms[ATOM->neighlist[j]].y-b;
+                    x=(x-(tilt*lround(y/twob)));
                     x=(x-(twob*lround(x/twob)));
                     y=(y-(twob*lround(y/twob)));
                     if((y-(m*x+C))<0.)
@@ -1291,23 +1320,25 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                         atom L=*ATOM;
                         atom M=Atoms[ATOM->contigous[D->B][TYPE]];
                         atom R=Atoms[ATOM->neighlist[j]];
-                        double ax=M.x-L.x;
-                        double ay=M.y-L.y;
-                        double bx=R.x-L.x;
-                        double by=R.y-L.y;
+                        long double ax=M.x-L.x;
+                        long double ay=M.y-L.y;
+                        long double bx=R.x-L.x;
+                        long double by=R.y-L.y;
+                        ax=(ax-(tilt*lround(ay/twob)));
                         ax=(ax-(twob*lround(ax/twob)));
                         ay=(ay-(twob*lround(ay/twob)));
+                        bx=(bx-(tilt*lround(by/twob)));
                         bx=(bx-(twob*lround(bx/twob)));
                         by=(by-(twob*lround(by/twob)));
-                        double rA,rS,rB;
-                        double XA,YA,XB,YB;
-                        double xA,yA,xB,yB;
-                        double l;
-                        double DISA;
-                        double DISB;
-                        double MA,MB,INMA,INMB;
-                        double CA,CB;
-                        double tan_sq;
+                        long double rA,rS,rB;
+                        long double XA,YA,XB,YB;
+                        long double xA,yA,xB,yB;
+                        long double l;
+                        long double DISA;
+                        long double DISB;
+                        long double MA,MB,INMA,INMB;
+                        long double CA,CB;
+                        long double tan_sq;
                         XA=ax;
                         YA=ay;
                         XB=bx;
@@ -1332,7 +1363,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                         X=(CB-CA)/(INMA-INMB);
                         Y=INMA*X+CA;
                         tan_sq=X*X+Y*Y-rS*rS;
-                        double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
+                        long double Y_AXIS=sqrt(pow(X-xA,2)+pow(Y-yA,2));
                         int sign_C;
                         if((Y-(m*X+C))<0.)
                             sign_C=-1;
@@ -1344,6 +1375,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                         X=X+L.x;
                         Y=Y+L.y;
                         int sign_circ;
+			//cout<<j<<"\t"<<Y_AXIS<<"\n";
                         if(Y_AXIS<Y_MIN)
                         {
                             ;
@@ -1394,8 +1426,8 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                     ATOM->edge_index[k][TYPE]++;
                 }
 
-                //cout<<DIS_atom<<"\n";
-                //cout<<Atoms[DIS_atom].x<<"\t"<<Atoms[DIS_atom].y<<"\n";
+                  //cout<<DIS_atom<<"\n";
+                  //cout<<Atoms[DIS_atom].x<<"\t"<<Atoms[DIS_atom].y<<"\n";
                 delunay *temp=nullptr;
                 temp=D;
                 while(1)
@@ -1440,29 +1472,26 @@ int main()
     atom *Atoms=NULL;
     int counter=0;
     int config_count=0;
-    //cout << "Maximum value for dou: " << std::numeric_limits<double>::min() << '\n';
-    std::ifstream infile("config_2000_0.38_2_0.70.dat");
-    infile>>nAtoms;
-    infile>>box;
-    cout<<nAtoms<<"\t"<<box<<"\n";
-    config_count=100;
+    //cout << "Maximum value for dou: " << std::numeric_limits<long double>::min() << '\n';
+    std::ifstream infile("dat");//config_2000_0.38_2_0.70.dat");
+    //infile>>nAtoms;
+    nAtoms=2000;
+    config_count=1;
     int ntypes=2;
     twob=2*box;
-    density=nAtoms/(twob*twob);
     int SAM=0;
-    double *radius=new (nothrow) double[ntypes];
+    long double *radius=new (nothrow) long double[ntypes];
     long double b,c,d,e;
-    for(int t=0; t<ntypes; t++)
-    {
-        infile>>radius[t];
-    }
+    radius[0]=0.5;
+    radius[1]=0.7;
     //nAtoms=0;
     char buffer[64];
     vertice *temp_site=nullptr;
     temp_site=sites;
-    double free_dist[1000]={0.};
-    double max_free_area=0.;
-    double width;
+    long double free_dist[1000]={0.};
+    long double max_free_area=0.;
+    long double width;
+    long double dummy;
     snprintf(buffer,sizeof(char)*64,"free_dist");//_%d_%f.dat",int(nAtoms),Press);
     ofstream fdist;
     fdist.open(buffer);
@@ -1473,7 +1502,13 @@ int main()
 	Atoms = new (nothrow) atom[nAtoms];
 	cout<<nconfig<<"\n"<<std::flush;
 	counter=0;
-	while(infile>>b>>c>>d>>e)
+	infile>>twob;
+	box=0.5*twob;
+	infile>>density;
+	infile>>dummy;
+	infile>>dummy;
+	infile>>tilt;
+	while(infile>>b>>c>>d)
 	{
 	  //Atoms[nAtoms].x=b;
 	  //Atoms[nAtoms].y=c;
@@ -1489,7 +1524,7 @@ int main()
 	    	sites->p=new site;
 	    	sites->p->x=b;
 	    	sites->p->y=c;
-	    	sites->r=d;
+	    	sites->r=radius[int(d)-1];
 	    }
 	    else 
 	    {
@@ -1497,7 +1532,7 @@ int main()
 	    	temp_site->p=new site;
 	    	temp_site->p->x=b;
 	    	temp_site->p->y=c;
-	    	temp_site->r=d;
+	    	temp_site->r=radius[int(d)-1]-0.000000000001;
 	    	insert_site(sites,temp_site);
 	    }
 	    if(counter==nAtoms)
@@ -1520,13 +1555,31 @@ int main()
 	    else
 	    	break;
 	}
-     // for(int i=0;i<nAtoms;i++)
-     // {
-     //         cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\t"<<Atoms[i].radius<<"\t"<<Atoms[i].radius<<"\n";
-     // }
-	//return 0;
+      //for(int i=0;i<nAtoms;i++)
+      //{
+      //        cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\t"<<Atoms[i].radius<<"\t"<<Atoms[i].radius<<"\n";
+      //}
 	update_neighbours(Atoms,nAtoms);
-	double area=0;
+        for(int i=0;i<nAtoms;i++)
+        {
+        	for(int j=0;j<Atoms[i].neighbours;j++)
+        	{
+		    long double drx,dry,dr;
+		    drx=Atoms[i].x-Atoms[Atoms[i].neighlist[j]].x;
+		    dry=Atoms[i].y-Atoms[Atoms[i].neighlist[j]].y;
+		    drx=(drx-(tilt*lround(dry/twob)));
+		    drx=(drx-(twob*lround(drx/twob)));
+		    dry=(dry-(twob*lround(dry/twob)));
+		    dr=sqrt(drx*drx+dry*dry);
+		    if(dr<Atoms[i].radius+Atoms[Atoms[i].neighlist[j]].radius)
+		    {
+			    cout<<"error\t"<<dr<<"\n";
+		    }
+        		//cout<<Atoms[Atoms[i].neighlist[j]].x<<"\t"<<Atoms[Atoms[i].neighlist[j]].y<<"\n";
+        	}
+        }
+        //return 0;
+	long double area=0;
 	vertice *save=nullptr;
 	//cout<<"here\n";
 	for(int i=0; i<nAtoms; i++)
@@ -1574,36 +1627,36 @@ int main()
 	    vor.open(buffer);
 	    r_cut=radius[TYPE];
 	    cout<<TYPE<<"\t"<<r_cut<<"\n";
-	    for(SAM=0 ; SAM<nAtoms ; SAM++)
+	    for(SAM=0 ; SAM<nAtoms; SAM++)
 	    {
 	        {
 	    	first_delunay(&(Atoms[SAM]),Atoms,TYPE);
 	    	complete_del(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
 	    	delunay *D=nullptr;
 	    	int count=0;
-	    	double area_s=0;
+	    	long double area_s=0;
 	    	//cout<<SAM<<"\n";
 	    	//if(SAM==492)
-	    	//{
-	    	//	cout<<TYPE<<"\n";
-	    	//	D=Atoms[SAM].D[0].initial;
-	    	//	cout<<"cuthere\n";
-	    	//	while(1)
-	    	//	{
-	    	//		print_delunay(&(Atoms[SAM]),D,Atoms,0);
-	    	//		count++;
-	    	//		if(D->next)
-	    	//		{
-	    	//			D=D->next;
-	    	//		}
-	    	//		else
-	    	//			break;
-	    	//	}
-	    	//}
+	      //{
+	      //	cout<<TYPE<<"\n";
+	      //	D=Atoms[SAM].D[0].initial;
+	      //	cout<<"cuthere\n";
+	      //	while(1)
+	      //	{
+	      //		print_delunay(&(Atoms[SAM]),D,Atoms,0);
+	      //		count++;
+	      //		if(D->next)
+	      //		{
+	      //			D=D->next;
+	      //		}
+	      //		else
+	      //			break;
+	      //	}
+	      //}
 	    	for(int i=0; i<Atoms[SAM].conti[TYPE]; i++)
 	    	{
 	    	    D=Atoms[SAM].D[TYPE].initial;
-	    	    double a,b,p,q,x,y;
+	    	    long double a,b,p,q,x,y;
 	    	    x=Atoms[SAM].x;
 	    	    y=Atoms[SAM].y;
 	    	    int flaga=1;
@@ -1679,10 +1732,11 @@ int main()
 	    	    temp=V->insert_vertice(start[TYPE],temp,TYPE);
 	    	    //display_SITE(tempert);
 	    	    //display_SITE(temp_vert_d->p);
-	    	    double m;
-	    	    double X,Y,dis;
+	    	    long double m;
+	    	    long double X,Y,dis;
 	    	    X=Atoms[Atoms[SAM].contigous[i][TYPE]].x-Atoms[SAM].x;
 	    	    Y=Atoms[Atoms[SAM].contigous[i][TYPE]].y-Atoms[SAM].y;
+	    	    X=(X-(tilt*lround(Y/twob)));
 	    	    X=(X-(twob*lround(X/twob)));
 	    	    Y=(Y-(twob*lround(Y/twob)));
 	    	    dis=sqrt(distance(X,Y));
@@ -1739,12 +1793,13 @@ int main()
 	    vertice *temp_start=nullptr;
 	    temp_start=start[TYPE];
 	    int void_vert_count=0;
-	    //cout<<"after  first tessellation \t"<<TYPE<<"\n";;
+	    cout<<"after  first tessellation \t"<<TYPE<<"\n";;
+	    cout<<r_cut<<"\n";
 	    while(1)
 	    {
-	        if(temp_start->v_neigh_count == 2)
+	        if(temp_start->v_neigh_count != 3)
 	        {
-		      //display_SITE(temp_start->p);
+		  display_SITE(temp_start->p);
 		      //cout<<std::flush;
 	          V->delete_vertice(start[TYPE],temp_start,TYPE);
 	          vertice *temp=nullptr;
@@ -1760,15 +1815,15 @@ int main()
 			
 	      //if(TYPE==0)
 	      //{
-	          //display_SITE(temp_start->p);
+	        //display_SITE(temp_start->p);
 	      //}
 	        int flag=1;
-	        double AX,AY,BX,BY,X,Y;
+	        long double AX,AY,BX,BY,X,Y;
 	        BX=temp_start->p->x ;
 	        BY=temp_start->p->y;
 	        AX=Atoms[temp_start->A].x;
 	        AY=Atoms[temp_start->A].y;
-	        double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	        long double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
 	        if(dis<r_cut+Atoms[temp_start->A].radius)
 	        {
 	    	flag=0;
@@ -1808,7 +1863,6 @@ int main()
 	    vor.close();
 	}
 	//CODE BEGINS FOR CALCULATING FREE VOLUME
-	//return 0;
 	cout<<"are we here\n"<<std::flush;
 	ofstream vor;
 	for(int t=0; t<ntypes; t++)
@@ -1823,7 +1877,8 @@ int main()
 	    }
 	    config.close();
 	}
-	cout<<"are we here2\n"<<std::flush;
+	//return 0;
+	//cout<<"are we here2\n"<<std::flush;
 	//SAM=2;
 	int TYPE=1;
 	//cout<<Atoms[35].conti[TYPE]<<"\n";
@@ -1832,10 +1887,10 @@ int main()
 	//    cout<<k<<"\t"<<Atoms[35].contigous[k][TYPE]<<"\n";
 	//}
 	//LOOP OVER ALL ATOMS , CALCULATE THE FREE VOL FOR EACH ATOM
-	double *freearea=nullptr;
-	double *freeperi=nullptr;
-	freearea=new (nothrow) double [nAtoms];
-	freeperi=new (nothrow) double [nAtoms];
+	long double *freearea=nullptr;
+	long double *freeperi=nullptr;
+	freearea=new (nothrow) long double [nAtoms];
+	freeperi=new (nothrow) long double [nAtoms];
 	for(int i=0; i<nAtoms; i++)
 	{
 		freearea[i]=0.;
@@ -1843,6 +1898,7 @@ int main()
 	}
 	for(int i=0; i<nAtoms; i++)
 	{
+
 	    vertice *temp_start=nullptr;
 	  //  temp_start=start[TYPE];
 	  //while(1)
@@ -1873,13 +1929,13 @@ int main()
 	  //		break;
 	  //}
 
+
 	    container_vertice *new_vert=NULL;
 	    int Atom_in_foc=i;
 	    //set_of_delunay D;
 	    //cout<<"Atom co-ordiantes\n";
-	    //cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
-	    r_cut=Atoms[i].radius;
-	    //cout<<i<<" Atoms NO \n";
+	    cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
+	    cout<<i<<" Atoms NO \n";
 	    TYPE=Atoms[i].type;
 	    //FIND THE ATOM RADIUS
 	    
@@ -1891,7 +1947,8 @@ int main()
 	//          break;
 	//      }
 	//  }
-	    //cout<<TYPE<<"\t"<<"TYPE"<<"\n";
+	    r_cut=radius[TYPE];
+	    cout<<TYPE<<"\t"<<"TYPE"<<"\n";
 	    container_vertice *ctemp=nullptr;
 	    ctemp=Atoms[i].Cstart[TYPE];
 	    //REMOVE THE VERTICES WHICH BELONGED TO THE VORONOI CELL OF THE ATOM IN CONSIDERATIO (i)
@@ -1932,6 +1989,19 @@ int main()
 	    //cout<<Atoms[Atoms[i].contigous[0][TYPE]].x<<"\t"<<Atoms[Atoms[i].contigous[0][TYPE]].y<<"\n";
 	    //cout<<TYPE<<" TYPE\n";
 	    //LOOP OVER ALL THE ATOMS THAT ARE CONTIGUOUS TO i
+	    delunay *D=nullptr;
+	  //D=Atoms[i].D[TYPE].initial;
+	  //cout<<"cuthere\n";
+	  //while(1)
+	  //{
+	  //	print_delunay(&(Atoms[SAM]),D,Atoms,0);
+	  //	if(D->next)
+	  //	{
+	  //		D=D->next;
+	  //	}
+	  //	else
+	  //		break;
+	  //}
 	    for(int j=0; j<Atoms[i].conti[TYPE]; j++)
 	    {
 	        //cout<<"eye "<<j<<"\t"<<Atoms[35].conti[TYPE]<<"\n";
@@ -1970,13 +2040,12 @@ int main()
 	        first_delunay(&(Atoms[SAM]),Atoms,TYPE);
 	        complete_del(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
 	        int count=0;
-	        double area_s=0;
+	        long double area_s=0;
 	        //cout<<SAM<<"\t"<<Atoms[SAM].conti[TYPE]<<"=SAM\n";
 	        for(int i=0; i<Atoms[SAM].conti[TYPE]; i++)
 	        {
-	    	//cout<<i<<"\n";
 	    	D=Atoms[SAM].D[TYPE].initial;
-	    	double a,b,p,q,x,y;
+	    	long double a,b,p,q,x,y;
 	    	x=Atoms[SAM].x;
 	    	y=Atoms[SAM].y;
 	    	int flaga=1;
@@ -2037,7 +2106,7 @@ int main()
 	    	    temp=V->insert_vertice(start[TYPE],temp,TYPE);
 	    	    if(temp_o==temp)
 	    	    {
-	    		double Ax,Ay,Bx,By,Cx,Cy,px,py,m,Co;
+	    		long double Ax,Ay,Bx,By,Cx,Cy,px,py,m,Co;
 	    		int sign_1,sign_2;
 	    		int flag=1;
 	    		Ax=Atoms[temp->A].x;
@@ -2054,10 +2123,13 @@ int main()
 	    		py=Atoms[Atom_in_foc].y;
 	    		px=px-Ax;
 	    		py=py-Ay;
+	    		Cx=(Cx-(tilt*lround(Cy/twob)));
 	    		Cx=(Cx-(twob*lround(Cx/twob)));
 	    		Cy=(Cy-(twob*lround(Cy/twob)));
+	    		Bx=(Bx-(tilt*lround(By/twob)));
 	    		Bx=(Bx-(twob*lround(Bx/twob)));
 	    		By=(By-(twob*lround(By/twob)));
+	    		px=(px-(tilt*lround(py/twob)));
 	    		px=(px-(twob*lround(px/twob)));
 	    		py=(py-(twob*lround(py/twob)));
 	    		m=By/Bx;
@@ -2146,7 +2218,7 @@ int main()
 	    		container_vertice *ctemp=nullptr;
 	    		ctemp = new container_vertice;
 	    		ctemp->V=temp;
-	    	////////display_SITE(ctemp->V->p);
+	    	        //display_SITE(ctemp->V->p);
 		////////cout<<"insertion begins\n";
 	    		if(!new_vert)
 	    		{
@@ -2178,7 +2250,7 @@ int main()
 	    	//cout<<"here2\n";
 	    	if(temp_o==temp)
 	    	{
-	    	    double Ax,Ay,Bx,By,Cx,Cy,px,py,m,Co;
+	    	    long double Ax,Ay,Bx,By,Cx,Cy,px,py,m,Co;
 	    	    int sign_1,sign_2;
 	    	    int flag=1;
 	    	    Ax=Atoms[temp->A].x;
@@ -2189,22 +2261,26 @@ int main()
 	    	    Cy=Atoms[temp->D->b].y;
 	    	    px=Atoms[Atom_in_foc].x;
 	    	    py=Atoms[Atom_in_foc].y;
-	    	  //cout<<Ax<<"\t"<<Ay<<"\n";
-	    	  //cout<<Bx<<"\t"<<By<<"\n";
-	    	  //cout<<Cx<<"\t"<<Cy<<"\n";
-	    	  //cout<<px<<"\t"<<py<<"\n";
 	    	    Bx=Bx-Ax;
 	    	    By=By-Ay;
 	    	    Cx=Cx-Ax;
 	    	    Cy=Cy-Ay;
 	    	    px=px-Ax;
 	    	    py=py-Ay;
+	    	    Cx=(Cx-(tilt*lround(Cy/twob)));
 	    	    Cx=(Cx-(twob*lround(Cx/twob)));
 	    	    Cy=(Cy-(twob*lround(Cy/twob)));
+	    	    Bx=(Bx-(tilt*lround(By/twob)));
 	    	    Bx=(Bx-(twob*lround(Bx/twob)));
 	    	    By=(By-(twob*lround(By/twob)));
+	    	    px=(px-(tilt*lround(py/twob)));
 	    	    px=(px-(twob*lround(px/twob)));
 	    	    py=(py-(twob*lround(py/twob)));
+		    cout<<std::setprecision(25);
+	    	  //cout<<Ax<<"\t"<<Ay<<"\n";
+	    	  //cout<<Bx+Ax<<"\t"<<By+Ay<<"\n";
+	    	  //cout<<Cx+Ax<<"\t"<<Cy+Ay<<"\n";
+	    	  //cout<<px+Ax<<"\t"<<py+Ay<<"\n";
 	    	    m=By/Bx;
 	    	    if(Cy-m*Cx>0.)
 	    	    {
@@ -2296,7 +2372,7 @@ int main()
 	    	    container_vertice *ctemp=nullptr;
 	    	    ctemp = new container_vertice;
 	    	    ctemp->V=temp;
-	    	  //display_SITE(ctemp->V->p);
+	    	    //display_SITE(ctemp->V->p);
 		  //cout<<"insertion begins\n";
 	    	    if(!new_vert)
 	    	    {
@@ -2312,10 +2388,13 @@ int main()
 	    	    }
 	    	}
 	    	temp_vert_d=temp;
-	    	double m;
-	    	double X,Y,dis;
+		//display_SITE(temp_vert_o->p);
+		//display_SITE(temp_vert_d->p);
+	    	long double m;
+	    	long double X,Y,dis;
 	    	X=Atoms[Atoms[SAM].contigous[i][TYPE]].x-Atoms[SAM].x;
 	    	Y=Atoms[Atoms[SAM].contigous[i][TYPE]].y-Atoms[SAM].y;
+	    	X=(X-(tilt*lround(Y/twob)));
 	    	X=(X-(twob*lround(X/twob)));
 	    	Y=(Y-(twob*lround(Y/twob)));
 	    	dis=sqrt(distance(X,Y));
@@ -2338,17 +2417,18 @@ int main()
 	    	else
 	    	    Atoms[SAM].bondinvoid[i][TYPE]=0;
 	    	//if(Atoms[SAM].bondinvoid[i])
-	    ////{
-	    ////    vor<<std::setprecision(15)<<x<<"\t"<<y<<"\t"<<std::flush;
-	    ////    vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
-	    ////    vor<<"\n"<<std::flush;
-	    ////}
+	        {
+	            vor<<std::setprecision(15)<<x<<"\t"<<y<<"\t"<<std::flush;
+	            vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
+	            vor<<"\n"<<std::flush;
+	        }
 	    	add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i][TYPE]);
 	    	add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i][TYPE]);
 	        }
 	        //cout<<"here\n";
 	    }
-	    //cout<<"herere\n";
+	    cout<<"herere\n";
+	    //return 0;
 	    //display_SITE(new_vert->V->p);
 	    //display_SITE(new_vert->next->V->p);
 	    //cout<<"eye "<<Atoms[35].conti[TYPE]<<"\n";
@@ -2369,6 +2449,7 @@ int main()
 	    //  }
 	    container_vertice *cstart=nullptr;
 	    cstart=CSTART[TYPE];
+	    //display_SITE(cstart->V->p);
 	    container_vertice *temp_new_vert=nullptr;
 	    temp_new_vert=new_vert;
 	    while(1)
@@ -2387,7 +2468,7 @@ int main()
 		else
 			break;
 	    }
-	    //cout<<"####\n";
+	    cout<<"####\n";
 	    temp_new_vert=new_vert;
 	    while(1)
 	    {
@@ -2409,6 +2490,7 @@ int main()
 		else
 			break;
 	    }
+	    //display_SITE(cstart->V->p);
 	    container_vertice *temp_new_vert1=nullptr;
 	    temp_new_vert=new_vert;
 	    int flag1=1,flag2=1;
@@ -2548,35 +2630,45 @@ int main()
 		    	break;
 		    }
 	    }
-	    //cout<<r_cut<<"\n";
+	    cout<<r_cut<<"\n";
 	    temp_new_vert=new_vert;
 	    while(1)
 	    {
 	        temp_start=temp_new_vert->V;
 		//display_SITE(temp_start->p);
 	        int flag=1;
-	        double AX,AY,BX,BY,X,Y;
+	        long double AX,AY,BX,BY,X,Y;
 	        BX=temp_start->p->x ;
 	        BY=temp_start->p->y;
-	        AX=Atoms[temp_start->A].x;
-	        AY=Atoms[temp_start->A].y;
-	        double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	        AX=Atoms[temp_start->A].x-BX;
+	        AY=Atoms[temp_start->A].y-BY;
+		AX=AX-tilt*lround(AY/twob);
+		AX=AX-twob*lround(AX/twob);
+		AY=AY-twob*lround(AY/twob);
+	        long double dis=sqrt((AX)*(AX)+(AY)*(AY));
 	        if(dis<r_cut+Atoms[temp_start->A].radius)
 	        {
-	    	flag=0;
+	    		flag=0;
 	    	//break;
 	        }
-	        AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].x;
-	        AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].y;
-	        dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	        AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].x-BX;
+	        AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].y-BY;
+		AX=AX-tilt*lround(AY/twob);
+		AX=AX-twob*lround(AX/twob);
+		AY=AY-twob*lround(AY/twob);
+	        dis=sqrt((AX)*(AX)+(AY)*(AY));
 	        if(dis<r_cut+Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].radius)
 	        {
 	    	flag=0;
 	    	//break;
 	        }
-	        AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].x;
-	        AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].y;
-	        dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
+	        AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].x-BX;
+	        AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].y-BY;
+		AX=AX-tilt*lround(AY/twob);
+		AX=AX-twob*lround(AX/twob);
+		AY=AY-twob*lround(AY/twob);
+	        dis=sqrt((AX)*(AX)+(AY)*(AY));
+	        //dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
 	        //cout<<dis<<"\t"<<AX<<"\t"<<AY<<"\t"<<temp_start->D->B<<"\n";;
 	        if(dis<r_cut+Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].radius)
 	        {
@@ -2589,13 +2681,14 @@ int main()
 	        BY=temp_start->p->y;
 	        X=AX-BX;
 	        Y=AY-BY;
+	        X=(X-(tilt*lround(Y/twob)));
 	        X=(X-(twob*lround(X/twob)));
 	        Y=(Y-(twob*lround(Y/twob)));
 	        dis=sqrt((X)*(X)+(Y)*(Y));
 	    	//display_SITE(temp_start->p);
 	        if(flag)//&& temp_start_start->v_neigh_count == 3)
 	        {
-		  //  cout<<"####\n";
+		    //cout<<"####\n";
 	    	//display_SITE(temp_start->p);
 		  //  cout<<temp_start->D->Ax<<"\t"<<temp_start->D->Ay<<"\n";
 		  //  cout<<temp_start->D->Bx<<"\t"<<temp_start->D->By<<"\n";
@@ -2609,12 +2702,41 @@ int main()
 	        else
 	    	break;
 	    }
+	    temp_start=start[TYPE];
+	    while(1)
+	    {
+	        //if(temp_start->v_neigh_count!=3)
+	        {
+	    	    //display_SITE(temp_start->p);
+		    int count=0;
+		    for(int n=0;n<temp_start->v_neigh_count;n++)
+		    {
+		    	if(temp_start->neib_vert[n])
+			{
+				count++;
+			}
+		    }
+		    		//display_SITE(temp_start->p);
+		    if(temp_start->v_neigh_count!=3)
+		    {
+			    cout<<"#\t"<<count<<"= i need to \n";
+		   // cout<<temp_start->v_neigh_count<<"\n";
+		    		display_SITE(temp_start->p);
+		    }
+	        }
+	    	if(temp_start->next)
+	    	{
+	    		temp_start=temp_start->next;
+	    	}
+	    	else
+	    		break;
+	    }
 	    cstart=CSTART[TYPE];
 	////if(!new_vert)
 	////	new_vert=cstart;
 	    int void_vert_count=0;
 	    temp_new_vert=new_vert;
-	    //cout<<"here4\n";
+	    cout<<"here4\n";
 	  //while(1)
 	  //{
 	  //    //temp_new_vert->V=cstart->V;
@@ -2649,7 +2771,7 @@ int main()
 	    {
 	        if(cstart->V->is_void)
 	        {
-	////////display_SITE(cstart->V->p);
+	        display_SITE(cstart->V->p);
 	////////for(int i=0;i<cstart->V->v_neigh_count;i++)
 	////////{
 	////////	display_SITE(cstart->V->neib_vert[i]->p);
@@ -2664,7 +2786,7 @@ int main()
 	    int change=1;
 	    int void_vert_count_prev;
 	    int tem_ind=0;
-	    //cout<<"here?\n";
+	    cout<<"here?\n";
 	    while(change)
 	    {
 	        cstart=CSTART[TYPE];
@@ -2747,7 +2869,7 @@ int main()
 	        else
 	            break;
 	    }
-	    //cout<<void_vert_count<<"void_count\n"<<std::flush;
+	    cout<<void_vert_count<<"void_count\n"<<std::flush;
 	    vertice **cavity_list=nullptr;
 	    cavity_list = new (nothrow) vertice*[void_vert_count];
 	    cstart=CSTART[TYPE];
@@ -2773,10 +2895,11 @@ int main()
 	    }
 	    //return 0;
 	    //CALCULATING THE VOID VOLUME IN A GIVEN CAVITY
-	    double *void_area=nullptr;
-	    void_area= new (nothrow) double[void_vert_count];
-	    double *void_length=nullptr;
-	    void_length= new (nothrow) double[void_vert_count];
+	    cout<<"here cav\n";
+	    long double *void_area=nullptr;
+	    void_area= new (nothrow) long double[void_vert_count];
+	    long double *void_length=nullptr;
+	    void_length= new (nothrow) long double[void_vert_count];
 	    //return 0;
 	    for(int j=0 ; j<void_vert_count; j++)
 	    {
@@ -2784,15 +2907,15 @@ int main()
 	        void_length[j]=0;
 	        //display_SITE(cavity_list[j]->p);
 	        //cout<<cavity_list[j]->A<<"\t"<<cavity_list[j]->D->A<<"\t"<<cavity_list[j]->D->B<<"\n";
-	        double A1x,A1y,A2x,A2y,A3x,A3y,Vx,Vy;
-	        double E12x,E12y;
-	        double E13x,E13y;
-	        double E23x,E23y;
-	        double A1r,A2r,A3r;
-	        double m;
+	        long double A1x,A1y,A2x,A2y,A3x,A3y,Vx,Vy;
+	        long double E12x,E12y;
+	        long double E13x,E13y;
+	        long double E23x,E23y;
+	        long double A1r,A2r,A3r;
+	        long double m;
 	        int sign1,sign2;
 	        int S12,S23,S13;
-	        double C;
+	        long double C;
 	        A1x=Atoms[cavity_list[j]->A].x;
 	        A1y=Atoms[cavity_list[j]->A].y;
 	        A1r=Atoms[cavity_list[j]->A].radius+r_cut;
@@ -2807,26 +2930,32 @@ int main()
 	        E12y=cavity_list[j]->D->Ay-A1y;
 	        E13x=cavity_list[j]->D->Bx-A1x;
 	        E13y=cavity_list[j]->D->By-A1y;
+	        E12x=(E12x-(tilt*lround(E12y/twob)));
 	        E12x=(E12x-(twob*lround(E12x/twob)));
 	        E12y=(E12y-(twob*lround(E12y/twob)));
+	        E13x=(E13x-(tilt*lround(E13y/twob)));
 	        E13x=(E13x-(twob*lround(E13x/twob)));
 	        E13y=(E13y-(twob*lround(E13y/twob)));
 	        Vx=cavity_list[j]->p->x-A1x;
 	        Vy=cavity_list[j]->p->y-A1y;
+	        A2x=(A2x-(tilt*lround(A2y/twob)));
 	        A2x=(A2x-(twob*lround(A2x/twob)));
 	        A2y=(A2y-(twob*lround(A2y/twob)));
+	        A3x=(A3x-(tilt*lround(A3y/twob)));
 	        A3x=(A3x-(twob*lround(A3x/twob)));
 	        A3y=(A3y-(twob*lround(A3y/twob)));
 	////////cout<<j<<"\n";
 	////////cout<<A1x<<"\t"<<A1y<<"\t"<<A1r<<"\n";;
 	////////cout<<A2x+A1x<<"\t"<<A2y+A1y<<"\t"<<A2r<<"\n";
 	////////cout<<A3x+A1x<<"\t"<<A3y+A1y<<"\t"<<A3r<<"\n";
+	        Vx=(Vx-(tilt*lround(Vy/twob)));
 	        Vx=(Vx-(twob*lround(Vx/twob)));
 	        Vy=(Vy-(twob*lround(Vy/twob)));
-	        double X,Y,x,y;
-	        double rA,rS,DIS,l,dis_i,tan_sq;
+	        long double X,Y,x,y;
+	        long double rA,rS,DIS,l,dis_i,tan_sq;
 	        X=Atoms[cavity_list[j]->D->a].x-Atoms[cavity_list[j]->D->b].x;
 	        Y=Atoms[cavity_list[j]->D->a].y-Atoms[cavity_list[j]->D->b].y;
+	        X=(X-(tilt*lround(Y/twob)));
 	        X=(X-(twob*lround(X/twob)));
 	        Y=(Y-(twob*lround(Y/twob)));
 	        DIS=sqrt(X*X+Y*Y);
@@ -2839,6 +2968,7 @@ int main()
 	        y=y+Atoms[cavity_list[j]->D->b].y;
 	        E23x=x-A1x;
 	        E23y=y-A1y;
+	        E23x=(E23x-(tilt*lround(E23y/twob)));
 	        E23x=(E23x-(twob*lround(E23x/twob)));
 	        E23y=(E23y-(twob*lround(E23y/twob)));
 	        //calculating the area of A1VA2
@@ -2954,8 +3084,8 @@ int main()
 	        //cout<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\n";
 	    }
 	    //delete [] cavity_list;
-	    double cav_tot=0.;
-	    double ca_per_tot=0.;
+	    long double cav_tot=0.;
+	    long double ca_per_tot=0.;
 	    for(int i=0; i<void_vert_count; i++)
 	    {
 	        cav_tot=cav_tot+void_area[i];
@@ -2964,7 +3094,7 @@ int main()
 	    }
 	    freearea[i]=cav_tot;
 	    freeperi[i]=ca_per_tot;
-	    //cout<<cav_tot<<"\t"<<ca_per_tot<<"\n";
+	    cout<<cav_tot<<"\t"<<ca_per_tot<<"\n";
 	    temp_new_vert=new_vert;
 	    //cout<<"#####\n";
 	    while(1)
@@ -3001,7 +3131,7 @@ int main()
 	    //for(int j=0; j<Atoms[i].conti[TYPE]; j++)
 	    //{
 	    //    int SAM=Atoms[i].contigous[j][TYPE];
-            delunay *D=nullptr;
+            //delunay *D=nullptr;
             for(int j=0; j<Atoms[i].conti[TYPE]; j++)
             {
         	  //  cout<<j<<"\n"<<std::flush;
@@ -3057,7 +3187,7 @@ int main()
                 add_connected(temp2,temp1,Atoms[i].bondinvoid[j][TYPE],0);
         //cout<<"\n";
             }
-////////    cout<<"here\n"<<std::flush;
+            cout<<"here\n"<<std::flush;
             ctemp=Atoms[i].Cstart[TYPE];
             while(1)
             {
@@ -3089,7 +3219,7 @@ int main()
 				count++;
 			}
 		    }
-		    if(count!=3 || temp_start->v_neigh_count<3)
+		    if(temp_start->v_neigh_count!=3)
 		    {
 			    cout<<count<<"= i need to \n";
 		    cout<<temp_start->v_neigh_count<<"\n";
@@ -3198,9 +3328,9 @@ int main()
 			free_dist[int(freearea[f]/width)]++;
 	}
 	//cout<<"ahere\n";
-	double *sum_freearea=new (nothrow) double [ntypes];
-	double *sum_freeperi=new (nothrow) double [ntypes];
-	double *sum_freeratio=new (nothrow) double [ntypes];
+	long double *sum_freearea=new (nothrow) long double [ntypes];
+	long double *sum_freeperi=new (nothrow) long double [ntypes];
+	long double *sum_freeratio=new (nothrow) long double [ntypes];
 	int *count=new (nothrow) int [ntypes];
 	for(int t=0;t<ntypes;t++)
 	{
