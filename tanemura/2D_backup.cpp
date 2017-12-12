@@ -3,8 +3,12 @@
 #include<fstream>
 #include<ostream>
 #include<iomanip>
+#include<vector>
 #include <set>
 #include <limits>
+#include <functional>
+#include <numeric> 
+#include <algorithm>
 using namespace std;
 #define distance(x,y) x*x+y*y
 int dim=3;
@@ -13,7 +17,7 @@ long double twob;
 long double density;
 long double r_cut=0.0;
 long double tilt;
-long double DMIN=0.000000000000001;//std::numeric_limits<long double>::min();
+long double DMIN=0.00000000000001;//std::numeric_limits<long double>::min();
 struct atom;
 struct face;
 struct vertice;
@@ -133,9 +137,13 @@ void add_connected(vertice *focus,vertice *add,int binv,int debug=0)
     int i;
     if(debug)
     {
+	    cout<<"begin\n";
+	    cout<<focus<<"\n";
 	    display_SITE(focus->p);
 	    display_SITE(add->p);
     }
+  //if(!compare(focus->p,add->p))
+  //return ;
     //if(!compare(focus->p,add->p),0)
 	//cout<<"here22323\n";
     for(i=0; i<focus->v_neigh_count; i++)
@@ -144,20 +152,34 @@ void add_connected(vertice *focus,vertice *add,int binv,int debug=0)
 	if(focus->neib_vert[i])	
         if(!compare(focus->neib_vert[i]->p,add->p))
         {
-	        if(focus->neib_vert[i]->p->y-add->p->y)
+	        std::vector<int> EV1 {focus->neib_vert[i]->A,focus->neib_vert[i]->D->a,focus->neib_vert[i]->D->b};
+	        std::vector<int> v1 {add->A,add->D->a,add->D->b};
+	        std::sort(EV1.begin(),EV1.end());
+	        std::sort(v1.begin(),v1.end());
+	        if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
 	        {
-	        	if(focus->neib_vert[i]->p->y<0.)
-	        	{
-	        		focus->neib_vert[i]=add;
-	        	}
+			if(debug)
+			{
+				cout<<"here\n";
+			}
+			if(focus->neib_vert[i]->p->y-add->p->y)
+			{
+				if(focus->neib_vert[i]->p->y<0.)
+				{
+					if(debug)
+						cout<<"replaced\n";
+					focus->neib_vert[i]=add;
+				}
+			}
+	                flag=0;
+            		break;
 	        }
-
-            flag=0;
-            break;
         }
     }
     if(flag)
     {
+	    if(debug)
+	    cout<<"added\n";
         focus->neib_vert[focus->v_neigh_count]=add;
         focus->neib_ed[focus->v_neigh_count]=binv;
         focus->v_neigh_count=focus->v_neigh_count+1;
@@ -254,6 +276,23 @@ int insert_cvertice(container_vertice *EV,container_vertice *v,container_vertice
       display_SITE(EV->V->p);
       cout<<flag<<"\n";
     }
+    if(flag==0)
+    {
+	 std::vector<int> EV1 {EV->V->A,EV->V->D->a,EV->V->D->b};
+	 std::vector<int> v1 {v->V->A,v->V->D->a,v->V->D->b};
+	 std::sort(EV1.begin(),EV1.end());
+	 std::sort(v1.begin(),v1.end());
+	 if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+	 {
+		 flag=0;
+	////////delete v->p;
+	////////delete v;
+	////////return EV;
+	 }
+	 else
+		 flag=1;
+
+    }
     if(flag==1)
     {
         if(EV->next)
@@ -344,8 +383,44 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
     flag=compare(EV->p,v->p);
     if(debug)
     {
-        cout<<"flag\t"<<flag<<"\n";
+            cout<<flag<<"\n";
     }
+  //else if (flag==0)
+  //{
+  //        flag=-1;
+  //}
+  
+    if(flag==0)
+    {
+		 if(debug)
+		 {
+		cout<<"here\n";
+		 }
+	 std::vector<int> EV1 {EV->A,EV->D->a,EV->D->b};
+	 std::vector<int> v1 {v->A,v->D->a,v->D->b};
+	 std::sort(EV1.begin(),EV1.end());
+	 std::sort(v1.begin(),v1.end());
+		 if(debug)
+		 {
+		cout<<"here\n";
+	 cout<<EV1[0]<<"\t"<<EV1[1]<<"\t"<<EV1[2]<<"\n";
+	 cout<<v1[0]<<"\t"<<v1[1]<<"\t"<<v1[2]<<"\n";
+		 }
+	 if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+	 {
+		delete v->p;
+		delete v;
+		return EV;
+	 }
+	 else
+		 flag=1;
+
+    }
+    
+  //if(debug)
+  //{
+  //    cout<<"flag\t"<<flag<<"\n";
+  //}
     if(flag==1)
     {
         if(EV->next)
@@ -374,25 +449,35 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
         //	cout<<"here2?\n";
         return v;
     }
-    else if (flag==0)
-    {
-        //cout<<"vertice already exists\n";
-        delete v->p;
-        delete v;
-        return EV;
-    }
 }
 void vert_list::delete_vertice(vertice *EV,vertice *v,int type,int debug=0)
 {
     int flag;
     flag=compare(EV->p,v->p,1);
-  //if(debug)
-  //{
-  //  cout<<flag<<"\n";
-  //  display_SITE(EV->p);
-  //  display_SITE(v->p);
-  //  cout<<"\n"<<std::flush;
-  //}
+    if(flag==0)
+    {
+	 std::vector<int> EV1 {EV->A,EV->D->a,EV->D->b};
+	 std::vector<int> v1 {v->A,v->D->a,v->D->b};
+	 std::sort(EV1.begin(),EV1.end());
+	 std::sort(v1.begin(),v1.end());
+	 if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+	 {
+		 flag=0;
+	////////delete v->p;
+	////////delete v;
+	////////return EV;
+	 }
+	 else
+		 flag=1;
+
+    }
+    if(debug)
+    {
+      cout<<flag<<"\n";
+      display_SITE(EV->p);
+      display_SITE(v->p);
+      cout<<"\n"<<std::flush;
+    }
     if (flag==0)
     {
         if(EV->prev)
@@ -421,19 +506,34 @@ void vert_list::delete_vertice(vertice *EV,vertice *v,int type,int debug=0)
                 {
                     if(v->neib_vert[n]->neib_vert[m])
 		    {
-                        if(!(compare(v->neib_vert[n]->neib_vert[m]->p,v->p)))
+                        if(!(compare(v->neib_vert[n]->neib_vert[m]->p,v->p,1)))
                         {
-                            v->neib_vert[n]->neib_vert[m]=NULL;
-			    if(m==0)
+			    
+			    std::vector<int> EV1 {v->neib_vert[n]->neib_vert[m]->A,v->neib_vert[n]->neib_vert[m]->D->a,v->neib_vert[n]->neib_vert[m]->D->b};
+			    std::vector<int> v1 {v->A,v->D->a,v->D->b};
+			    std::sort(EV1.begin(),EV1.end());
+			    std::sort(v1.begin(),v1.end());
+			    if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
 			    {
-				v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
-				v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
+			    	flag=0;
+                                v->neib_vert[n]->neib_vert[m]=NULL;
+                                if(m==0)
+                                {
+                                    v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
+                                    v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
+                                    v->neib_vert[n]->neib_vert[m+2]=v->neib_vert[n]->neib_vert[m+3];
+                                }
+                                if(m==1)
+                                {
+                                    v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
+                                    v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
+                                }
+                                if(m==2)
+                                {
+                                    v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
+                                }
+                                v->neib_vert[n]->v_neigh_count=v->neib_vert[n]->v_neigh_count-1;
 			    }
-			    if(m==1)
-			    {
-				v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
-			    }
-			    v->neib_vert[n]->v_neigh_count=v->neib_vert[n]->v_neigh_count-1;
                         }
 		    }
                 }
@@ -621,26 +721,47 @@ long double area_trangle(long double Vx,long double Vy,long double E12x,long dou
         long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
         Aintx=(dise-disint)/dise*E12x;
         Ainty=(dise-disint)/dise*E12y;
+        //cout<<Ax+Vx+originx<<"\t"<<Ay+Vy+originy<<"\n";
         //cout<<Aintx+Vx+originx<<"\t"<<Ainty+Vy+originy<<"\n";
         Aint1x=(disv-Arad)/disv*Ax;
         Aint1y=(disv-Arad)/disv*Ay;
+        //cout<<Aint1x+Vx+originx<<"\t"<<Aint1y+Vy+originy<<"\n";
         X1=Aintx-Ax;
         Y1=Ainty-Ay;
         X2=Aint1x-Ax;
         Y2=Aint1y-Ay;
-        long double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
-        if((X2*X1+Y1*Y2)/(Arad*Arad)>1.)
-            theta=0.;
+        long double a,b,c,p,q,l,m;
+	a=sqrt(X1*X1+Y1*Y1);
+	b=sqrt(X2*X2+Y2*Y2);
+	c=sqrt((X1-X2)*(X1-X2)+(Y1-Y2)*(Y1-Y2));
+	long double theta=2*asin(sqrt((c*c-(a-b)*(a-b))/(4*a*b)));
+////////std::vector<long double> V1{X1,Y1};
+////////std::vector<long double> V2{X2,Y2};
+////////long double inp=std::inner_product(V1.begin(),V1.end(),V2.begin(),0.);
+	//cout<<sqrt(X1*X1+Y1*Y1)<<"\t"<<sqrt(X2*X2+Y2*Y2)<<"\n";
+	//cout<<"values\n"<<std::setprecision(100);
+	//cout<<X1<<"\t"<<Y1<<"\n";
+	//cout<<X2<<"\t"<<Y2<<"\n";
         //long double theta=acos(-1.0);
 
-        //cout<<theta<<"=theta\t"<<(X2*X1+Y1*Y2)/(Arad*Arad)+Y1*Y2<<"\n";
+        //cout<<theta<<"=theta\t"<<(X2*X1+Y1*Y2)/(Arad*Arad)<<"\n";
+       // X1=-Ax;
+       // Y1=-Ay;
+      //X2=Aint1x-Ax;
+      //Y2=Aint1y-Ay;
+      //long double len=sqrt(distance(X1,Y1));
+      //theta=acos((X2*X1+Y1*Y2)/(len*Arad));
+      //cout<<len-Arad<<"\n";
+      //cout<<theta<<"=theta\t"<<std::setprecision(50)<<(X2*X1+Y1*Y2)/(len*Arad)<<"\n";
         //cout<<Arad<<"\n";
-        areac=M_PI*Arad*Arad*(theta/(2.*M_PI));
-        long double a,b,p,q;
+        areac=M_PIl*Arad*Arad*(theta/(2.*M_PIl));
         a=Ax;
         b=Ay;
         p=Aintx;
         q=Ainty;
+	l=Aint1x;
+	m=Aint1y;
+	//cout<<0.5*abs(a*q+p*m+l*p-a*q-p*b)<<"\n";
         ////////cout<<"#\n";
         ////////cout<<Vx+originx<<"\t"<<Vy+originy<<"\t"<<a+Vx+originx<<"\t"<<b+Vy+originy<<"\n";
         ////////cout<<Vx+originx<<"\t"<<Vy+originy<<"\t"<<p+Vx+originx<<"\t"<<q+Vy+originy<<"\n";
@@ -1476,7 +1597,8 @@ int main()
     std::ifstream infile("dat");//config_2000_0.38_2_0.70.dat");
     //infile>>nAtoms;
     nAtoms=2000;
-    config_count=1;
+    cout<<std::setprecision(26);
+    config_count=100;
     int ntypes=2;
     twob=2*box;
     int SAM=0;
@@ -1488,7 +1610,7 @@ int main()
     char buffer[64];
     vertice *temp_site=nullptr;
     temp_site=sites;
-    long double free_dist[1000]={0.};
+    long long free_dist[10000]={0};
     long double max_free_area=0.;
     long double width;
     long double dummy;
@@ -1524,7 +1646,7 @@ int main()
 	    	sites->p=new site;
 	    	sites->p->x=b;
 	    	sites->p->y=c;
-	    	sites->r=radius[int(d)-1];
+	    	sites->r=radius[int(d)-1]-0.000000000001;
 	    }
 	    else 
 	    {
@@ -1586,7 +1708,7 @@ int main()
 	{
 	    for(int t=0; t<ntypes; t++)
 	    {
-	        if(Atoms[i].radius==radius[t])
+	        if(Atoms[i].radius==radius[t]-0.000000000001)
 	        {
 	    	Atoms[i].type=t;
 	    	break;
@@ -1863,7 +1985,7 @@ int main()
 	    vor.close();
 	}
 	//CODE BEGINS FOR CALCULATING FREE VOLUME
-	cout<<"are we here\n"<<std::flush;
+	//cout<<"are we here\n"<<std::flush;
 	ofstream vor;
 	for(int t=0; t<ntypes; t++)
 	{
@@ -1896,6 +2018,7 @@ int main()
 		freearea[i]=0.;
 		freeperi[i]=0.;
 	}
+	int percentage=1;
 	for(int i=0; i<nAtoms; i++)
 	{
 
@@ -1934,21 +2057,27 @@ int main()
 	    int Atom_in_foc=i;
 	    //set_of_delunay D;
 	    //cout<<"Atom co-ordiantes\n";
-	    cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
-	    cout<<i<<" Atoms NO \n";
+	    //cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
+	    //cout<<i<<" Atoms NO \n";
+	    if(i>percentage*nAtoms/4.)
+	    {
+		    cout<<percentage/4.*100.<<" completed\n";
+		    percentage++;
+
+	    } 
 	    TYPE=Atoms[i].type;
 	    //FIND THE ATOM RADIUS
 	    
-	//  for(int t=0; t<ntypes; t++)
-	//  {
-	//      if(r_cut==radius[t])
-	//      {
-	//          TYPE=t;
-	//          break;
-	//      }
-	//  }
+	  //for(int t=0; t<ntypes; t++)
+	  //{
+	  //    if(r_cut==radius[t])
+	  //    {
+	  //        TYPE=t;
+	  //        break;
+	  //    }
+	  //}
 	    r_cut=radius[TYPE];
-	    cout<<TYPE<<"\t"<<"TYPE"<<"\n";
+	    //cout<<TYPE<<"\t"<<"TYPE"<<"\t"<<r_cut<<"\n";
 	    container_vertice *ctemp=nullptr;
 	    ctemp=Atoms[i].Cstart[TYPE];
 	    //REMOVE THE VERTICES WHICH BELONGED TO THE VORONOI CELL OF THE ATOM IN CONSIDERATIO (i)
@@ -1972,7 +2101,7 @@ int main()
 	    {
 		 // if(i==1981)
 		 // {
-		 //     display_SITE(ctemp->V->p);
+		      //display_SITE(ctemp->V->p);
 	         //     V->delete_vertice(start[TYPE],ctemp->V,TYPE,1);
 		 // }
 		 // else
@@ -2276,7 +2405,6 @@ int main()
 	    	    px=(px-(tilt*lround(py/twob)));
 	    	    px=(px-(twob*lround(px/twob)));
 	    	    py=(py-(twob*lround(py/twob)));
-		    cout<<std::setprecision(25);
 	    	  //cout<<Ax<<"\t"<<Ay<<"\n";
 	    	  //cout<<Bx+Ax<<"\t"<<By+Ay<<"\n";
 	    	  //cout<<Cx+Ax<<"\t"<<Cy+Ay<<"\n";
@@ -2372,6 +2500,7 @@ int main()
 	    	    container_vertice *ctemp=nullptr;
 	    	    ctemp = new container_vertice;
 	    	    ctemp->V=temp;
+		   
 	    	    //display_SITE(ctemp->V->p);
 		  //cout<<"insertion begins\n";
 	    	    if(!new_vert)
@@ -2388,8 +2517,12 @@ int main()
 	    	    }
 	    	}
 	    	temp_vert_d=temp;
+		//cout<<"##\n";
+		//cout<<temp_vert_o->A<<"\t"<<temp_vert_o->D->a<<"\t"<<temp_vert_o->D->b<<"\n";
+		//cout<<temp_vert_d->A<<"\t"<<temp_vert_d->D->a<<"\t"<<temp_vert_d->D->b<<"\n";
 		//display_SITE(temp_vert_o->p);
 		//display_SITE(temp_vert_d->p);
+		//cout<<"##\n";
 	    	long double m;
 	    	long double X,Y,dis;
 	    	X=Atoms[Atoms[SAM].contigous[i][TYPE]].x-Atoms[SAM].x;
@@ -2422,12 +2555,16 @@ int main()
 	            vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
 	            vor<<"\n"<<std::flush;
 	        }
-	    	add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i][TYPE]);
-	    	add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i][TYPE]);
+	    	add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i][TYPE],0);
+	    	add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i][TYPE],0);
 	        }
 	        //cout<<"here\n";
 	    }
-	    cout<<"herere\n";
+	    //cout<<"herere\n";
+	    container_vertice *cstart=nullptr;
+	    cstart=CSTART[TYPE];
+	    //display_SITE(cstart->V->p);
+	    container_vertice *temp_new_vert=nullptr;
 	    //return 0;
 	    //display_SITE(new_vert->V->p);
 	    //display_SITE(new_vert->next->V->p);
@@ -2447,15 +2584,51 @@ int main()
 	    //              break;
 	    //      }
 	    //  }
-	    container_vertice *cstart=nullptr;
-	    cstart=CSTART[TYPE];
-	    //display_SITE(cstart->V->p);
-	    container_vertice *temp_new_vert=nullptr;
+	    //cout<<"####\n";
+	    temp_start=start[TYPE];
+	    //cout<<"early0\n";
+	  //while(1)
+	  //{
+	  //    //if(temp_start->v_neigh_count!=3)
+	  //    {
+	  //	    //display_SITE(temp_start->p);
+	  //        int count=0;
+	  //        for(int n=0;n<temp_start->v_neigh_count;n++)
+	  //        {
+	  //        	if(temp_start->neib_vert[n])
+	  //    	{
+	  //    		count++;
+	  //    	}
+	  //        }
+	  //        		//display_SITE(temp_start->p);
+	  //        if(temp_start->v_neigh_count!=3)
+	  //        {
+	  //       // cout<<temp_start->v_neigh_count<<"\n";
+	  //            cout<<"#\t"<<count<<"= i need to \n";
+	  //    	cout<<temp_start<<"\n";
+	  //        	display_SITE(temp_start->p);
+	  //            for(int n=0;n<temp_start->v_neigh_count;n++)
+	  //            {
+	  //                if(temp_start->neib_vert[n])
+	  //                {
+	  //                	display_SITE(temp_start->neib_vert[n]->p);
+	  //                }
+	  //            }
+	  //        }
+	  //    }
+	  //	if(temp_start->next)
+	  //	{
+	  //		temp_start=temp_start->next;
+	  //	}
+	  //	else
+	  //		break;
+	  //}
 	    temp_new_vert=new_vert;
 	    while(1)
 	    {
 		   // /cout<<"####\n";
-		    //display_SITE(temp_new_vert->V->p);
+		      //display_SITE(temp_new_vert->V->p);
+	    //print_delunay(&Atoms[temp_new_vert->V->A],temp_new_vert->V->D,Atoms,TYPE);
 		  //  for(int n=0;n<temp_new_vert->V->v_neigh_count;n++)
 		   // {
 		//	    cout<<n<<"\t";
@@ -2468,17 +2641,25 @@ int main()
 		else
 			break;
 	    }
-	    cout<<"####\n";
+	    //cout<<"over\n";
 	    temp_new_vert=new_vert;
 	    while(1)
 	    {
+		    //display_SITE(temp_new_vert->V->p);
 		if(!(compare(temp_new_vert->V->p,cstart->V->p)))
 		{
 			if((temp_new_vert->V->p->y-cstart->V->p->y)||(temp_new_vert->V->p->x-cstart->V->p->x))
 			{
 				if(temp_new_vert->V->p->y>0.)
 				{
-					cstart->V=temp_new_vert->V;
+					 std::vector<int> EV1 {temp_new_vert->V->A,temp_new_vert->V->D->a,temp_new_vert->V->D->b};
+					 std::vector<int> v1 {cstart->V->A,cstart->V->D->a,cstart->V->D->b};
+					 std::sort(EV1.begin(),EV1.end());
+					 std::sort(v1.begin(),v1.end());
+					 if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+					 {
+						cstart->V=temp_new_vert->V;
+					 }
 				}
 			}
 
@@ -2503,18 +2684,39 @@ int main()
 		    while(1)
 		    {
 			    flag2=1;
-	//		    cout<<"####\n";
-	//		                display_SITE(temp_new_vert->V->p);
-	//		        	display_SITE(temp_new_vert1->V->p);
+	  		//  cout<<"####\n";
+	  		//              display_SITE(temp_new_vert->V->p);
+	  		//      	display_SITE(temp_new_vert1->V->p);
 		        rep=compare(temp_new_vert->V->p,temp_new_vert1->V->p);
+			if(rep==0)
+			{
+			     std::vector<int> EV1 {temp_new_vert->V->A,temp_new_vert->V->D->a,temp_new_vert->V->D->b};
+			     std::vector<int> v1 {temp_new_vert1->V->A,temp_new_vert1->V->D->a,temp_new_vert1->V->D->b};
+			     std::sort(EV1.begin(),EV1.end());
+			     std::sort(v1.begin(),v1.end());
+			     if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+			     {
+			    	 rep=0;
+			    ////////delete v->p;
+			    ////////delete v;
+			    ////////return EV;
+			     }
+			     else
+			    	 rep=1;
+
+			}
+
 		        if(rep==0)
 		        {
 				if((temp_new_vert1->V->p->y-temp_new_vert->V->p->y)||(temp_new_vert1->V->p->x-temp_new_vert->V->p->x))
 				{
 					if(temp_new_vert1->V->p->y>0.)
 					{
+						//display_SITE(temp_new_vert->V->p);
 						for(int n=0;n<temp_new_vert->V->v_neigh_count;n++)
 						{
+							//display_SITE(temp_new_vert1->V->p);
+							//display_SITE(temp_new_vert->V->neib_vert[n]->p);
 							add_connected(temp_new_vert1->V,temp_new_vert->V->neib_vert[n],temp_new_vert->V->neib_ed[n]);
 							add_connected(temp_new_vert->V->neib_vert[n],temp_new_vert1->V,temp_new_vert->V->neib_ed[n]);
 						}
@@ -2544,13 +2746,16 @@ int main()
 					}
 					else
 					{
+						//display_SITE(temp_new_vert1->V->p);
 						for(int n=0;n<temp_new_vert1->V->v_neigh_count;n++)
 						{
+						//	display_SITE(temp_new_vert->V->p);
+						//	display_SITE(temp_new_vert1->V->neib_vert[n]->p);
 	//						cout<<n<<"\n";
 							if(temp_new_vert1->V->neib_vert[n])
 							{
 							add_connected(temp_new_vert->V,temp_new_vert1->V->neib_vert[n],temp_new_vert1->V->neib_ed[n]);
-							add_connected(temp_new_vert1->V->neib_vert[n],temp_new_vert->V,temp_new_vert1->V->neib_ed[n],0);
+							add_connected(temp_new_vert1->V->neib_vert[n],temp_new_vert->V,temp_new_vert1->V->neib_ed[n]);
 							}
 						}
 					        if(temp_new_vert1->prev)
@@ -2630,7 +2835,82 @@ int main()
 		    	break;
 		    }
 	    }
-	    cout<<r_cut<<"\n";
+	    temp_start=start[TYPE];
+	    temp_new_vert=new_vert;
+	    while(1)
+	    {
+		   // /cout<<"####\n";
+		      //display_SITE(temp_new_vert->V->p);
+	    //print_delunay(&Atoms[cstart->V->A],cstart->V->D,Atoms,TYPE);
+		  //  for(int n=0;n<temp_new_vert->V->v_neigh_count;n++)
+		   // {
+		//	    cout<<n<<"\t";
+		//	display_SITE(temp_new_vert->V->neib_vert[n]->p);
+		  //  }
+		if(temp_new_vert->next)
+		{
+			temp_new_vert=temp_new_vert->next;
+		}
+		else
+			break;
+	    }
+	    //cout<<"over\n";
+	    //cout<<"early\n";
+	    while(1)
+	    {
+	        //if(temp_start->v_neigh_count!=3)
+	        {
+	    	    //display_SITE(temp_start->p);
+	            int count=0;
+	            for(int n=0;n<temp_start->v_neigh_count;n++)
+	            {
+	            	if(temp_start->neib_vert[n])
+	        	{
+	        		count++;
+	        	}
+	            }
+	            		//display_SITE(temp_start->p);
+	            if(temp_start->v_neigh_count!=3)
+	            {
+	           // cout<<temp_start->v_neigh_count<<"\n";
+	                cout<<"#\t"<<count<<"= i need to \n";
+			cout<<temp_start<<"\n";
+	            	display_SITE(temp_start->p);
+	                for(int n=0;n<temp_start->v_neigh_count;n++)
+	                {
+	                    if(temp_start->neib_vert[n])
+	                    {
+	                    	display_SITE(temp_start->neib_vert[n]->p);
+	                    }
+	                }
+	            }
+	        }
+	    	if(temp_start->next)
+	    	{
+	    		temp_start=temp_start->next;
+	    	}
+	    	else
+	    		break;
+	    }
+	    temp_new_vert=new_vert;
+	    while(1)
+	    {
+		   // /cout<<"####\n";
+		      //display_SITE(temp_new_vert->V->p);
+		  //  for(int n=0;n<temp_new_vert->V->v_neigh_count;n++)
+		   // {
+		//	    cout<<n<<"\t";
+		//	display_SITE(temp_new_vert->V->neib_vert[n]->p);
+		  //  }
+		if(temp_new_vert->next)
+		{
+			temp_new_vert=temp_new_vert->next;
+		}
+		else
+			break;
+	    }
+	    //return 0;
+	    //cout<<r_cut<<"\n";
 	    temp_new_vert=new_vert;
 	    while(1)
 	    {
@@ -2702,41 +2982,12 @@ int main()
 	        else
 	    	break;
 	    }
-	    temp_start=start[TYPE];
-	    while(1)
-	    {
-	        //if(temp_start->v_neigh_count!=3)
-	        {
-	    	    //display_SITE(temp_start->p);
-		    int count=0;
-		    for(int n=0;n<temp_start->v_neigh_count;n++)
-		    {
-		    	if(temp_start->neib_vert[n])
-			{
-				count++;
-			}
-		    }
-		    		//display_SITE(temp_start->p);
-		    if(temp_start->v_neigh_count!=3)
-		    {
-			    cout<<"#\t"<<count<<"= i need to \n";
-		   // cout<<temp_start->v_neigh_count<<"\n";
-		    		display_SITE(temp_start->p);
-		    }
-	        }
-	    	if(temp_start->next)
-	    	{
-	    		temp_start=temp_start->next;
-	    	}
-	    	else
-	    		break;
-	    }
 	    cstart=CSTART[TYPE];
 	////if(!new_vert)
 	////	new_vert=cstart;
 	    int void_vert_count=0;
 	    temp_new_vert=new_vert;
-	    cout<<"here4\n";
+	    //cout<<"here4\n";
 	  //while(1)
 	  //{
 	  //    //temp_new_vert->V=cstart->V;
@@ -2771,7 +3022,7 @@ int main()
 	    {
 	        if(cstart->V->is_void)
 	        {
-	        display_SITE(cstart->V->p);
+	        //display_SITE(cstart->V->p);
 	////////for(int i=0;i<cstart->V->v_neigh_count;i++)
 	////////{
 	////////	display_SITE(cstart->V->neib_vert[i]->p);
@@ -2786,7 +3037,7 @@ int main()
 	    int change=1;
 	    int void_vert_count_prev;
 	    int tem_ind=0;
-	    cout<<"here?\n";
+	    //cout<<"here?\n";
 	    while(change)
 	    {
 	        cstart=CSTART[TYPE];
@@ -2869,7 +3120,7 @@ int main()
 	        else
 	            break;
 	    }
-	    cout<<void_vert_count<<"void_count\n"<<std::flush;
+	    //cout<<void_vert_count<<"  void_count\n"<<std::flush;
 	    vertice **cavity_list=nullptr;
 	    cavity_list = new (nothrow) vertice*[void_vert_count];
 	    cstart=CSTART[TYPE];
@@ -2895,7 +3146,7 @@ int main()
 	    }
 	    //return 0;
 	    //CALCULATING THE VOID VOLUME IN A GIVEN CAVITY
-	    cout<<"here cav\n";
+	    //cout<<"here cav\n";
 	    long double *void_area=nullptr;
 	    void_area= new (nothrow) long double[void_vert_count];
 	    long double *void_length=nullptr;
@@ -2905,7 +3156,7 @@ int main()
 	    {
 	        void_area[j]=0;
 	        void_length[j]=0;
-	        //display_SITE(cavity_list[j]->p);
+	       //display_SITE(cavity_list[j]->p);
 	        //cout<<cavity_list[j]->A<<"\t"<<cavity_list[j]->D->A<<"\t"<<cavity_list[j]->D->B<<"\n";
 	        long double A1x,A1y,A2x,A2y,A3x,A3y,Vx,Vy;
 	        long double E12x,E12y;
@@ -3041,20 +3292,20 @@ int main()
 	        //cout<<A1x<<"\t"<<A1y<<"\n";
 	        //cout<<A2x+A1x<<"\t"<<A2y+A1y<<"\n";
 	        //cout<<A3x+A1x<<"\t"<<A3y+A1y<<"\n";
-	        //cout<<"begin\n";
-	        //cout<<void_area[j]<<"\n";
+	        ////cout<<"begin\n";
+	        ////cout<<void_area[j]<<"\n";
 	        void_area[j]=void_area[j]+S12*area_trangle(Vx,Vy,E12x,E12y,A2x,A2y,A2r,A1x,A1y);
-	        //cout<<void_area[j]<<"\n";
+	        //cout<<void_area[j]<<"\t"<<S12<<"\n";
 	        void_area[j]=void_area[j]+S12*area_trangle(Vx,Vy,E12x,E12y,0.,0.,A1r,A1x,A1y);
-	        //cout<<void_area[j]<<"\n";
+	        //cout<<void_area[j]<<"\t"<<S12<<"\n";
 	        void_area[j]=void_area[j]+S13*area_trangle(Vx,Vy,E13x,E13y,A3x,A3y,A3r,A1x,A1y);
-	        //cout<<void_area[j]<<"\n";
+	        //cout<<void_area[j]<<"\t"<<S13<<"\n";
 	        void_area[j]=void_area[j]+S13*area_trangle(Vx,Vy,E13x,E13y,0.,0.,A1r,A1x,A1y);
-	        //cout<<void_area[j]<<"\n";
+	        //cout<<void_area[j]<<"\t"<<S13<<"\n";
 	        void_area[j]=void_area[j]+S23*area_trangle(Vx,Vy,E23x,E23y,A3x,A3y,A3r,A1x,A1y);
-	        //cout<<void_area[j]<<"\n";
+	        //cout<<void_area[j]<<"\t"<<S23<<"\n";
 	        void_area[j]=void_area[j]+S23*area_trangle(Vx,Vy,E23x,E23y,A2x,A2y,A2r,A1x,A1y);
-	        //cout<<void_area[j]<<"here\n";
+	        //cout<<void_area[j]<<"\t"<<S23<<"here\n";
 	        void_length[j]=void_length[j]+S12*perimeter(Vx,Vy,E12x,E12y,A2x,A2y,A2r);
 	        void_length[j]=void_length[j]+S12*perimeter(Vx,Vy,E12x,E12y,0.,0.,A1r);
 	        void_length[j]=void_length[j]+S13*perimeter(Vx,Vy,E13x,E13y,A3x,A3y,A3r);
@@ -3092,9 +3343,25 @@ int main()
 	        ca_per_tot=ca_per_tot+void_length[i];
 	        //cout<<i<<"\t"<<void_area[i]<<"\t"<<void_length[i]<<"\n";
 	    }
-	    freearea[i]=cav_tot;
-	    freeperi[i]=ca_per_tot;
-	    cout<<cav_tot<<"\t"<<ca_per_tot<<"\n";
+	    //cout<<cav_tot<<"\t"<<ca_per_tot<<"\n";
+	    if(cav_tot>=0.0)
+	    {
+		    freearea[i]=cav_tot;
+		    //freeperi[i]=ca_per_tot;
+	    }
+	    else
+	    {
+		    freearea[i]=0.;
+	    }
+	    if(ca_per_tot>=0.0)
+	    {
+		    freeperi[i]=ca_per_tot;
+	    }
+	    else
+	    {
+		    freeperi[i]=0.;
+	    }
+	    //cout<<cav_tot<<"\t"<<ca_per_tot<<"\n";
 	    temp_new_vert=new_vert;
 	    //cout<<"#####\n";
 	    while(1)
@@ -3134,7 +3401,6 @@ int main()
             //delunay *D=nullptr;
             for(int j=0; j<Atoms[i].conti[TYPE]; j++)
             {
-        	  //  cout<<j<<"\n"<<std::flush;
                 D=Atoms[i].D[TYPE].initial;
                 delunay *D_ONE=NULL;
                 delunay *D_TWO=NULL;
@@ -3169,25 +3435,26 @@ int main()
             	}
 
                 }
-        	///cout<<"her1\n"<<std::flush;
         	vertice *temp1=nullptr;
         	vertice *temp2=nullptr;
         	temp1=new vertice;
         	temp2=new vertice;
         	temp1->p=new site;
         	temp2->p=new site;
-        	//cout<<"here1\n"<<std::flush;
         	temp1->p->x=D_ONE->circum_x;
         	temp1->p->y=D_ONE->circum_y;
         	temp2->p->x=D_TWO->circum_x;
         	temp2->p->y=D_TWO->circum_y;
-            	temp1=V->insert_vertice(start[TYPE],temp1,TYPE);
-            	temp2=V->insert_vertice(start[TYPE],temp2,TYPE);
+		temp1->A=i;
+		temp2->A=i;
+		temp1->D=D_ONE;
+		temp2->D=D_TWO;
+            	temp1=V->insert_vertice(start[TYPE],temp1,TYPE,0);
+            	temp2=V->insert_vertice(start[TYPE],temp2,TYPE,0);
                 add_connected(temp1,temp2,Atoms[i].bondinvoid[j][TYPE],0);
                 add_connected(temp2,temp1,Atoms[i].bondinvoid[j][TYPE],0);
         //cout<<"\n";
             }
-            cout<<"here\n"<<std::flush;
             ctemp=Atoms[i].Cstart[TYPE];
             while(1)
             {
@@ -3206,6 +3473,7 @@ int main()
             }
 	    
 	    temp_start=start[TYPE];
+	    //cout<<"late\n";
 	    while(1)
 	    {
 	        //if(temp_start->v_neigh_count!=3)
@@ -3312,20 +3580,25 @@ int main()
 	delete [] CSTART;
 	//DISTRIBUTION CALCULATION
 	cout<<"are we here3\n"<<std::flush;
-	if(nconfig==0)
-	{
-		for(int f=0;f<nAtoms;f++)
-		{
-			if(max_free_area<freearea[f])
-				max_free_area=freearea[f];
-		}
-		width=(max_free_area+1.0)/1000.;
-	}
+	width=-50.0/10000;
+////////if(nconfig==0)
+////////{
+////////	for(int f=0;f<nAtoms;f++)
+////////	{
+////////		if(max_free_area<freearea[f])
+////////			max_free_area=freearea[f];
+////////	}
+////////	width=(max_free_area+1.0)/10000.;
+////////}
+	//cout<<width<<"\n";
+	cout<<max_free_area<<"\n";
 	for(int f=0;f<nAtoms;f++)
 	{
-		//cout<<f<<"\t"<<int(freearea[f]/width)<<std::flush<<"\n";
-		if(int(freearea[f]/width)<1000)
-			free_dist[int(freearea[f]/width)]++;
+		if(freearea[f]!=0.)
+		{
+			if(int(log(freearea[f])/width)>-1 && int(log(freearea[f])/width)<10000)
+			free_dist[10000-int(log(freearea[f])/width)]++;
+		}
 	}
 	//cout<<"ahere\n";
 	long double *sum_freearea=new (nothrow) long double [ntypes];
@@ -3343,12 +3616,15 @@ int main()
 	{
 	        sum_freearea[Atoms[i].type]=sum_freearea[Atoms[i].type]+freearea[i];
 	        sum_freeperi[Atoms[i].type]=sum_freeperi[Atoms[i].type]+freeperi[i];
+		if(freearea[i]!=0.0)
+		{
 	        sum_freeratio[Atoms[i].type]=sum_freeratio[Atoms[i].type]+freeperi[i]/freearea[i];
 	        count[Atoms[i].type]++;
+		}
 	}
         for(int t=0;t<ntypes;t++)
         {
-                cout<<t<<"\t"<<sum_freeratio[t]/count[t]<<"\t"<<std::flush;///<<sum_freeperi[t]<<"\t"<<count[t]<<"\t";
+                //cout<<t<<"\t"<<sum_freeratio[t]/count[t]<<"\t"<<std::flush<<sum_freeperi[t]<<"\t"<<count[t]<<"\t";
         }
 	delete[] sum_freearea;
 	delete[] sum_freeperi;
@@ -3427,7 +3703,6 @@ cout<<"are we here5\n"<<std::flush;
 	    for(int t=0; t<ntypes; t++)
 	    {
 	        D=Atoms[n].D[t].initial;
-	        ////////cout<<n<<"\n";
 		while(1)
 		{
 		    delunay *temp=nullptr;
@@ -3474,9 +3749,9 @@ cout<<"are we here5\n"<<std::flush;
 	}
 	sites=NULL;
         delete[] Atoms;
-	for(int i=0;i<1000;i++)
+	for(int i=0;i<10000;i++)
 	{
-	        fdist<<i*width<<"\t"<<free_dist[i]/(config_count*nAtoms*width)<<"\n"<<std::flush;
+	        fdist<<i*width<<"\t"<<free_dist[i]/(config_count*nAtoms*abs(width))<<"\t"<<free_dist[i]<<"\n"<<std::flush;
 	}
     }
     delete[] radius;
