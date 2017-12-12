@@ -17,7 +17,7 @@ long double twob;
 long double density;
 long double r_cut=0.0;
 long double tilt;
-long double DMIN=0.00000000000001;//std::numeric_limits<long double>::min();
+long double DMIN=0.0000000000001;//std::numeric_limits<long double>::min();
 struct atom;
 struct face;
 struct vertice;
@@ -1594,7 +1594,7 @@ int main()
     int counter=0;
     int config_count=0;
     //cout << "Maximum value for dou: " << std::numeric_limits<long double>::min() << '\n';
-    std::ifstream infile("dat");//config_2000_0.38_2_0.70.dat");
+    std::ifstream infile("dat_trial_2");//config_2000_0.38_2_0.70.dat");
     //infile>>nAtoms;
     nAtoms=2000;
     cout<<std::setprecision(26);
@@ -3600,6 +3600,10 @@ int main()
 			free_dist[10000-int(log(freearea[f])/width)]++;
 		}
 	}
+	for(int i=0;i<nAtoms;i++)
+	{
+	        fdist<<i<<"\t"<<freearea[i]<<"\n"<<std::flush;
+	}
 	//cout<<"ahere\n";
 	long double *sum_freearea=new (nothrow) long double [ntypes];
 	long double *sum_freeperi=new (nothrow) long double [ntypes];
@@ -3749,10 +3753,6 @@ cout<<"are we here5\n"<<std::flush;
 	}
 	sites=NULL;
         delete[] Atoms;
-	for(int i=0;i<10000;i++)
-	{
-	        fdist<<i*width<<"\t"<<free_dist[i]/(config_count*nAtoms*abs(width))<<"\t"<<free_dist[i]<<"\n"<<std::flush;
-	}
     }
     delete[] radius;
 
