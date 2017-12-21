@@ -16,8 +16,9 @@ long double box=0;
 long double twob;
 long double density;
 long double r_cut=0.0;
-long double tilt;
+long double tilt=0.0;
 long double DMIN=0.000000000001;//std::numeric_limits<long double>::min();
+long double epsilon=0.00000000000;
 struct atom;
 struct face;
 struct vertice;
@@ -1370,7 +1371,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
     }//loop  over conti
 }//end
 
-int main(int argc,char * argv[])
+int main( int argc , char * argv[] )
 {
     int nAtoms=0;
     atom *Atoms=NULL;
@@ -1382,7 +1383,7 @@ int main(int argc,char * argv[])
     nAtoms=2000;
     cout<<std::setprecision(26);
     //No of configurations in the input file
-    config_count=1;
+    config_count=2;
     //No of types of particle
     int ntypes=2;
     int SAM=0;
@@ -1418,11 +1419,11 @@ int main(int argc,char * argv[])
         box=0.5*twob;
         infile>>density;
         infile>>dummy;
-        //infile>>dummy;
-        //infile>>tilt;
+        infile>>dummy;
+        infile>>tilt;
 		if(nconfig==0)
 		{
-			cout<<tilt<<"\n";
+				cout<<tilt<<"\n";
 			snprintf(buffer,sizeof(char)*64,"free_dist_%f",float(tilt));//_%d_%f.dat",int(nAtoms),Press);
 			fdist.open(buffer);
 		}
@@ -1436,7 +1437,7 @@ int main(int argc,char * argv[])
                 sites->p=new site;
                 sites->p->x=b;
                 sites->p->y=c;
-                sites->r=d-0.000000000001;//radius[int(d)-1]-0.000000000001;
+                sites->r=radius[int(d)-1]-epsilon;
             }
             else
             {
@@ -1444,7 +1445,7 @@ int main(int argc,char * argv[])
                 temp_site->p=new site;
                 temp_site->p->x=b;
                 temp_site->p->y=c;
-                temp_site->r=d-0.000000000001;//radius[int(d)-1]-0.000000000001;
+                temp_site->r=radius[int(d)-1]-epsilon;
                 insert_site(sites,temp_site);
             }
             if(counter==nAtoms)
@@ -1494,7 +1495,7 @@ int main(int argc,char * argv[])
         {
             for(int t=0; t<ntypes; t++)
             {
-                if(Atoms[i].radius==radius[t]-0.000000000001)
+                if(Atoms[i].radius==radius[t]-epsilon)
                 {
                     Atoms[i].type=t;
                     break;
@@ -2173,11 +2174,11 @@ int main(int argc,char * argv[])
                         Atoms[SAM].bondinvoid[i][TYPE]=1;
                     else
                         Atoms[SAM].bondinvoid[i][TYPE]=0;
-                    {
-                        vor<<std::setprecision(15)<<x<<"\t"<<y<<"\t"<<std::flush;
-                        vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
-                        vor<<"\n"<<std::flush;
-                    }
+                  //{
+                  //    vor<<std::setprecision(15)<<x<<"\t"<<y<<"\t"<<std::flush;
+                  //    vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
+                  //    vor<<"\n"<<std::flush;
+                  //}
                     add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i][TYPE],0);
                     add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i][TYPE],0);
                 }
@@ -2358,48 +2359,38 @@ int main(int argc,char * argv[])
                 }
             }
             temp_start=start[TYPE];
-          //temp_new_vert=new_vert;
-          //while(1)
-          //{
-          //    if(temp_new_vert->next)
-          //    {
-          //        temp_new_vert=temp_new_vert->next;
-          //    }
-          //    else
-          //        break;
-          //}
-          //while(1)
-          //{
-          //    {
-          //        int count=0;
-          //        for(int n=0; n<temp_start->v_neigh_count; n++)
-          //        {
-          //            if(temp_start->neib_vert[n])
-          //            {
-          //                count++;
-          //            }
-          //        }
-          //        if(temp_start->v_neigh_count!=3)
-          //        {
-          //            cout<<"#\t"<<count<<"= i need to \n";
-          //            cout<<temp_start<<"\n";
-          //            display_SITE(temp_start->p);
-          //            for(int n=0; n<temp_start->v_neigh_count; n++)
-          //            {
-          //                if(temp_start->neib_vert[n])
-          //                {
-          //                    display_SITE(temp_start->neib_vert[n]->p);
-          //                }
-          //            }
-          //        }
-          //    }
-          //    if(temp_start->next)
-          //    {
-          //        temp_start=temp_start->next;
-          //    }
-          //    else
-          //        break;
-          //}
+            while(1)
+            {
+                {
+                    int count=0;
+                    for(int n=0; n<temp_start->v_neigh_count; n++)
+                    {
+                        if(temp_start->neib_vert[n])
+                        {
+                            count++;
+                        }
+                    }
+                    if(temp_start->v_neigh_count!=3)
+                    {
+                        cout<<"#\t"<<count<<"= i need to \n";
+                        cout<<temp_start<<"\n";
+                        display_SITE(temp_start->p);
+                        for(int n=0; n<temp_start->v_neigh_count; n++)
+                        {
+                            if(temp_start->neib_vert[n])
+                            {
+                                display_SITE(temp_start->neib_vert[n]->p);
+                            }
+                        }
+                    }
+                }
+                if(temp_start->next)
+                {
+                    temp_start=temp_start->next;
+                }
+                else
+                    break;
+            }
             temp_new_vert=new_vert;
             while(1)
             {
@@ -2471,18 +2462,27 @@ int main(int argc,char * argv[])
             int void_vert_count=0;
             temp_new_vert=new_vert;
             cstart=CSTART[TYPE];
-
+			int flag=0;
             while(1)
             {
                 if(cstart->V->is_void)
                 {
                     void_vert_count++;
                 }
+				else
+				{
+					flag=1;
+					break;
+				}
                 if(cstart->next)
                     cstart=cstart->next;
                 else
                     break;
             }
+		////if(flag)
+		////{
+		////		continue;
+		////}
             int change=1;
             int void_vert_count_prev;
             int tem_ind=0;
@@ -2492,7 +2492,7 @@ int main(int argc,char * argv[])
                 void_vert_count_prev=void_vert_count;
                 while(1)
                 {
-                    if(cstart->V->is_void)
+                    //if(cstart->V->is_void)
                     {
                         for(int i=0; i<cstart->V->v_neigh_count; i++)
                         {
@@ -2532,7 +2532,7 @@ int main(int argc,char * argv[])
             void_vert_count=0;
             while(1)
             {
-                if(cstart->V->is_void)
+                //if(cstart->V->is_void)
                 {
                     void_vert_count++;
                 }
@@ -2548,7 +2548,7 @@ int main(int argc,char * argv[])
                 int i=0;
                 while(1)
                 {
-                    if(cstart->V->is_void)
+                    //if(cstart->V->is_void)
                     {
                         cavity_list[i]=cstart->V;
                         i++;
@@ -2810,32 +2810,32 @@ int main(int argc,char * argv[])
                     break;
             }
 
-          //temp_start=start[TYPE];
-          //while(1)
-          //{
-          //    {
-          //        int count=0;
-          //        for(int n=0; n<temp_start->v_neigh_count; n++)
-          //        {
-          //            if(temp_start->neib_vert[n])
-          //            {
-          //                count++;
-          //            }
-          //        }
-          //        if(temp_start->v_neigh_count!=3)
-          //        {
-          //            cout<<count<<"= i need to \n";
-          //            cout<<temp_start->v_neigh_count<<"\n";
-          //            display_SITE(temp_start->p);
-          //        }
-          //    }
-          //    if(temp_start->next)
-          //    {
-          //        temp_start=temp_start->next;
-          //    }
-          //    else
-          //        break;
-          //}
+            temp_start=start[TYPE];
+            while(1)
+            {
+                {
+                    int count=0;
+                    for(int n=0; n<temp_start->v_neigh_count; n++)
+                    {
+                        if(temp_start->neib_vert[n])
+                        {
+                            count++;
+                        }
+                    }
+                    if(temp_start->v_neigh_count!=3)
+                    {
+                        cout<<count<<"= i need to \n";
+                        cout<<temp_start->v_neigh_count<<"\n";
+                        display_SITE(temp_start->p);
+                    }
+                }
+                if(temp_start->next)
+                {
+                    temp_start=temp_start->next;
+                }
+                else
+                    break;
+            }
 
             for(int j=0; j<Atoms[i].conti[TYPE]; j++)
             {
