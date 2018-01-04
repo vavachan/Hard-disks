@@ -204,7 +204,7 @@ struct atom
     int *conti;
     struct face *F=NULL;
     long double radius=1.;
-    long double ignore=0;
+    int ignore=0;
     container_vertice **Cstart=nullptr;
     set_of_delunay *D=nullptr;
     int save_neighlist[500];
@@ -1383,7 +1383,7 @@ int main( int argc , char * argv[] )
     nAtoms=2000;
     cout<<std::setprecision(26);
     //No of configurations in the input file
-    config_count=2;
+    config_count=64;
     //No of types of particle
     int ntypes=2;
     int SAM=0;
@@ -1404,7 +1404,7 @@ int main( int argc , char * argv[] )
   //ofstream fdist;
   //fdist.open(buffer);
     //This loop is over all the configurations
-			ofstream fdist;
+	ofstream fdist;
     for(int nconfig=0; nconfig<config_count; nconfig++)
     {
         //start[TYPE]is a list that stores all the voronoi vertices calculate with disks of radius radius[TYPE]
@@ -1483,7 +1483,9 @@ int main( int argc , char * argv[] )
                 dr=sqrtl(drx*drx+dry*dry);
                 if(dr<Atoms[i].radius+Atoms[Atoms[i].neighlist[j]].radius)
                 {
-                    cout<<"error\t"<<dr<<"\n";
+                    //cout<<"error\t"<<dr<<"\n";
+					Atoms[i].ignore=1;
+					break;
                 }
                 //cout<<Atoms[Atoms[i].neighlist[j]].x<<"\t"<<Atoms[Atoms[i].neighlist[j]].y<<"\n";
             }
@@ -1772,7 +1774,8 @@ int main( int argc , char * argv[] )
         //loop over all the atoms to calculate the free volume
         for(int i=0; i<nAtoms; i++)
         {
-
+			if(Atoms[i].ignore==0)
+			{
             vertice *temp_start=nullptr;
             container_vertice *new_vert=NULL;
             int Atom_in_foc=i;
@@ -1783,7 +1786,10 @@ int main( int argc , char * argv[] )
                 percentage++;
 
             }
+			//cout<<i<<" #\n";
             TYPE=Atoms[i].type;
+			//cout<<TYPE<<"\n";
+			//cout<<Atoms[i].x<<"\t"<<Atoms[i].y<<"\n";
             //FIND THE ATOM RADIUS
             r_cut=radius[TYPE];
             container_vertice *ctemp=nullptr;
@@ -2175,14 +2181,48 @@ int main( int argc , char * argv[] )
                     else
                         Atoms[SAM].bondinvoid[i][TYPE]=0;
                   //{
-                  //    vor<<std::setprecision(15)<<x<<"\t"<<y<<"\t"<<std::flush;
-                  //    vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
-                  //    vor<<"\n"<<std::flush;
+                        vor<<std::setprecision(15)<<x<<"\t"<<y<<"\t"<<std::flush;
+                        vor<<std::setprecision(15)<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\n"<<std::flush;
+                        vor<<"\n"<<std::flush;
                   //}
                     add_connected(temp_vert_o,temp_vert_d,Atoms[SAM].bondinvoid[i][TYPE],0);
                     add_connected(temp_vert_d,temp_vert_o,Atoms[SAM].bondinvoid[i][TYPE],0);
                 }
             }
+            temp_start=start[TYPE];
+          //while(1)
+          //{
+          //    {
+          //        int count=0;
+          //        for(int n=0; n<temp_start->v_neigh_count; n++)
+          //        {
+          //            if(temp_start->neib_vert[n])
+          //            {
+          //                count++;
+          //            }
+          //        }
+          //        if(temp_start->v_neigh_count!=3)
+          //        {
+          //            cout<<"#\t"<<count<<"= i need to \n";
+          //            cout<<temp_start<<"\n";
+          //            display_SITE(temp_start->p);
+          //            for(int n=0; n<temp_start->v_neigh_count; n++)
+          //            {
+          //                if(temp_start->neib_vert[n])
+          //                {
+          //                    display_SITE(temp_start->neib_vert[n]->p);
+          //                }
+          //            }
+          //        }
+          //    }
+          //    if(temp_start->next)
+          //    {
+          //        temp_start=temp_start->next;
+          //    }
+          //    else
+          //        break;
+          //}
+			//cout<<"end\n";
             container_vertice *cstart=nullptr;
             cstart=CSTART[TYPE];
             container_vertice *temp_new_vert=nullptr;
@@ -2465,15 +2505,19 @@ int main( int argc , char * argv[] )
 			int flag=0;
             while(1)
             {
-                if(cstart->V->is_void)
+                //if(cstart->V->is_void)
                 {
                     void_vert_count++;
                 }
-				else
-				{
-					flag=1;
-					break;
-				}
+                if(!cstart->V->is_void)
+			    {
+			        cout<<"this guy \n";
+			    }
+			////else
+			////{
+			////	flag=1;
+			////	break;
+			////}
                 if(cstart->next)
                     cstart=cstart->next;
                 else
@@ -2541,6 +2585,7 @@ int main( int argc , char * argv[] )
                 else
                     break;
             }
+			//cout<<"void count ="<<void_vert_count<<"\n";
             vertice **cavity_list=nullptr;
             cavity_list = new (nothrow) vertice*[void_vert_count];
             cstart=CSTART[TYPE];
@@ -2707,7 +2752,8 @@ int main( int argc , char * argv[] )
                 cav_tot=cav_tot+void_area[i];
                 ca_per_tot=ca_per_tot+void_length[i];
             }
-            if(cav_tot>=0.0)
+			//cout<<cav_tot<<"\n";
+            if(CSTART[TYPE]->V->is_void)
             {
                 freearea[i]=cav_tot;
             }
@@ -2715,7 +2761,7 @@ int main( int argc , char * argv[] )
             {
                 freearea[i]=0.;
             }
-            if(ca_per_tot>=0.0)
+            if(CSTART[TYPE]->V->is_void)
             {
                 freeperi[i]=ca_per_tot;
             }
@@ -2908,6 +2954,7 @@ int main( int argc , char * argv[] )
                 }
             }
             vor.close();
+			}
         }
         delete [] CSTART;
         for(int i=0; i<nAtoms; i++)
