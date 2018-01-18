@@ -7,7 +7,7 @@ int dim=3;
 double box=0;
 double twob;
 double density;
-double r_cut=0.0;
+double r_cut=0.7;
 struct atom;
 struct face;
 struct vertice;
@@ -486,8 +486,8 @@ void first_delunay(atom *ATOM,atom Atoms[])
 	        X=(X-(twob*lround(X/twob)));
 	        Y=(Y-(twob*lround(Y/twob)));
 		DIS=sqrt(X*X+Y*Y);
-		rA=Atoms[ATOM->neighlist[i]].radius;
-		rS=ATOM->radius;
+		rA=Atoms[ATOM->neighlist[i]].radius+r_cut;
+		rS=ATOM->radius+r_cut;
 		l=0.5*(DIS+(rS*rS-rA*rA)/DIS);
 		x=l/DIS*X;
 		y=l/DIS*Y;
@@ -561,9 +561,9 @@ void first_delunay(atom *ATOM,atom Atoms[])
 			MB=YB/XB;
 			INMA=-1./MA;
 			INMB=-1./MB;
-			rA=M.radius;
-			rB=R.radius;
-			rS=L.radius;
+			rA=M.radius+r_cut;
+			rB=R.radius+r_cut;
+			rS=L.radius+r_cut;
 			l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
 			xA=l/DISA*XA;
 			yA=l/DISA*YA;
@@ -812,9 +812,9 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						MB=YB/XB;
 						INMA=-1./MA;
 						INMB=-1./MB;
-						rA=M.radius;
-						rB=R.radius;
-						rS=L.radius;
+						rA=M.radius+r_cut;
+						rB=R.radius+r_cut;
+						rS=L.radius+r_cut;
 						l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
 						xA=l/DISA*XA;
 						yA=l/DISA*YA;
@@ -1027,9 +1027,9 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms)
 						MB=YB/XB;
 						INMA=-1./MA;
 						INMB=-1./MB;
-						rA=M.radius;
-						rB=R.radius;
-						rS=L.radius;
+						rA=M.radius+r_cut;
+						rB=R.radius+r_cut;
+						rS=L.radius+r_cut;
 						l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
 						xA=l/DISA*XA;
 						yA=l/DISA*YA;
@@ -1185,7 +1185,7 @@ int main()
 	{ 
             Atoms[nAtoms].x=b;
             Atoms[nAtoms].y=c;
-	    Atoms[nAtoms].radius=e;
+	    Atoms[nAtoms].radius=d;
 	    //cout<<nAtoms<<"\t"<<b<<"\t"<<c<<"\n";
             nAtoms++;
 	}
@@ -1386,7 +1386,7 @@ int main()
             AX=Atoms[temp_start->A].x;
             AY=Atoms[temp_start->A].y;
             double dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-            if(dis<Atoms[temp_start->A].radius)
+            if(dis<r_cut+Atoms[temp_start->A].radius)
             {
                 flag=0;
                 //break;
@@ -1394,7 +1394,7 @@ int main()
             AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A]].x;
             AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A]].y;
             dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-            if(dis<Atoms[Atoms[temp_start->A].contigous[temp_start->D->A]].radius)
+            if(dis<r_cut+Atoms[Atoms[temp_start->A].contigous[temp_start->D->A]].radius)
             {
                 flag=0;
                 //break;
@@ -1403,7 +1403,7 @@ int main()
             AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B]].y;
             dis=sqrt((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
             //cout<<dis<<"\t"<<AX<<"\t"<<AY<<"\t"<<temp_start->D->B<<"\n";;
-            if(dis<Atoms[Atoms[temp_start->A].contigous[temp_start->D->B]].radius)
+            if(dis<r_cut+Atoms[Atoms[temp_start->A].contigous[temp_start->D->B]].radius)
             {
                 flag=0;
                 //break;
@@ -1608,13 +1608,13 @@ int main()
 				double C;
 				A1x=Atoms[cavity_list[j]->A].x;
 				A1y=Atoms[cavity_list[j]->A].y;
-				A1r=Atoms[cavity_list[j]->A].radius;
+				A1r=Atoms[cavity_list[j]->A].radius+r_cut;
 				A2x=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->A]].x-A1x;
 				A2y=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->A]].y-A1y;
-				A2r=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->A]].radius;
+				A2r=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->A]].radius+r_cut;
 				A3x=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->B]].x-A1x;
 				A3y=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->B]].y-A1y;
-				A3r=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->B]].radius;
+				A3r=Atoms[Atoms[cavity_list[j]->A].contigous[cavity_list[j]->D->B]].radius+r_cut;
 				E12x=cavity_list[j]->D->Ax-A1x;
 				E12y=cavity_list[j]->D->Ay-A1y;
 				E13x=cavity_list[j]->D->Bx-A1x;
