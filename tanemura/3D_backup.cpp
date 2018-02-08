@@ -387,8 +387,8 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
         {
             cout<<"here\n";
         }
-        std::vector<int> EV1 {EV->A,EV->D->a,EV->D->b};
-        std::vector<int> v1 {v->A,v->D->a,v->D->b};
+        std::vector<int> EV1 {EV->A,EV->D->a,EV->D->b,EV->D->c};
+        std::vector<int> v1 {v->A,v->D->a,v->D->b,v->D->c};
         std::sort(EV1.begin(),EV1.end());
         std::sort(v1.begin(),v1.end());
         if(debug)
@@ -397,7 +397,7 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
             cout<<EV1[0]<<"\t"<<EV1[1]<<"\t"<<EV1[2]<<"\n";
             cout<<v1[0]<<"\t"<<v1[1]<<"\t"<<v1[2]<<"\n";
         }
-        if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+        if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2] && EV1[3]==v1[3])
         {
             delete v->p;
             delete v;
@@ -787,9 +787,9 @@ void update_neighbours(atom Atoms[],int nAtoms)
 void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
 {
     cout<<"#\t";
-	cout<<D->a<<"\t"<<D->b<<"\t"<<D->c<<"\n";
-	cout<<"#\t";
-	cout<<D->A<<"\t"<<D->B<<"\t"<<D->C<<"\n";
+    cout<<D->a<<"\t"<<D->b<<"\t"<<D->c<<"\n";
+    cout<<"#\t";
+    cout<<D->A<<"\t"<<D->B<<"\t"<<D->C<<"\n";
     long double Sx,Sy,Sz;
     long double Px,Py,Pz;
     Sx=ATOM->x-Atoms[D->a].x;
@@ -799,7 +799,8 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
     Sx=(Sx-(twob*lroundl(Sx/twob)));
     Sy=(Sy-(twob*lroundl(Sy/twob)));
     Sz=(Sz-(twob*lroundl(Sz/twob)));
-    cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->z<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"\n";
+	cout<<"draw line\t{";
+    cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->z<<"}\t{"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"}\twidth 5\n";
     Sx=ATOM->x-Atoms[D->b].x;
     Sy=ATOM->y-Atoms[D->b].y;
     Sz=ATOM->z-Atoms[D->b].z;
@@ -807,7 +808,8 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
     Sx=(Sx-(twob*lroundl(Sx/twob)));
     Sy=(Sy-(twob*lroundl(Sy/twob)));
     Sz=(Sz-(twob*lroundl(Sz/twob)));
-    cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->z<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"\n";
+	cout<<"draw line\t{";
+    cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->z<<"}\t{"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"}\twidth 5\n";
     Sx=ATOM->x-Atoms[D->c].x;
     Sy=ATOM->y-Atoms[D->c].y;
     Sz=ATOM->z-Atoms[D->c].z;
@@ -815,7 +817,8 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
     Sx=(Sx-(twob*lroundl(Sx/twob)));
     Sy=(Sy-(twob*lroundl(Sy/twob)));
     Sz=(Sz-(twob*lroundl(Sz/twob)));
-    cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->z<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"\n";
+	cout<<"draw line\t{";
+    cout<<ATOM->x<<"\t"<<ATOM->y<<"\t"<<ATOM->z<<"}\t{"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"}\twidth 5\n";
     Sx=ATOM->x-Atoms[D->b].x;
     Sy=ATOM->y-Atoms[D->b].y;
     Sz=ATOM->z-Atoms[D->b].z;
@@ -830,7 +833,8 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
     Px=(Px-(twob*lroundl(Px/twob)));
     Py=(Py-(twob*lroundl(Py/twob)));
     Pz=(Pz-(twob*lroundl(Pz/twob)));
-    cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->z-Pz<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"\n";
+	cout<<"draw line\t{";
+    cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->z-Pz<<"}\t{"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"}\twidth 5\n";
     Sx=ATOM->x-Atoms[D->c].x;
     Sy=ATOM->y-Atoms[D->c].y;
     Sz=ATOM->z-Atoms[D->c].z;
@@ -845,7 +849,8 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
     Px=(Px-(twob*lroundl(Px/twob)));
     Py=(Py-(twob*lroundl(Py/twob)));
     Pz=(Pz-(twob*lroundl(Pz/twob)));
-    cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->z-Pz<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"\n";
+	cout<<"draw line\t{";
+    cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->z-Pz<<"}\t{"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"}\twidth 5\n";
     Sx=ATOM->x-Atoms[D->b].x;
     Sy=ATOM->y-Atoms[D->b].y;
     Sz=ATOM->z-Atoms[D->b].z;
@@ -860,7 +865,8 @@ void print_delunay(atom *ATOM,delunay *D,atom Atoms[],int TYPE)
     Px=(Px-(twob*lroundl(Px/twob)));
     Py=(Py-(twob*lroundl(Py/twob)));
     Pz=(Pz-(twob*lroundl(Pz/twob)));
-    cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->z-Pz<<"\t"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"\n";
+	cout<<"draw line\t{";
+    cout<<ATOM->x-Px<<"\t"<<ATOM->y-Py<<"\t"<<ATOM->z-Pz<<"}\t{"<<ATOM->x-Sx<<"\t"<<ATOM->y-Sy<<"\t"<<ATOM->z-Sz<<"}\twidth 5\n";
 }
 void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
 {
@@ -1485,6 +1491,12 @@ void constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q,lon
 				circx=X;
 				circy=Y;
 				circz=Z;
+				X1_s=X1+a;
+				Y1_s=Y1+b;
+				Z1_s=Z1+c;
+				X2_s=X2+a;
+				Y2_s=Y2+b;
+				Z2_s=Z2+c;
 			}
 		}
 	}//j loop
@@ -1533,6 +1545,18 @@ void constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q,lon
 	    ATOM->part_c[A][ATOM->conti[TYPE]][TYPE]++;
 	    ATOM->part_c[B][A][TYPE]++;
 	    ATOM->part_c[ATOM->conti[TYPE]][B][TYPE]++;
+	    ATOM->MIDP[A][B][TYPE].x=X2_s;
+	    ATOM->MIDP[A][B][TYPE].y=Y2_s;
+	    ATOM->MIDP[A][B][TYPE].z=Z2_s;
+	    ATOM->MIDP[B][A][TYPE].x=X2_s;
+	    ATOM->MIDP[B][A][TYPE].y=Y2_s;
+	    ATOM->MIDP[B][A][TYPE].z=Z2_s;
+	    ATOM->MIDP[A][ATOM->conti[TYPE]][TYPE].x=X1_s;
+	    ATOM->MIDP[A][ATOM->conti[TYPE]][TYPE].y=Y1_s;
+	    ATOM->MIDP[A][ATOM->conti[TYPE]][TYPE].z=Z1_s;
+	    ATOM->MIDP[ATOM->conti[TYPE]][A][TYPE].x=X1_s;
+	    ATOM->MIDP[ATOM->conti[TYPE]][A][TYPE].y=Y1_s;
+	    ATOM->MIDP[ATOM->conti[TYPE]][A][TYPE].z=Z1_s;
 		//ATOM->MIDP[A][B][TYPE]->
 	}
 	else
@@ -1553,6 +1577,18 @@ void constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q,lon
 	    ATOM->part_c[A][k][TYPE]++;
 	    ATOM->part_c[B][A][TYPE]++;
 	    ATOM->part_c[k][B][TYPE]++;
+	    ATOM->MIDP[A][B][TYPE].x=X2_s;
+	    ATOM->MIDP[A][B][TYPE].y=Y2_s;
+	    ATOM->MIDP[A][B][TYPE].z=Z2_s;
+	    ATOM->MIDP[B][A][TYPE].x=X2_s;
+	    ATOM->MIDP[B][A][TYPE].y=Y2_s;
+	    ATOM->MIDP[B][A][TYPE].z=Z2_s;
+	    ATOM->MIDP[A][k][TYPE].x=X1_s;
+	    ATOM->MIDP[A][k][TYPE].y=Y1_s;
+	    ATOM->MIDP[A][k][TYPE].z=Z1_s;
+	    ATOM->MIDP[k][A][TYPE].x=X1_s;
+	    ATOM->MIDP[k][A][TYPE].y=Y1_s;
+	    ATOM->MIDP[k][A][TYPE].z=Z1_s;
 		//ATOM->edge_index[k][TYPE]++;
 	}
 	//cout<<"look\t";
@@ -1917,8 +1953,8 @@ int main( int argc , char * argv[] )
     long double *radius=new (nothrow) long double[ntypes];
     long double b,c,d,e,f;
     //radiuses of the particle
-    radius[0]=0.2;
-    radius[1]=0.4;
+    radius[0]=0.5;
+    radius[1]=0.7;
     //nAtoms=0;
     char buffer[64];
     vertice *temp_site=nullptr;
@@ -2034,7 +2070,8 @@ int main( int argc , char * argv[] )
         {
             for(int t=0; t<ntypes; t++)
             {
-                if(Atoms[i].radius==radius[t]-epsilon)
+					//cout<<Atoms[i].radius<<"\t"<<radius[t]-epsilon<<"\n";
+                if(abs(Atoms[i].radius-radius[t]-epsilon)<0.00001)
                 {
                     Atoms[i].type=t;
                     break;
@@ -2092,37 +2129,38 @@ int main( int argc , char * argv[] )
             cout<<TYPE<<"\t"<<r_cut<<"\n";
             //This is the loop over all atoms: we construct the voronoi cell for each atom
             int void_vert_count=0;
+            //for(SAM=0 ; SAM<101; SAM++)
             for(SAM=0 ; SAM<nAtoms; SAM++)
-            //for(SAM=0 ; SAM<nAtoms; SAM++)
             {
+				////cout<<"here\n";
+				////cout<<Atoms[SAM].type<<"\n";
+			  //if(Atoms[SAM].type==1)
+			  //{
+			  //	cout<<"draw color blue\n";
+			  //	cout<<"draw sphere \t";
+			  //	cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
+			  //}
+			  //if(Atoms[SAM].type==0)
+			  //{
+			  //	cout<<"draw color red\n";
+			  //	cout<<"draw sphere \t";
+			  //	cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
+			  //}
                 {
                     //the first function calculates the first delunay triangle for the atom
                     first_delunay(&(Atoms[SAM]),Atoms,TYPE);
                     //this completes the delunay triangles of the atoms: all the triangle the atom takes part in
                     complete_del(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
                     delunay *D=nullptr;
-				    D=Atoms[SAM].D[TYPE].initial;
-				  //while(1)
-				  //{
-				  //	print_delunay(&(Atoms[SAM]),D,Atoms,TYPE);
-				  //	if(D->next)
-				  //			D=D->next;
-				  //	else
-				  //			break;
-				  //}
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next->next->next->next->next->next,Atoms,TYPE);
-				////print_delunay(&(Atoms[SAM]),Atoms[SAM].D[TYPE].initial->next->next->next->next->next->next->next->next->next->next->next->next,Atoms,TYPE);
+				 // D=Atoms[SAM].D[TYPE].initial;
+				 // while(1)
+				 // {
+				 // 	print_delunay(&(Atoms[SAM]),D,Atoms,TYPE);
+				 // 	if(D->next)
+				 // 			D=D->next;
+				 // 	else
+				 // 			break;
+				 // }
 					//break;
                     int count=0;
                     long double area_s=0;
@@ -2245,47 +2283,56 @@ int main( int argc , char * argv[] )
 									else
 											break;
 								}
-								vertice *temp_vert_o=nullptr;
-								vertice *temp_vert_d=nullptr;
-								//THe D_ONE->circum_x/y are the co-ordinates of the voronoi vertice that is defined by the delunay triangle D_ONE
-								//And we add them to the list of vertices / again in descending order
-								if(!start[TYPE])
-								{
-									start[TYPE]=new vertice;
-									start[TYPE]->p=new site;
-									start[TYPE]->p->x=D_ONE->circum_x;
-									start[TYPE]->p->y=D_ONE->circum_y;
-									start[TYPE]->p->z=D_ONE->circum_z;
-									start[TYPE]->A=SAM;
-									start[TYPE]->D=D_ONE;
-									temp_vert_o=start[TYPE];
-								}
-								else
-								{
-									vertice *temp=nullptr;
-									temp=new vertice;
-									temp->p=new site;
-									temp->p->x=D_ONE->circum_x;
-									temp->p->y=D_ONE->circum_y;
-									temp->p->z=D_ONE->circum_z;
-									temp->A=SAM;
-									temp->D=D_ONE;
-									temp=V->insert_vertice(start[TYPE],temp,TYPE);
-									temp_vert_o=temp;
-								}
-								vertice *temp=nullptr;
-								temp=new vertice;
-								temp->p=new site;
-								temp->p->x=D_TWO->circum_x;
-								temp->p->y=D_TWO->circum_y;
-								temp->p->z=D_TWO->circum_z;
-								temp->A=SAM;
-								temp->D=D_TWO;
-								temp=V->insert_vertice(start[TYPE],temp,TYPE);
-                        		temp_vert_d=temp;
-								vert_void(temp_vert_o,Atoms,nAtoms,TYPE,void_vert_count);
-								vert_void(temp_vert_d,Atoms,nAtoms,TYPE,void_vert_count);
-								////////////////////////////////////////////
+							  //if(D_ONE && D_TWO )//&& Atoms[SAM].D3bondinvoid[i][k][TYPE]==1)
+							  //{
+							  //		//cout<<"#\t"<<k<<""\n";
+							  //    	cout<<"draw line\t";
+							  //    	//cout<<"{"<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+							  //		//cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"\n";
+							  //		cout<<"{"<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"}\t{"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"}\t";
+							  //		cout<<"width 10\n";
+							  //}
+							    vertice *temp_vert_o=nullptr;
+							    vertice *temp_vert_d=nullptr;
+							    //THe D_ONE->circum_x/y are the co-ordinates of the voronoi vertice that is defined by the delunay triangle D_ONE
+							    //And we add them to the list of vertices / again in descending order
+							    if(!start[TYPE])
+							    {
+							    	start[TYPE]=new vertice;
+							    	start[TYPE]->p=new site;
+							    	start[TYPE]->p->x=D_ONE->circum_x;
+							    	start[TYPE]->p->y=D_ONE->circum_y;
+							    	start[TYPE]->p->z=D_ONE->circum_z;
+							    	start[TYPE]->A=SAM;
+							    	start[TYPE]->D=D_ONE;
+							    	temp_vert_o=start[TYPE];
+							    }
+							    else
+							    {
+							    	vertice *temp=nullptr;
+							    	temp=new vertice;
+							    	temp->p=new site;
+							    	temp->p->x=D_ONE->circum_x;
+							    	temp->p->y=D_ONE->circum_y;
+							    	temp->p->z=D_ONE->circum_z;
+							    	temp->A=SAM;
+							    	temp->D=D_ONE;
+							    	temp=V->insert_vertice(start[TYPE],temp,TYPE);
+							    	temp_vert_o=temp;
+							    }
+							    vertice *temp=nullptr;
+							    temp=new vertice;
+							    temp->p=new site;
+							    temp->p->x=D_TWO->circum_x;
+							    temp->p->y=D_TWO->circum_y;
+							    temp->p->z=D_TWO->circum_z;
+							    temp->A=SAM;
+							    temp->D=D_TWO;
+							    temp=V->insert_vertice(start[TYPE],temp,TYPE);
+                        	    temp_vert_d=temp;
+							  //vert_void(temp_vert_o,Atoms,nAtoms,TYPE,void_vert_count);
+							  //vert_void(temp_vert_d,Atoms,nAtoms,TYPE,void_vert_count);
+							    ////////////////////////////////////////////
 							    long double X1,Y1,Z1;
 							    long double X2,Y2,Z2;
 							    long double X,Y,Z;
@@ -2297,39 +2344,26 @@ int main( int argc , char * argv[] )
 							    X2=Atoms[Atoms[SAM].contigous[k][TYPE]].x-Atoms[SAM].x;
 							    Y2=Atoms[Atoms[SAM].contigous[k][TYPE]].y-Atoms[SAM].y;
 							    Z2=Atoms[Atoms[SAM].contigous[k][TYPE]].z-Atoms[SAM].z;
-							////X1=(X1-(tilt*lroundl(Y1/twob)));
-							////X1=(X1-(twob*lroundl(X1/twob)));
-							////Y1=(Y1-(twob*lroundl(Y1/twob)));
-							////Z1=(Z1-(twob*lroundl(Z1/twob)));
-							////long double DIS,rA,rS;
-							////DIS=sqrtl(X1*X1+Y1*Y1+Z1*Z1);
-							////rA=Atoms[Atoms[SAM].contigous[i][TYPE]].radius+r_cut;
-							////rS=Atoms[SAM].radius+r_cut;
-							////long double l=0.5*(DIS+(rS*rS-rA*rA)/DIS);
-							////long double x,y,z;
-							////x=l/DIS*X1+Atoms[SAM].x;
-							////y=l/DIS*Y1+Atoms[SAM].y;
-							////z=l/DIS*Z1+Atoms[SAM].z;
-								if(control)
-								{
-									x=D_ONE->circum_x;
-									y=D_ONE->circum_y;
-									z=D_ONE->circum_z;
-									control=0;
-								}
-
-							////if(k==0)
-							////{
-							////	
-							////}
-								if(D_ONE && D_TWO)
-								{
-										//cout<<"#\t"<<k<<""\n";
-								    	cout<<"draw triangle\t";
-								    	cout<<"{"<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
-										//cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"\n";
-										cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"}\t{"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"}\n";
-								}
+							    X1=(X1-(tilt*lroundl(Y1/twob)));
+							    X1=(X1-(twob*lroundl(X1/twob)));
+							    Y1=(Y1-(twob*lroundl(Y1/twob)));
+							    Z1=(Z1-(twob*lroundl(Z1/twob)));
+							    long double DIS,rA,rS;
+							    DIS=sqrtl(X1*X1+Y1*Y1+Z1*Z1);
+							    rA=Atoms[Atoms[SAM].contigous[i][TYPE]].radius+r_cut;
+							    rS=Atoms[SAM].radius+r_cut;
+							    long double l=0.5*(DIS+(rS*rS-rA*rA)/DIS);
+							    long double x,y,z;
+							    x=l/DIS*X1+Atoms[SAM].x;
+							    y=l/DIS*Y1+Atoms[SAM].y;
+							    z=l/DIS*Z1+Atoms[SAM].z;
+							    if(control)
+							    {
+							    	x=D_ONE->circum_x;
+							    	y=D_ONE->circum_y;
+							    	z=D_ONE->circum_z;
+							    	control=0;
+							    }
 							    V1x=D_ONE->circum_x-Atoms[SAM].x;
 							    V1y=D_ONE->circum_y-Atoms[SAM].y;
 							    V1z=D_ONE->circum_z-Atoms[SAM].z;
@@ -2359,8 +2393,14 @@ int main( int argc , char * argv[] )
 							    long double overlap1,overlap2;
 							    int sign1,sign2;
 							    long double disV1,disV2,disA;
+
 							    disV1=sqrtl((V1x*V1x+V1y*V1y+V1z*V1z));
+							    if((disV1*disV1-rS*rS)>0.)
+							    		temp_vert_o->is_void=1;
 							    disV2=sqrtl((V2x*V2x+V2y*V2y+V2z*V2z));
+							    if((disV2*disV2-rS*rS)>0.)
+							    		temp_vert_d->is_void=1;
+
 							    disA=sqrtl((a*a+b*b+c*c));//V1x*V1x+V1y*V1y+V1z*V1z));
 							    overlap1=a*V1x+b*V1y+c*V1z;
 							    if(overlap1<0.)
@@ -2378,19 +2418,66 @@ int main( int argc , char * argv[] )
 							    		{
 							    				if(temp_vert_o->is_void==1)
 							    				{
-							    						Atoms[SAM].D3bondinvoid[i][k][TYPE]==1;
-
+							    						Atoms[SAM].D3bondinvoid[i][k][TYPE]=1;
+							    						Atoms[SAM].D3bondinvoid[k][i][TYPE]=1;
 							    				}
 							    		}
 							    		else
 							    		{
 							    				if(temp_vert_d->is_void==1)
 							    				{
-							    						Atoms[SAM].D3bondinvoid[i][k][TYPE]==1;
-
+							    						Atoms[SAM].D3bondinvoid[i][k][TYPE]=1;
+							    						Atoms[SAM].D3bondinvoid[k][i][TYPE]=1;
 							    				}
 							    		}
-							    		//if(
+							    }
+							    else 
+							    {
+							    		long double midx,midy,midz;
+							    		midx=Atoms[SAM].MIDP[i][k][TYPE].x-Atoms[SAM].x;
+							    		midy=Atoms[SAM].MIDP[i][k][TYPE].y-Atoms[SAM].y;
+							    		midz=Atoms[SAM].MIDP[i][k][TYPE].z-Atoms[SAM].z;
+							    		midx=(midx-(tilt*lroundl(midy/twob)));
+							    		midx=(midx-(twob*lroundl(midx/twob)));
+							    		midy=(midy-(twob*lroundl(midy/twob)));
+							    		midz=(midz-(twob*lroundl(midz/twob)));
+							    		long double dismsq=midx*midx+midy*midy+midz*midz;
+							    		if((dismsq-rS*rS)>0.)
+							    		{
+							    						Atoms[SAM].D3bondinvoid[i][k][TYPE]=1;
+							    						Atoms[SAM].D3bondinvoid[k][i][TYPE]=1;
+							    		}
+							    }
+							////if(temp_vert_o->is_void)
+							////{
+							////		cout<<"draw color yellow\n";
+							////		cout<<"draw point\t";
+							////		cout<<"{"<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->x<<"}\n";
+							////}
+							////if(temp_vert_d->is_void)
+							////{
+							////		cout<<"draw color yellow\n";
+							////		cout<<"draw point\t";
+							////		cout<<"{"<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->x<<"}\n";
+							////}
+							    if(D_ONE && D_TWO && Atoms[SAM].D3bondinvoid[i][k][TYPE]==1)
+							    {
+							    		cout<<"draw color white\n";
+							    		//cout<<"#\t"<<k<<""\n";
+							        	cout<<"draw line\t";
+							        	//cout<<"{"<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+							    		//cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"\n";
+							    		cout<<"{"<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"}\t{"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"}\n";
+							    }
+							    else
+							    {
+							    		cout<<"draw color red\n";
+							    		//cout<<"#\t"<<k<<""\n";
+							        	cout<<"draw line\t";
+							        	//cout<<"{"<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+							    		//cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"\n";
+							    		cout<<"{"<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"}\t{"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"}\n";
+
 							    }
 
 
@@ -2450,63 +2537,25 @@ int main( int argc , char * argv[] )
 
                 }
             }
-			return 0;
             vertice *temp_start=nullptr;
             temp_start=start[TYPE];
-            cout<<"after  first tessellation \t"<<TYPE<<"\n";;
+            cout<<"#after  first tessellation \t"<<TYPE<<"\n#";;
             cout<<r_cut<<"\n";
             //this part checks if the vertices are in void
             while(1)
             {
-                if(temp_start->v_neigh_count != 3)
-                {
-                    //this should only happen rarely (if a vertice has more than 4 neighbours
-                    display_SITE(temp_start->p);
-                    V->delete_vertice(start[TYPE],temp_start,TYPE);
-                    vertice *temp=nullptr;
-                    temp=temp_start;
-                    temp_start=temp_start->next;
-                    delete temp->p;
-                    delete temp;
-                    continue;
-                }
-                int flag=1;
-                long double AX,AY,BX,BY,X,Y;
-                BX=temp_start->p->x ;
-                BY=temp_start->p->y;
-                AX=Atoms[temp_start->A].x;
-                AY=Atoms[temp_start->A].y;
-                long double dis=sqrtl((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-                if(dis<r_cut+Atoms[temp_start->A].radius)
-                {
-                    flag=0;
-                }
-                AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].x;
-                AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].y;
-                dis=sqrtl((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-                if(dis<r_cut+Atoms[Atoms[temp_start->A].contigous[temp_start->D->A][TYPE]].radius)
-                {
-                    flag=0;
-                }
-                AX=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].x;
-                AY=Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].y;
-                dis=sqrtl((AX-BX)*(AX-BX)+(AY-BY)*(AY-BY));
-                if(dis<r_cut+Atoms[Atoms[temp_start->A].contigous[temp_start->D->B][TYPE]].radius)
-                {
-                    flag=0;
-                }
-                //flag=1 if the vertice is not in the exclusion area of the atoms
-                if(flag )
-                {
-                    temp_start->is_void=1;
-                    //mark it as void
-                    void_vert_count=void_vert_count+1;
-                }
+				if(temp_start->is_void)
+				{
+						cout<<"draw color yellow\n";
+						cout<<"draw sphere\t";
+						cout<<"{"<<temp_start->p->x<<"\t"<<temp_start->p->y<<"\t"<<temp_start->p->z<<"}\tradius\t"<<0.03<<"\t"<<"resolution\t100\n";;
+				}
                 if(temp_start->next)
                     temp_start=temp_start->next;
                 else
                     break;
             }
+			return 0;
             vor.close();
         }
         //CODE BEGINS FOR CALCULATING FREE VOLUME
