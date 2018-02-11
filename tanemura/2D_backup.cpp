@@ -224,6 +224,7 @@ struct atom
     int *contigous[500];
 	int *part_c[500][100];
     int *bondinvoid[500];
+    int *D3bondinvoid[50][50];
     int *edge_index[500];
     int neighbours=0;
     int *conti;
@@ -1997,6 +1998,11 @@ int main( int argc , char * argv[] )
 								Atoms[i].part_c[t][j]=new (nothrow) int[ntypes];
 						}
 				}
+			    for(int j=0;j<50 && t<50;j++)
+			    {
+
+                	Atoms[i].D3bondinvoid[t][j]= new (nothrow) int[ntypes];
+			    }
                 for(int TYPE=0; TYPE<ntypes; TYPE++)
                 {
                     Atoms[i].contigous[t][TYPE]=0;
@@ -2215,16 +2221,73 @@ int main( int argc , char * argv[] )
 								temp->A=SAM;
 								temp->D=D_TWO;
 								temp=V->insert_vertice(start[TYPE],temp,TYPE);
+								long double X1,Y1,Z1;
+								long double X2,Y2,Z2;
+								long double X,Y,Z;
+								long double V1x,V1y,V1z;
+								long double V2x,V2y,V2z;
+								X1=Atoms[Atoms[SAM].contigous[i][TYPE]].x-Atoms[SAM].x;
+								Y1=Atoms[Atoms[SAM].contigous[i][TYPE]].y-Atoms[SAM].y;
+								Z1=Atoms[Atoms[SAM].contigous[i][TYPE]].z-Atoms[SAM].z;
+								X2=Atoms[Atoms[SAM].contigous[k][TYPE]].x-Atoms[SAM].x;
+								Y2=Atoms[Atoms[SAM].contigous[k][TYPE]].y-Atoms[SAM].y;
+								Z2=Atoms[Atoms[SAM].contigous[k][TYPE]].z-Atoms[SAM].z;
+								V1x=D_ONE->circum_x-Atoms[SAM].x;
+								V1y=D_ONE->circum_y-Atoms[SAM].y;
+								V1z=D_ONE->circum_z-Atoms[SAM].z;
+								V2x=D_TWO->circum_x-Atoms[SAM].x;
+								V2y=D_TWO->circum_y-Atoms[SAM].y;
+								V2z=D_TWO->circum_z-Atoms[SAM].z;
+								X1=(X1-(tilt*lroundl(Y1/twob)));
+								X1=(X1-(twob*lroundl(X1/twob)));
+								Y1=(Y1-(twob*lroundl(Y1/twob)));
+								Z1=(Z1-(twob*lroundl(Z1/twob)));
+								X2=(X2-(tilt*lroundl(Y2/twob)));
+								X2=(X2-(twob*lroundl(X2/twob)));
+								Y2=(Y2-(twob*lroundl(Y2/twob)));
+								Z2=(Z2-(twob*lroundl(Z2/twob)));
+								V2x=(V2x-(tilt*lroundl(V2y/twob)));
+								V2x=(V2x-(twob*lroundl(V2x/twob)));
+								V2y=(V2y-(twob*lroundl(V2y/twob)));
+								V2z=(V2z-(twob*lroundl(V2z/twob)));
+								V1x=(V1x-(tilt*lroundl(V1y/twob)));
+								V1x=(V1x-(twob*lroundl(V1x/twob)));
+								V1y=(V1y-(twob*lroundl(V1y/twob)));
+								V1z=(V1z-(twob*lroundl(V1z/twob)));
+								long double a,b,c;
+								a=(Y1*Z2-Z1*Y2);
+                                b=(Z1*X2-X1*Z2);
+                                c=(X1*Y2-Y1*X2);
+								long double overlap1,overlap2;
+								int sign1,sign2;
+								long double disV1,disV2,disA;
+								disV1=sqrtl((V1x*V1x+V1y*V1y+V1z*V1z));
+								disV2=sqrtl((V2x*V2x+V2y*V2y+V2z*V2z));
+								disA=sqrtl((a*a+b*b+c*c));//V1x*V1x+V1y*V1y+V1z*V1z));
+								overlap1=a*V1x+b*V1y+c*V1z;
+								if(overlap1<0.)
+										sign1=1;
+								else
+										sign1=-1;
+								overlap2=a*V2x+b*V2y+c*V2z;
+								if(overlap2<0.)
+										sign2=1;
+								else
+										sign2=-1;
+								if(sign1==sign2)
+								{
+										if(overlap1/(disV1*disA)<overlap2/(disV2*disA))
+										{
+											
+										}
+										//if(
+
+								}
+
+
 							}
 						}
                       ////Now that we have the two vertices that define an edge we need to see if the bond between them lies in a void.
-                      //long double m;
-                      //long double X,Y,dis;
-                      //X=Atoms[Atoms[SAM].contigous[i][TYPE]].x-Atoms[SAM].x;
-                      //Y=Atoms[Atoms[SAM].contigous[i][TYPE]].y-Atoms[SAM].y;
-                      //X=(X-(tilt*lroundl(Y/twob)));
-                      //X=(X-(twob*lroundl(X/twob)));
-                      //Y=(Y-(twob*lroundl(Y/twob)));
                       //dis=sqrtl(distance(X,Y));
                       //m=Y/X;
                       //int sign_C;

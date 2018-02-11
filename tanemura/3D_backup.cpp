@@ -1943,7 +1943,7 @@ int main( int argc , char * argv[] )
     //The file with configurations
     std::ifstream infile(argv[1]);///dat_trial");//config_2000_0.38_2_0.70.dat");
     //No of Atoms
-    nAtoms=64;
+    nAtoms=28;
     cout<<std::setprecision(5);
     //No of configurations in the input file
     config_count=1;
@@ -2130,22 +2130,31 @@ int main( int argc , char * argv[] )
             //This is the loop over all atoms: we construct the voronoi cell for each atom
             int void_vert_count=0;
             //for(SAM=0 ; SAM<101; SAM++)
-            for(SAM=0 ; SAM<nAtoms; SAM++)
+            for(SAM=13 ; SAM<14; SAM++)
             {
+				
+				cout<<"mol new\n";
+				cout<<"draw material Opaque\n";
 				////cout<<"here\n";
 				////cout<<Atoms[SAM].type<<"\n";
-			  //if(Atoms[SAM].type==1)
-			  //{
-			  //	cout<<"draw color blue\n";
-			  //	cout<<"draw sphere \t";
-			  //	cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
-			  //}
-			  //if(Atoms[SAM].type==0)
-			  //{
-			  //	cout<<"draw color red\n";
-			  //	cout<<"draw sphere \t";
-			  //	cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
-			  //}
+			    if(Atoms[SAM].type==1)
+			    {
+						//cout<<"mol new\t";
+						//cout<<"draw material Transparent\t";
+			    	cout<<"draw color blue\n";
+			    	cout<<"draw sphere \t";
+			    	cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
+			    }
+			    if(Atoms[SAM].type==0)
+			    {
+						//cout<<"mol new\t";
+						//cout<<"draw material Transparent\t";
+			    	cout<<"draw color red\n";
+			    	cout<<"draw sphere \t";
+			    	cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
+			    }
+					////cout<<"mol new\t";
+					////cout<<"draw material Opaque\t";
                 {
                     //the first function calculates the first delunay triangle for the atom
                     first_delunay(&(Atoms[SAM]),Atoms,TYPE);
@@ -2167,6 +2176,8 @@ int main( int argc , char * argv[] )
 					cout<<"####\t####\t"<<SAM<<"\n";
                     for(int i=0; i<Atoms[SAM].conti[TYPE]; i++)
                     {
+						cout<<"mol new\n";
+						cout<<"draw material Transparent\n";
                         //We loop over all the atoms the atom "SAM" make a voronoi edge with
                         long double a,b,p,q,x,y,z;
                         x=Atoms[SAM].x;
@@ -2177,6 +2188,23 @@ int main( int argc , char * argv[] )
                         delunay *D_ONE=NULL;
                         delunay *D_TWO=NULL;
 						cout<<"#\t"<<i<<"\n";;
+						if(Atoms[Atoms[SAM].contigous[i][TYPE]].type==1)
+						{
+								//cout<<"mol new\t";
+								//cout<<"draw material Transparent\t";
+							cout<<"draw color blue\n";
+							cout<<"draw sphere \t";
+							cout<<"{\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].x<<"\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].y<<"\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].z<<"}\t"<<"radius\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].radius+r_cut<<"\t"<<"resolution\t100\n";
+						}
+						if(Atoms[Atoms[SAM].contigous[i][TYPE]].type==0)
+						{
+								//cout<<"mol new\t";
+								//cout<<"draw material Transparent\t";
+							cout<<"draw color red\n";
+							cout<<"draw sphere \t";
+							cout<<"{\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].x<<"\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].y<<"\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].z<<"}\t"<<"radius\t"<<Atoms[Atoms[SAM].contigous[i][TYPE]].radius+r_cut<<"\t"<<"resolution\t100\n";
+						}
+
                         //D is a the first delunay triangle : Associted with each atom is a list of delunay triangle the atom is part of
                         //D_ONE and D_TWO are the two delunay triangle the atom SAM and its i'th contiguous atom takes part in (they define one edge
 						int control=1;
@@ -2460,6 +2488,9 @@ int main( int argc , char * argv[] )
 							////		cout<<"draw point\t";
 							////		cout<<"{"<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->x<<"}\n";
 							////}
+								
+								cout<<"mol new\n";
+								cout<<"draw material Transparent\n";
 							    if(D_ONE && D_TWO && Atoms[SAM].D3bondinvoid[i][k][TYPE]==1)
 							    {
 							    		cout<<"draw color white\n";
