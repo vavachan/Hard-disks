@@ -834,7 +834,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     ATOM->conti[TYPE]++;
     if(lmin<0.)
     {
-        ATOM->ignore=1;
+        //ATOM->ignore=1;
     }
     long double DIS_MIN=box*box;
     int DIS_atom;
@@ -1115,7 +1115,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                 flag=1;
                 if(lmin<0.)
                 {
-                    ATOM->ignore=1;
+                    //ATOM->ignore=1;
                 }
                 for(k=0; k<ATOM->conti[TYPE]; k++)
                 {
@@ -1305,7 +1305,7 @@ void complete_del(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                 flag=1;
                 if(lmin<0.)
                 {
-                    ATOM->ignore=1;
+                    //ATOM->ignore=1;
                     //return;
                 }
                 if(lmin<0.)
@@ -1383,7 +1383,7 @@ int main( int argc , char * argv[] )
     nAtoms=2000;
     cout<<std::setprecision(26);
     //No of configurations in the input file
-    config_count=64;
+    config_count=1;
     //No of types of particle
     int ntypes=2;
     int SAM=0;
