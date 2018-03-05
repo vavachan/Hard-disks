@@ -60,6 +60,7 @@ public:
 }*V;
 struct delunay
 {
+	int AT[4];
     int A;
     int B;
     int C;
@@ -92,6 +93,12 @@ struct delunay
     long double Cy=0.;
     long double Cz=0.;
     delunay *next=NULL;
+};
+struct container_delunay
+{
+	delunay *D;	
+	struct container_delunay *next;
+	struct container_delunay *prev;
 };
 struct vertice
 {
@@ -236,6 +243,7 @@ struct atom
     int ignore=0;
     container_vertice **Cstart=nullptr;
     set_of_delunay *D=nullptr;
+	container_delunay *D_FIRST;
     int save_neighlist[500];
     int *save_contigous[500];
     int *save_bondinvoid[500];
@@ -1255,6 +1263,60 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     ATOM->edge_index[2][TYPE]++;
     ATOM->conti[TYPE]++;
     ATOM->D[TYPE].initial= new delunay;
+///////////////////////////////////////////////////////////////////////////////////////////////
+	//if(!ATOM->D_FIRST)
+	{
+		ATOM->D_FIRST= new container_delunay;
+		ATOM->D_FIRST->D=ATOM->D[TYPE].initial;
+	}
+	if(!Atoms[ATOM->contigous[0][TYPE]].D_FIRST)
+	{
+		Atoms[ATOM->contigous[0][TYPE]].D_FIRST=new container_delunay;
+		Atoms[ATOM->contigous[0][TYPE]].D_FIRST->D=ATOM->D[TYPE].initial;
+	}
+	else
+	{
+		container_delunay *temp;
+		temp=Atoms[ATOM->contigous[0][TYPE]].D_FIRST;
+		while(temp->next)
+		{
+			temp=temp->next;
+		}
+		temp->next=new container_delunay;
+		temp->D=ATOM->D[TYPE].initial;
+	}
+	if(!Atoms[ATOM->contigous[1][TYPE]].D_FIRST)
+	{
+		Atoms[ATOM->contigous[1][TYPE]].D_FIRST=new container_delunay;
+		Atoms[ATOM->contigous[1][TYPE]].D_FIRST->D=ATOM->D[TYPE].initial;
+	}
+	else
+	{
+		container_delunay *temp;
+		temp=Atoms[ATOM->contigous[1][TYPE]].D_FIRST;
+		while(temp->next)
+		{
+			temp=temp->next;
+		}
+		temp->next=new container_delunay;
+		temp->D=ATOM->D[TYPE].initial;
+	}
+	if(!Atoms[ATOM->contigous[2][TYPE]].D_FIRST)
+	{
+		Atoms[ATOM->contigous[2][TYPE]].D_FIRST=new container_delunay;
+		Atoms[ATOM->contigous[2][TYPE]].D_FIRST->D=ATOM->D[TYPE].initial;
+	}
+	else
+	{
+		container_delunay *temp;
+		temp=Atoms[ATOM->contigous[2][TYPE]].D_FIRST;
+		while(temp->next)
+		{
+			temp=temp->next;
+		}
+		temp->next=new container_delunay;
+		temp->D=ATOM->D[TYPE].initial;
+	}
     ATOM->D[TYPE].initial->A=0;
     ATOM->D[TYPE].initial->B=1;
     ATOM->MIDP[0][1][TYPE].x=circx_s+L.x;
@@ -2196,10 +2258,10 @@ int main( int argc, char * argv[] )
     //The file with configurations
     std::ifstream infile(argv[1]);///dat_trial");//config_2000_0.38_2_0.70.dat");
     //No of Atoms
-    nAtoms=126;
+    nAtoms=216;
     cout<<std::setprecision(5);
     //No of configurations in the input file
-    config_count=500;
+    config_count=1;
     //No of types of particle
     int ntypes=2;
     int SAM=0;
@@ -2393,6 +2455,7 @@ int main( int argc, char * argv[] )
         }
 
         //This a loop over the types ,  if you have 2 kinds of atoms you have to do voronoi tessellation twice
+        //for(int TYPE=0; TYPE<ntypes; TYPE++)
         for(int TYPE=0; TYPE<ntypes; TYPE++)
         {
             snprintf(buffer,sizeof(char)*64,"vor_%d",int(TYPE));//_%d_%f.dat",int(nAtoms),Press);
@@ -2402,71 +2465,73 @@ int main( int argc, char * argv[] )
             //cout<<TYPE<<"\t"<<r_cut<<"\n";
             //This is the loop over all atoms: we construct the voronoi cell for each atom
             int void_vert_count=0;
+            //for(SAM=0 ; SAM<1; SAM++)
             for(SAM=0 ; SAM<nAtoms; SAM++)
-                //for(SAM=10 ; SAM<20; SAM++)
             {
 
-                //cout<<"mol new\n";
-                //cout<<"draw material Opaque\n";
-                ////////cout<<"here\n";
-                ////////cout<<Atoms[SAM].type<<"\n";
-                //if(Atoms[SAM].type==1)
-                //{
-                //    ////cout<<"mol new\t";
-                //    ////cout<<"draw material Transparent\t";
-                //      cout<<"draw color blue\n";
-                //      cout<<"draw sphere \t";
-                //      cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius<<"\t"<<"resolution\t100\n";
-                //}
-                //if(Atoms[SAM].type==0)
-                //{
-                //      //cout<<"mol new\t";
-                //      //cout<<"draw material Transparent\t";
-                //      cout<<"draw color red\n";
-                //      cout<<"draw sphere \t";
-                //      cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius<<"\t"<<"resolution\t100\n";
-                //}
-                //cout<<"mol new\n";
-                //cout<<"draw material Transparent\n";
-                ////////cout<<"here\n";
-                ////////cout<<Atoms[SAM].type<<"\n";
-                //if(Atoms[SAM].type==1)
-                //{
-                //    ////cout<<"mol new\t";
-                //    ////cout<<"draw material Transparent\t";
-                //    cout<<"draw color blue\n";
-                //    cout<<"draw sphere \t";
-                //    cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
-                //}
-                //if(Atoms[SAM].type==0)
-                //{
-                //    ////cout<<"mol new\t";
-                //    ////cout<<"draw material Transparent\t";
-                //    cout<<"draw color red\n";
-                //    cout<<"draw sphere \t";
-                //    cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
-                //}
-                //////cout<<"mol new\t";
-                //////cout<<"draw material Opaque\t";
+             //   cout<<"mol new\n";
+             //   cout<<"draw material Opaque\n";
+             // ////////cout<<"here\n";
+             // ////////cout<<Atoms[SAM].type<<"\n";
+             // if(Atoms[SAM].type==1)
+             // {
+             //     ////cout<<"mol new\t";
+             //     ////cout<<"draw material Transparent\t";
+             //       cout<<"draw color blue\n";
+             //       cout<<"draw sphere \t";
+             //       cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius<<"\t"<<"resolution\t100\n";
+             // }
+             // if(Atoms[SAM].type==0)
+             // {
+             //       //cout<<"mol new\t";
+             //       //cout<<"draw material Transparent\t";
+             //       cout<<"draw color red\n";
+             //       cout<<"draw sphere \t";
+             //       cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius<<"\t"<<"resolution\t100\n";
+             // }
+              //cout<<"mol new\n";
+              //cout<<"draw material Transparent\n";
+              ////////cout<<"here\n";
+              ////////cout<<Atoms[SAM].type<<"\n";
+              //if(Atoms[SAM].type==1)
+              //{
+              //    ////cout<<"mol new\t";
+              //    ////cout<<"draw material Transparent\t";
+              //    cout<<"draw color blue\n";
+              //    cout<<"draw sphere \t";
+              //    cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
+              //}
+              //if(Atoms[SAM].type==0)
+              //{
+              //    ////cout<<"mol new\t";
+              //    ////cout<<"draw material Transparent\t";
+              //    cout<<"draw color red\n";
+              //    cout<<"draw sphere \t";
+              //    cout<<"{\t"<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t"<<"radius\t"<<Atoms[SAM].radius+r_cut<<"\t"<<"resolution\t100\n";
+              //}
+              //cout<<"mol new\n";
+              //cout<<"draw material Opaque\n";
                 {
                     //the first function calculates the first delunay triangle for the atom
                     first_delunay(&(Atoms[SAM]),Atoms,TYPE);
                     //this completes the delunay triangles of the atoms: all the triangle the atom takes part in
                     complete_del(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
                     delunay *D=nullptr;
-                    //D=Atoms[SAM].D[TYPE].initial;
-                    //while(1)
-                    //{
-                    //	print_delunay(&(Atoms[SAM]),D,Atoms,TYPE);
-                    //	if(D->next)
-                    //			D=D->next;
-                    //	else
-                    //			break;
-                    //}
+                    D=Atoms[SAM].D[TYPE].initial;
+				////cout<<"draw color green\n";	
+                ////while(1)
+                ////{
+                ////	print_delunay(&(Atoms[SAM]),D,Atoms,TYPE);
+                ////	if(D->next)
+                ////			D=D->next;
+                ////	else
+                ////			break;
+                ////}
                     //break;
                     int count=0;
                     long double area_s=0;
                     //cout<<"####\t####\t"<<SAM<<"\n";
+                    //for(int i=0; i<1; i++)
                     for(int i=0; i<Atoms[SAM].conti[TYPE]; i++)
                     {
 						//cout<<"#\t"<<i<<"\n";
@@ -2678,25 +2743,30 @@ int main( int argc, char * argv[] )
                                 V2x=D_TWO->circum_x-Atoms[SAM].x;
                                 V2y=D_TWO->circum_y-Atoms[SAM].y;
                                 V2z=D_TWO->circum_z-Atoms[SAM].z;
-							////cout<<"#\t"<<k<<"\n";
-							////cout<<"draw color blue\n";
-							////cout<<"draw triangle\t{";
-							////cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"\n";
-							////cout<<x<<"\t"<<y<<"\t"<<z<<"\n";
-							////cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"\n";
-							////cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"\n";
-							////cout<<"draw triangle\t{";
-							////cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t{";
-							////cout<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
-							////cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\n";
-							////cout<<"draw triangle\t{";
-							////cout<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
-							////cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\t{";
-							////cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"}\n";
-							////cout<<"draw triangle\t{";
-							////cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t{";
-							////cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\t{";
-							////cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"}\n";
+							 // cout<<"#\t"<<k<<"\n";
+							 // cout<<"mol new\n";
+							 // cout<<"draw material Transparent\n";
+							 // cout<<"draw color blue\n";
+							 // cout<<"draw triangle\t{";
+							 // cout<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+							 // cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"}\t{";
+							 // cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\n";
+							 // cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"\n";
+							 // cout<<x<<"\t"<<y<<"\t"<<z<<"\n";
+							 // cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"\n";
+							 // cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"\n";
+							  //cout<<"draw triangle\t{";
+							  //cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t{";
+							  //cout<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+							  //cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\n";
+							  //cout<<"draw triangle\t{";
+							  //cout<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+							  //cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\t{";
+							  //cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"}\n";
+							  //cout<<"draw triangle\t{";
+							  //cout<<Atoms[SAM].x<<"\t"<<Atoms[SAM].y<<"\t"<<Atoms[SAM].z<<"}\t{";
+							  //cout<<V2x+Atoms[SAM].x<<"\t"<<V2y+Atoms[SAM].y<<"\t"<<V2z+Atoms[SAM].z<<"}\t{";
+							  //cout<<V1x+Atoms[SAM].x<<"\t"<<V1y+Atoms[SAM].y<<"\t"<<V1z+Atoms[SAM].z<<"}\n";
                                 X1=(X1-(tilt*lroundl(Y1/twob)));
                                 X1=(X1-(twob*lroundl(X1/twob)));
                                 Y1=(Y1-(twob*lroundl(Y1/twob)));
@@ -2824,15 +2894,15 @@ int main( int argc, char * argv[] )
 								//cout<<"mol new\n";
                                 //cout<<"draw material Transparent\n";
 
-                              if(Atoms[SAM].D3bondinvoid[i][k][TYPE])
-                              {
-                                  //cout<<"draw color white\n";
-                                  //cout<<"draw line\t";
-                                  //cout<<"{"<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"}\t{"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"}\twidth 1\n";
-                                    //cout<<"{"<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
-                                    //cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"\n";
+                              //if(Atoms[SAM].D3bondinvoid[i][k][TYPE])
+                           // {
+                           //     cout<<"draw color white\n";
+                           //     cout<<"draw line\t";
+                           //     cout<<"{"<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"}\t{"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"}\twidth 1\n";
+                           //       //cout<<"{"<<x<<"\t"<<y<<"\t"<<z<<"}\t{";
+                           //       //cout<<D_ONE->circum_x<<"\t"<<D_ONE->circum_y<<"\t"<<D_ONE->circum_z<<"\t"<<D_TWO->circum_x<<"\t"<<D_TWO->circum_y<<"\t"<<D_TWO->circum_z<<"\n";
 
-                              }
+                           // }
                               //else
                               //{
                               //    cout<<"draw color red\n";
@@ -3592,7 +3662,7 @@ int main( int argc, char * argv[] )
 			}
 			cout<<r_cut<<"\t"<<cav_tot<<"\t"<<ca_per_tot<<"\n";
 		}
-		//return 0;
+		return 0;
         //continue ;
         //CODE BEGINS FOR CALCULATING FREE VOLUME
         for(int i=0; i<nAtoms; i++)
