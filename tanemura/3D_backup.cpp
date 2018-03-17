@@ -21,6 +21,7 @@ long double tilt=0.0;
 long double DMIN=0.000000000001;//std::numeric_limits<long double>::min();
 long double epsilon=0.00000000000;
 int void_vert_count=0;
+int ***contigous;
 struct atom;
 struct face;
 struct vertice;
@@ -29,7 +30,6 @@ struct site
     long double x=0;
     long double y=0;
     long double z=0;
-    struct face *F=NULL;
 };
 struct vect
 {
@@ -67,10 +67,10 @@ public:
 }*V;
 struct delunay
 {
-    int AT[4];
+    int AT[4]={0};
 	site MID[4][4][4];
 	site MIDP[4][4];
-	vertice *v;
+	vertice *v=nullptr;
     int A;
     int B;
     int C;
@@ -106,7 +106,7 @@ struct delunay
 }******DSET;
 struct container_delunay
 {
-    delunay *D;
+    delunay *D=nullptr;
     struct container_delunay *next=nullptr;
     struct container_delunay *prev=nullptr;
 };
@@ -218,7 +218,22 @@ class set_of_delunay
 {
 public :
     delunay *initial=NULL;
-};
+	delunay *end=NULL;
+	void insert_delunay(delunay *d1);
+}*FULLSETD;
+void set_of_delunay :: insert_delunay(delunay *d1)
+{
+	if(!initial)
+	{
+		initial=d1;
+		end=d1;
+	}
+	else
+	{
+		end->next=d1;
+		end=end->next;
+	}
+}
 struct atom3D
 {
     long double x=0;
@@ -242,7 +257,9 @@ struct atom
   //long double z=0;
     int neighlist[500];
     int *contigous[500];
+	int **conti_index;
     int *part_c[500][100];
+    int *bond_c[500][100];
     int *bondinvoid[500];
     int *D3bondinvoid[50][50];
     int *edge_index[500];
@@ -662,143 +679,6 @@ void insert_site(vertice *EV,vertice *v,int debug=0)
         delete v;
     }
 }
-void display_a_edge(struct half_edge *first,struct half_edge *E)
-{
-    ofstream DEL;
-    //cout<<"d therer ana\n";
-    DEL.open("dcel",ios::app);
-    //DEL<<"#"<<E->facing->p->x<<" "<<E->facing->p->y<<"\n";
-    //cout<<E->origin->p<<"\n";
-    DEL<<E->origin->p->x<<"\t"<<E->origin->p->y<<"\t"<<E->twin->origin->p->x<<"\t"<<E->twin->origin->p->y<<"\n";
-    //cout<<"d trer ana\n";
-    DEL.close();
-    if(E->next)
-    {
-        if(first==E->next)
-        {
-            return;
-        }
-        display_a_edge(first,E->next);
-    }
-    else
-    {
-        //cout<<"wehnt this way\n";
-        return;
-    }
-
-}
-long double perimeter(long double Vx,long double Vy,long double E12x,long double E12y,long double Ax,long double Ay,long double Arad)
-{
-    E12x=E12x-Vx;
-    E12y=E12y-Vy;
-    Ax=Ax-Vx;
-    Ay=Ay-Vy;
-    long double areac,areat;
-    long double perimeter;
-    long double dis,disint,dise,disv;
-    dis=sqrtl(distance((E12x-Ax),(E12y-Ay)));
-    if(dis<Arad)
-    {
-        disint=sqrtl(Arad*Arad-dis*dis);
-        dise=sqrtl(distance(E12x,E12y));
-        disv=sqrtl(distance(Ax,Ay));
-        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
-        Aintx=(dise-disint)/dise*E12x;
-        Ainty=(dise-disint)/dise*E12y;
-        Aint1x=(disv-Arad)/disv*Ax;
-        Aint1y=(disv-Arad)/disv*Ay;
-        X1=Aintx-Ax;
-        Y1=Ainty-Ay;
-        X2=Aint1x-Ax;
-        Y2=Aint1y-Ay;
-        long double theta=acos((X2*X1+Y1*Y2)/(Arad*Arad));
-        if((X2*X1+Y1*Y2)/(Arad*Arad)>1.)
-            theta=0.;
-        perimeter=2.*M_PI*Arad*(theta/(2.*M_PI));
-        return perimeter;
-    }
-    else
-    {
-        disv=sqrtl(distance(Ax,Ay));
-        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
-        Aint1x=(disv-Arad)/disv*Ax;
-        Aint1y=(disv-Arad)/disv*Ay;
-        X1=E12x-Ax;
-        Y1=E12y-Ay;
-        X2=Aint1x-Ax;
-        Y2=Aint1y-Ay;
-        long double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
-        if((X2*X1+Y1*Y2)/(Arad*dis)>1.)
-            theta=0.;
-        perimeter=2.*M_PI*Arad*(theta/(2.*M_PI));
-        return perimeter;
-    }
-
-}
-long double area_trangle(long double Vx,long double Vy,long double E12x,long double E12y,long double Ax,long double Ay,long double Arad,long double originx=0.,long double originy=0.)
-{
-    E12x=E12x-Vx;
-    E12y=E12y-Vy;
-    Ax=Ax-Vx;
-    Ay=Ay-Vy;
-    long double areac,areat;
-    long double dis,disint,dise,disv;
-    dis=sqrtl(distance((E12x-Ax),(E12y-Ay)));
-    if(dis<Arad)
-    {
-        disint=sqrtl(Arad*Arad-dis*dis);
-        dise=sqrtl(distance(E12x,E12y));
-        disv=sqrtl(distance(Ax,Ay));
-        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
-        Aintx=(dise-disint)/dise*E12x;
-        Ainty=(dise-disint)/dise*E12y;
-        Aint1x=(disv-Arad)/disv*Ax;
-        Aint1y=(disv-Arad)/disv*Ay;
-        X1=Aintx-Ax;
-        Y1=Ainty-Ay;
-        X2=Aint1x-Ax;
-        Y2=Aint1y-Ay;
-        long double a,b,c,p,q,l,m;
-        a=sqrtl(X1*X1+Y1*Y1);
-        b=sqrtl(X2*X2+Y2*Y2);
-        c=sqrtl((X1-X2)*(X1-X2)+(Y1-Y2)*(Y1-Y2));
-        long double theta=2*asinl(sqrtl((c*c-(a-b)*(a-b))/(4*a*b)));
-        areac=M_PIl*Arad*Arad*(theta/(2.*M_PIl));
-        a=Ax;
-        b=Ay;
-        p=Aintx;
-        q=Ainty;
-        l=Aint1x;
-        m=Aint1y;
-        areat=0.5*abs(a*q-b*p);
-        return areat-areac;
-    }
-    else
-    {
-        disv=sqrtl(distance(Ax,Ay));
-        long double Aintx,Ainty,X1,Y1,Aint1x,Aint1y,X2,Y2;
-        Aint1x=(disv-Arad)/disv*Ax;
-        Aint1y=(disv-Arad)/disv*Ay;
-        X1=E12x-Ax;
-        Y1=E12y-Ay;
-        X2=Aint1x-Ax;
-        Y2=Aint1y-Ay;
-        long double theta=acos((X2*X1+Y1*Y2)/(Arad*dis));
-        if((X2*X1+Y1*Y2)/(Arad*dis)>1.)
-        {
-            theta=0.;
-        }
-        areac=M_PI*Arad*Arad*(theta/(2.*M_PI));
-        long double a,b,p,q;
-        a=Ax;
-        b=Ay;
-        p=E12x;
-        q=E12y;
-        areat=0.5*abs(a*q-b*p);
-        return areat-areac;
-    }
-
-}
 void update_neighbours(atom Atoms[],int nAtoms)
 {
     long double R_CUT;
@@ -1005,10 +885,7 @@ site center_of_triangle(site A1,site A2,site A3,long double rS,long double rA,lo
 }
 void create_delunay(atom Atoms[],int A1,int A2,int A3,int A4,delunay *D,int TYPE)
 {
-////D->AT[0]=A1;
-////D->AT[1]=A2;
-////D->AT[2]=A3;
-////D->AT[3]=A4;
+	//cout<<"ghere\n";
 	for(int a=0;a<4;a++)
 	{
 		for(int b=a+1;b<4;b++)
@@ -1069,71 +946,86 @@ void create_delunay(atom Atoms[],int A1,int A2,int A3,int A4,delunay *D,int TYPE
     for(int k=0; k<4; k++)
     {
         atom *ATOM;
+		atom *Ai;
+		atom *Aj;
+		atom *Ak;
         ATOM=&(Atoms[D->AT[k]]);
+        Ai=&(Atoms[D->AT[(k+1)%4]]);
+        Aj=&(Atoms[D->AT[(k+2)%4]]);
+        Ak=&(Atoms[D->AT[(k+3)%4]]);
         int a1=-1,a2=-1,a3=-1;
-        //cout<<D->AT[k]<<"\n";
-        //for(int add=1;add<4;add++)
         {
-            int i;
-            for(i=0; i<ATOM->conti[TYPE]; i++)
+			if(!contigous[ATOM->index][D->AT[(k+1)%4]][TYPE])
             {
-                if(ATOM->contigous[i][TYPE]==D->AT[(k+1)%4])
-                {
-                    a1=i;
-                }
-                if(ATOM->contigous[i][TYPE]==D->AT[(k+2)%4])
-                {
-                    a2=i;
-                }
-                if(ATOM->contigous[i][TYPE]==D->AT[(k+3)%4])
-                {
-                    a3=i;
-                }
-            }
-            if(a1==-1)
-            {
-                ATOM->contigous[i][TYPE]=D->AT[(k+1)%4];
-                a1=i;
-                i++;
+                ATOM->contigous[ATOM->conti[TYPE]][TYPE]=D->AT[(k+1)%4];
+                Ai->contigous[Ai->conti[TYPE]][TYPE]=ATOM->index;
+				ATOM->conti_index[D->AT[(k+1)%4]][TYPE]=ATOM->conti[TYPE];
+				Ai->conti_index[ATOM->index][TYPE]=Ai->conti[TYPE];
+
+				contigous[ATOM->index][D->AT[(k+1)%4]][TYPE]=1;
+				contigous[D->AT[(k+1)%4]][ATOM->index][TYPE]=1;
+
+                a1=ATOM->conti[TYPE];
                 ATOM->conti[TYPE]++;
+                Ai->conti[TYPE]++;
             }
-            if(a2==-1)
+			else
+			{
+				a1=ATOM->conti_index[D->AT[(k+1)%4]][TYPE];
+			}
+
+			if(!contigous[ATOM->index][D->AT[(k+2)%4]][TYPE])
             {
-                ATOM->contigous[i][TYPE]=D->AT[(k+2)%4];
-                a2=i;
-                i++;
+                ATOM->contigous[ATOM->conti[TYPE]][TYPE]=D->AT[(k+2)%4];
+				Aj->contigous[Aj->conti[TYPE]][TYPE]=ATOM->index;
+				ATOM->conti_index[D->AT[(k+2)%4]][TYPE]=ATOM->conti[TYPE];
+				Aj->conti_index[ATOM->index][TYPE]=Aj->conti[TYPE];
+
+				contigous[ATOM->index][D->AT[(k+2)%4]][TYPE]=1;
+				contigous[D->AT[(k+2)%4]][ATOM->index][TYPE]=1;
+
+                a2=ATOM->conti[TYPE];
                 ATOM->conti[TYPE]++;
+                Aj->conti[TYPE]++;
             }
-            if(a3==-1)
+			else
+			{
+				a2=ATOM->conti_index[D->AT[(k+2)%4]][TYPE];
+			}
+
+			if(!contigous[ATOM->index][D->AT[(k+3)%4]][TYPE])
             {
-                ATOM->contigous[i][TYPE]=D->AT[(k+3)%4];
-                a3=i;
-                i++;
+                ATOM->contigous[ATOM->conti[TYPE]][TYPE]=D->AT[(k+3)%4];
+				Ak->contigous[Ak->conti[TYPE]][TYPE]=ATOM->index;
+				ATOM->conti_index[D->AT[(k+3)%4]][TYPE]=ATOM->conti[TYPE];
+				Ak->conti_index[ATOM->index][TYPE]=Ak->conti[TYPE];
+
+				contigous[ATOM->index][D->AT[(k+3)%4]][TYPE]=1;
+				contigous[D->AT[(k+3)%4]][ATOM->index][TYPE]=1;
+
+                a3=ATOM->conti[TYPE];
                 ATOM->conti[TYPE]++;
+                Ak->conti[TYPE]++;
             }
-			//cout<<a1<<"\t"<<a2<<"\t"<<a3<<"\n";
-			//cout<<ATOM->part_c[a1][a2]<<"\n";
+			else
+			{
+				a3=ATOM->conti_index[D->AT[(k+3)%4]][TYPE];
+			}
+
             if(ATOM->part_c[a1][a2][TYPE]==0)
             {
-					//cout<<"here\n";
                 ATOM->edge_index[a1][TYPE]++;
                 ATOM->edge_index[a2][TYPE]++;
-                ////ATOM->part_c[a1][a2]++;
-                ////ATOM->part_c[a2][a1]++;
             }
             if(ATOM->part_c[a1][a3][TYPE]==0)
             {
                 ATOM->edge_index[a1][TYPE]++;
                 ATOM->edge_index[a3][TYPE]++;
-                ////ATOM->part_c[a1][a3]++;
-                ////ATOM->part_c[a3][a1]++;
             }
             if(ATOM->part_c[a2][a3][TYPE]==0)
             {
                 ATOM->edge_index[a2][TYPE]++;
                 ATOM->edge_index[a3][TYPE]++;
-                ////ATOM->part_c[a2][a3]++;
-                ////ATOM->part_c[a3][a2]++;
             }
 
             ATOM->part_c[a1][a2][TYPE]++;
@@ -1163,13 +1055,10 @@ void create_delunay(atom Atoms[],int A1,int A2,int A3,int A4,delunay *D,int TYPE
             {
                 container_delunay *temp;
                 temp=ATOM->D_FIRST[TYPE];
-                //temp=ATOM->D_FIRST->next;
                 while(temp->next)
                 {
-					//cout<<temp->D->AT[0]<<"\t"<<temp->D->AT[1]<<"\t"<<temp->D->AT[2]<<"\t"<<temp->D->AT[3]<<"\n";
                     temp=temp->next;
                 }
-			//	cout<<"here\n";
                 temp->next=new container_delunay;
                 temp->next->D=D;
             }
@@ -1190,7 +1079,6 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     long double midby=0.;
     long double midbz=0.;
     long double lmin=0;
-    ATOM->conti[TYPE]=0;
     int A1,A2,A3,A4;
     for(int i=0; i<ATOM->neighbours; i++)
     {
@@ -1230,14 +1118,8 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
         }
 
     }
-//	cout<<"nea\t"<<nearest<<"\n";
     A1=ATOM->index;
     A2=nearest;
-    //ATOM->edge_index[ATOM->conti[TYPE]][TYPE]++;
-    //if(lmin<0.)
-    //{
-    //    ATOM->ignore=1;
-    //}
     long double DIS_MIN=box*box;
     int DIS_atom;
     long double dis;
@@ -1283,10 +1165,6 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             ZB=bz;
             DISA=sqrtl(XA*XA+YA*YA+ZA*ZA);
             DISB=sqrtl(XB*XB+YB*YB+ZB*ZB);
-            //MA=YA/XA;
-            //MB=YB/XB;
-            //INMA=-1./MA;
-            //INMB=-1./MB;
             rA=M.radius+r_cut;
             rB=R.radius+r_cut;
             rS=L.radius+r_cut;
@@ -1294,17 +1172,11 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             xA=l/DISA*XA;
             yA=l/DISA*YA;
             zA=l/DISA*ZA;
-//			cout<<i<<"\n";
-            //cout<<XA+L.x<<"\t"<<YA+L.y<<"\t"<<ZA+L.z<<"\n";
-//			cout<<l<<"\t"<<rA<<"\t"<<DISA<<"\n";
-//			cout<<xA+L.x<<"\t"<<yA+L.y<<"\t"<<zA+L.z<<"\n";
             l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
 //			cout<<l<<"\t"<<rB<<"\t"<<DISB<<"\n";
             xB=l/DISB*XB;
             yB=l/DISB*YB;
             zB=l/DISB*ZB;
-            //cout<<XB+L.x<<"\t"<<YB+L.y<<"\t"<<ZB+L.z<<"\n";
-//			cout<<xB+L.x<<"\t"<<yB+L.y<<"\t"<<zB+L.z<<"\n";
             long double a1,b1,c1,a2,b2,c2,a,b,c;
             a=zB*yA-zA*yB;
             b=zA*xB-xA*zB;
@@ -1321,32 +1193,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             X=xB+a2*t2;
             Y=yB+b2*t2;
             Z=zB+c2*t2;
-            //CA=yA-INMA*xA;
-            //CB=yB-INMB*xB;
-            //X=(CB-CA)/(INMA-INMB);
-            //Y=INMA*X+CA;
             tan_sq=X*X+Y*Y+Z*Z-rS*rS;
-            //long double Y_AXIS=sqrtl(powl(X-xA,2)+powl(Y-yA,2)+powl(Z-zA,2));
-            //int sign_C;
-            //int sign_N;
-            //long double m;
-            //m=YA/XA;
-            //if((by-(m*bx))<0.)
-            //    sign_N=-1;
-            //else
-            //    sign_N=1;
-            //if((Y-(m*X))<0.)
-            //    sign_C=-1;
-            //else
-            //    sign_C=1;
-            //X=X+L.x;
-            //Y=Y+L.y;
-            //if(sign_C!=sign_N)
-            //{
-            //    Y_AXIS=-1.*Y_AXIS;
-            //}
-            ////cout<<"sec\t";
-            ////cout<<i<<"\t"<<tan_sq<<"\n";
             if(DIS_MIN > tan_sq)
             {
                 DIS_MIN=tan_sq;
@@ -1371,8 +1218,6 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     }
 //	cout<<"dis\t"<<DIS_atom<<"\n";
     A3=DIS_atom;
-    //ATOM->edge_index[ATOM->conti[TYPE]][TYPE]++;
-    //ATOM->edge_index[ATOM->conti[TYPE]-1][TYPE]++;
     DIS_MIN=box*box*box;
     long double circx_s=circx;
     long double circy_s=circy;
@@ -1381,9 +1226,6 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     atom L=*ATOM;
     atom M=Atoms[nearest];
     atom N=Atoms[DIS_atom];
-////cout<<M.x<<"\t"<<M.y<<"\t"<<M.z<<"\n";
-////cout<<N.x<<"\t"<<N.y<<"\t"<<N.z<<"\n";
-////cout<<L.x<<"\t"<<L.y<<"\t"<<L.z<<"\n";
     for(int i=0; i<ATOM->neighbours; i++)
     {
         if(ATOM->neighlist[i]!=nearest && ATOM->neighlist[i]!=A3)
@@ -1466,43 +1308,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             X1=circx_s+norm_x*t1;
             Y1=circy_s+norm_y*t1;
             Z1=circz_s+norm_z*t1;
-            //cout<<"ceneter\t";
-            //cout<<X1<<"\t"<<Y1<<"\t"<<Z1<<"\n";
-            ////cout<<ATOM->neighlist[i]<<"\n";
-            ////cout<<ATOM->contigous[0][TYPE]<<"\t";
-            ////cout<<ATOM->contigous[1][TYPE]<<"\n";
-            //CA=yA-INMA*xA;
-            //CB=yB-INMB*xB;
-            //X=(CB-CA)/(INMA-INMB);
-            //Y=INMA*X+CA;
             tan_sq=X1*X1+Y1*Y1+Z1*Z1-rS*rS;
-            //cout<<"chec  \t";
-            //cout<<(XA)*(X1-circx_s)+(YA)*(Y1-circy_s)+(ZA)*(Z1-circz_s)<<"\n";
-            //long double Y_AXIS=sqrtl(powl(X-xA,2)+powl(Y-yA,2)+powl(Z-zA,2));
-            //int sign_C;
-            //int sign_N;
-            //long double m;
-            //m=YA/XA;
-            //if((by-(m*bx))<0.)
-            //    sign_N=-1;
-            //else
-            //    sign_N=1;
-            //if((Y-(m*X))<0.)
-            //    sign_C=-1;
-            //else
-            //    sign_C=1;
-            //X1=X1+L.x;
-            //Y1=Y1+L.y;
-            //Z1=Z1+L.z;
-            //X1=X1;
-            //Y1=Y1;
-            //Z1=Z1;
-            //if(sign_C!=sign_N)
-            //{
-            //    Y_AXIS=-1.*Y_AXIS;
-            //}
-            ////cout<<"third\t";
-            ////cout<<i<<"\t"<<tan_sq<<"\n";
             if(DIS_MIN > tan_sq)
             {
                 DIS_MIN=tan_sq;
@@ -1521,27 +1327,25 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
                 }
             }
         }
-
     }
-////cout<<"this\t";
-////cout<<(circx-circx_s-L.x)*(M.x-L.x)+(circy-circy_s-L.y)*(M.y-L.y)+(circz-circz_s-L.z)*(M.z-L.z)<<"\n";
-////cout<<circx_s+L.x<<"\t"<<circy_s+L.y<<"\t"<<circz_s+L.z<<"\n";
-    //ATOM->contigous[ATOM->conti[TYPE]][TYPE]=DIS_atom;
+
     A4=DIS_atom;
-    //cout<<A1<<"\t"<<A2<<"\t"<<A3<<"\t"<<A4<<"\n";
+
     std::vector<int> EV1 {A1,A2,A3,A4};
     std::sort(EV1.begin(),EV1.end());
     delunay *D;
-////DSET[EV1[0]][EV1[1]][EV1[2]][EV1[3]][TYPE]=*D;
-////DSET[EV1[0]][EV1[1]][EV1[2]][EV1[3]][TYPE]=new delunay;
+
     D=new delunay;
+	FULLSETD[TYPE].insert_delunay(D);
     D->AT[0]=EV1[0];
     D->AT[1]=EV1[1];
     D->AT[2]=EV1[2];
     D->AT[3]=EV1[3];
+
 	D->circum_x=circx;
 	D->circum_y=circy;
 	D->circum_z=circz;
+
     create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
 }
 delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q,long double r,long double Sx,long double Sy,long double Sz,int sign,int A,int B,int O,long double rA,long double rB,delunay *D,int debug=0)
@@ -1562,9 +1366,6 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
 	A1=ATOM->index;
 	A2=ATOM->contigous[A][TYPE];
 	A3=ATOM->contigous[B][TYPE];
-//	cout<<p+a<<"\t"<<q+b<<"\t"<<r+c<<"\n";
-///	cout<<Sx+a<<"\t"<<Sy+b<<"\t"<<Sz+c<<"\n";
-//	cout<<a<<"\t"<<b<<"\t"<<c<<"\n";
     for(int j=0; j<ATOM->neighbours; j++)
     {
         if(debug)
@@ -1586,17 +1387,12 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             sign_N=1;
         else
             sign_N=-1;
-////////if((y-(m*x+C))<0.)
-////////	sign_N=-1;
-////////else
-////////	sign_N=1;
         int flag=1;
         //to avoid atoms with have two delunay
         for(int k=0; k<ATOM->conti[TYPE]; k++)
         {
             if(ATOM->contigous[k][TYPE]==ATOM->neighlist[j])
             {
-                //cout<<k<<"\n";
                 if(k==O ||  k==A || k==B )
                 {
                     flag=0;
@@ -1610,18 +1406,9 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
                 }
                 if(s==2*ATOM->edge_index[k][TYPE])
                 {
-                    ////cout<<k<<"\n";
-                    //cout<<"see here\n";
-                    //cout<<s<<"\t"<<ATOM->edge_index[k][TYPE]<<"\n";
-                    //cout<<"nohspprn\n";
                     flag=0;
                     break;
                 }
-                ////if(ATOM->edge_index[k][TYPE]==4)
-                ////{
-                ////	flag=0;
-                ////	break;
-                ////}
             }
         }
 
@@ -1629,21 +1416,6 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             cout<<sign<<"\t"<<sign_N<<"\t"<<flag<<"\n";
         if(sign!=sign_N && flag)
         {
-            //cout<<"ATOM=\t";
-            // cout<<x+a<<"\t"<<y+b<<"\t"<<z+c<<"\n";
-            ////atom L=*ATOM;
-            ////atom M=Atoms[ATOM->contigous[D->A][TYPE]];
-            ////atom R=Atoms[ATOM->neighlist[j]];
-            ////long double ax=M.x-L.x;
-            ////long double ay=M.y-L.y;
-            ////long double bx=R.x-L.x;
-            ////long double by=R.y-L.y;
-            ////ax=(ax-(tilt*lroundl(ay/twob)));
-            ////ax=(ax-(twob*lroundl(ax/twob)));
-            ////ay=(ay-(twob*lroundl(ay/twob)));
-            ////bx=(bx-(tilt*lroundl(by/twob)));
-            ////bx=(bx-(twob*lroundl(bx/twob)));
-            ////by=(by-(twob*lroundl(by/twob)));
             long double XA,YA,ZA,XB,YB,ZB;
             long double xA,yA,zA,xB,yB,zB,xC,yC,zC;
             long double l;
@@ -1655,30 +1427,18 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             DISA=sqrtl(p*p+q*q+r*r);
             DISB=sqrtl(Sx*Sx+Sy*Sy+Sz*Sz);
             DIS=sqrtl(x*x+y*y+z*z);
-            ////rA=M.radius+r_cut;
-            ////rB=R.radius+r_cut;
-            ////rS=L.radius+r_cut;
             l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
-            //cout<<l<<"\t"<<rA<<"\t"<<DISA<<"\n";
             xA=l/DISA*p;
             yA=l/DISA*q;
             zA=l/DISA*r;
-            //cout<<"ths\n";
-            ////cout<<p+a<<"\t"<<q+b<<"\t"<<r+c<<"\n";
-            ////cout<<Sx+a<<"\t"<<Sy+b<<"\t"<<Sz+c<<"\n";
-            //cout<<xA+a<<"\t"<<yA+b<<"\t"<<zA+c<<"\n";
             l=0.5*(DIS+(rS*rS-rN*rN)/DIS);
             xB=l/DIS*x;
             yB=l/DIS*y;
             zB=l/DIS*z;
-            //cout<<xB+a<<"\t"<<yB+b<<"\t"<<zB+c<<"\n";
             l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
-            //cout<<l<<"\t"<<rB<<"\t"<<DISB<<"\n";
             xC=l/DISB*Sx;
             yC=l/DISB*Sy;
             zC=l/DISB*Sz;
-            //cout<<xC+a<<"\t"<<yC+b<<"\t"<<zC+c<<"\n";
-            ////cout<<"ths\n";
             long double v1x,v1y,v1z;
             long double v2x,v2y,v2z;
             long double v3x,v3y,v3z;
@@ -1717,42 +1477,26 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             c6=v3x*yB-v3y*xB;
             long double t1,t2,X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3;
             t2=(b1*xA-a1*yA-b1*xB+a1*yB)/(b1*a2-a1*b2);
+
             X1=xB+a2*t2;
             Y1=yB+b2*t2;
             Z1=zB+c2*t2;
             t2=(b3*xC-a3*yC-b3*xA+a3*yA)/(b3*a4-a3*b4);
-            ////cout<<t2<<" wdfd\n";
+
             X2=xA+a4*t2;
             Y2=yA+b4*t2;
             Z2=zA+c4*t2;
             t2=(b5*xC-a5*yC-b5*xB+a5*yB)/(b5*a6-a5*b6);
+
             X3=xB+a6*t2;
             Y3=yB+b6*t2;
             Z3=zB+c6*t2;
-            //cout<<X1+a<<"\t"<<Y1+b<<"\t"<<Z1+c<<"\n";
-            //cout<<xC*v2x+yC*v2y+zC*v2z<<" inn\n";
-            //cout<<a1*v1x+b1*v1y+c1*v1z<<" inn\n";
-            //cout<<a2*v1x+b2*v1y+c2*v1z<<" inn\n";
             t2=(v1y*X1-v1x*Y1-v1y*X2+v1x*Y2)/(v1y*v2x-v1x*v2y);
-            ////cout<<t2<<"\n";
+
             X=X2+v2x*t2;
             Y=Y2+v2y*t2;
             Z=Z2+v2z*t2;
-            //cout<<p<<"\t"<<q<<"\t"<<r<<"\n";
-            //cout<<v2x*p+v2y*q+v2z*r<<" check this\n";
-            ////cout<<rS<<"\n";
-            ////CA=yA-INMA*xA;
-            ////CB=yB-INMB*xB;
-            ////X=(CB-CA)/(INMA-INMB);
-            ////Y=INMA*X+CA;
-            ////cout<<"centers\n";
-            ////cout<<"vec =";
-            ////cout<<X2+v2x*0.0+a<<"\t"<<Y2+v2y*0.0+b<<"\t"<<Z2+v2z*0.0+c<<"\t";
-            ////cout<<X2+v2x*-1.0+a<<"\t"<<Y2+v2y*-1.0+b<<"\t"<<Z2+v2z*-1.0+c<<"\n";
-            //cout<<"Xchekc ";
-            //cout<<X2+a<<"\t"<<Y2+b<<"\t"<<Z2+c<<"\n";
             tan_sq=X*X+Y*Y+Z*Z-rS*rS;
-            //cout<<tan_sq<<"\n";
             long double Y_AXIS=sqrtl(powl(X-X2,2)+powl(Y-Y2,2)+powl(Z-Z2,2));
             int sign_C;
             long double overlap=(X*ax+Y*ay+Z*az);
@@ -1762,20 +1506,9 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
                 sign_C=-1;
             if(sign_C!=sign_N)
                 Y_AXIS=-1.*Y_AXIS;
-            //cout<<(X-X2)*p+(Y-Y2)*q+(Z-Z2)*r<<"\n";
             X=X+a;
             Y=Y+b;
             Z=Z+c;
-            //cout<<X<<"\t"<<Y<<"\t"<<Z<<"\n";
-
-////	//cout<<"trythis 		\t";
-////	//cout<<x+a<<"\t"<<y+b<<"\t"<<z+c<<"\n";
-////	//cout<<x+a<<"\t"<<y+b<<"\t"<<z+c<<"\n";
-////		//cout<<"trythis\t";
-            ////cout<<"tried this one\n";
-            ////cout<<"YAIS=";
-            ////cout<<ATOM->neighlist[j]<<"\t";
-            ////cout<<Y_AXIS<<"\t"<<tan_sq<<"\n";
             if(debug)
             {
                 cout<<ATOM->neighlist[j]<<"\t"<<Y_AXIS<<"\n";
@@ -1800,28 +1533,13 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             }
         }
     }//j loop
-////cout<<"here\n";
-////cout<<circx-D->circum_x<<"\t"<<circy-D->circum_y<<"\t"<<circz-D->circum_z<<"\n";
-////cout<<D->circum_x<<"\t"<<D->circum_y<<"\t"<<D->circum_z<<"\n";
-////cout<<p<<"\t"<<q<<"\t"<<r<<"\n";
-////cout<<(circx-D->circum_x)*p+(circy-D->circum_y)*q+(circz-D->circum_z)*r<<"\n";
-////cout<<"Xchekc end";
-////cout<<"trythis\t"<<DIS_atom<<"\t"<<Y_MIN;
-    //cout<<DIS_atom<<"\n";
-  //int flag=1;
-////if(lmin<0.)
-////{
-////	ATOM->ignore=1;
-////}
 
     A4=DIS_atom;
     //cout<<A1<<"\t"<<A2<<"\t"<<A3<<"\t"<<A4<<"\n";
     std::vector<int> EV1 {A1,A2,A3,A4};
     std::sort(EV1.begin(),EV1.end());
-    //delunay *D;
-////DSET[EV1[0]][EV1[1]][EV1[2]][EV1[3]][TYPE]=*D;
-////DSET[EV1[0]][EV1[1]][EV1[2]][EV1[3]][TYPE]=new delunay;
     D=new delunay;
+	FULLSETD[TYPE].insert_delunay(D);
     D->AT[0]=EV1[0];
     D->AT[1]=EV1[1];
     D->AT[2]=EV1[2];
@@ -1831,139 +1549,6 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
 	D->circum_z=circz;
     create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
 	return D;
-	//cout<<D<<"\n";
-  //int k;
-  ////cout<<ATOM->edge_index[12][TYPE]<<" twelve\n";
-  //for(k=0; k<ATOM->conti[TYPE]; k++)
-  //{
-  //    if(ATOM->contigous[k][TYPE]==DIS_atom)
-  //    {
-  //        flag=0;
-  //        break;
-  //    }
-  //}
-  //if(debug)
-  //{
-  //    cout<<"debug\t";
-  //    cout<<flag<<"\t"<<k<<"\n";;
-  //    cout<<DIS_atom<<"\n";
-  //}
-  ////cout<<"#"<<A<<"\t"<<B<<"\t"<<k<<"\n";
-  ////cout<<"#"<<X1_s<<"\t"<<Y1_s<<"\t"<<Z1_s<<"\n";
-  ////cout<<"#"<<X2_s<<"\t"<<Y2_s<<"\t"<<Z2_s<<"\n";
-
-  //if(flag)
-  //{
-  //    //ATOM->bondinvoid[ATOM->conti[TYPE]][TYPE]=binv;
-  //    //		cout<<"hereag\n";
-  //    ATOM->contigous[ATOM->conti[TYPE]][TYPE]=DIS_atom;
-  //    ATOM->edge_index[A][TYPE]++;
-  //    ATOM->edge_index[B][TYPE]++;
-  //    ATOM->edge_index[ATOM->conti[TYPE]][TYPE]++;
-  //    ATOM->edge_index[ATOM->conti[TYPE]][TYPE]++;
-  //    ATOM->part_c[ATOM->conti[TYPE]][A][TYPE]++;
-  //    ATOM->part_c[A][B][TYPE]++;
-  //    ATOM->part_c[B][ATOM->conti[TYPE]][TYPE]++;
-  //    ATOM->part_c[A][ATOM->conti[TYPE]][TYPE]++;
-  //    ATOM->part_c[B][A][TYPE]++;
-  //    ATOM->part_c[ATOM->conti[TYPE]][B][TYPE]++;
-  //    ATOM->MIDP[A][B][TYPE].x=X2_s;
-  //    ATOM->MIDP[A][B][TYPE].y=Y2_s;
-  //    ATOM->MIDP[A][B][TYPE].z=Z2_s;
-  //    ATOM->MIDP[B][A][TYPE].x=X2_s;
-  //    ATOM->MIDP[B][A][TYPE].y=Y2_s;
-  //    ATOM->MIDP[B][A][TYPE].z=Z2_s;
-  //    ATOM->MIDP[A][ATOM->conti[TYPE]][TYPE].x=X1_s;
-  //    ATOM->MIDP[A][ATOM->conti[TYPE]][TYPE].y=Y1_s;
-  //    ATOM->MIDP[A][ATOM->conti[TYPE]][TYPE].z=Z1_s;
-  //    ATOM->MIDP[ATOM->conti[TYPE]][A][TYPE].x=X1_s;
-  //    ATOM->MIDP[ATOM->conti[TYPE]][A][TYPE].y=Y1_s;
-  //    ATOM->MIDP[ATOM->conti[TYPE]][A][TYPE].z=Z1_s;
-  //    ATOM->MIDP[B][ATOM->conti[TYPE]][TYPE].x=X3_s;
-  //    ATOM->MIDP[B][ATOM->conti[TYPE]][TYPE].y=Y3_s;
-  //    ATOM->MIDP[B][ATOM->conti[TYPE]][TYPE].z=Z3_s;
-  //    ATOM->MIDP[ATOM->conti[TYPE]][B][TYPE].x=X3_s;
-  //    ATOM->MIDP[ATOM->conti[TYPE]][B][TYPE].y=Y3_s;
-  //    ATOM->MIDP[ATOM->conti[TYPE]][B][TYPE].z=Z3_s;
-  //    //ATOM->MIDP[A][B][TYPE]->
-  //}
-  //else
-  //{
-  //    if(ATOM->part_c[A][k][TYPE]==0)
-  //    {
-  //        ATOM->edge_index[A][TYPE]++;
-  //        ATOM->edge_index[k][TYPE]++;
-  //    }
-  //    if(ATOM->part_c[B][k][TYPE]==0)
-  //    {
-  //        ATOM->edge_index[B][TYPE]++;
-  //        ATOM->edge_index[k][TYPE]++;
-  //    }
-  //    ATOM->part_c[k][A][TYPE]++;
-  //    ATOM->part_c[A][B][TYPE]++;
-  //    ATOM->part_c[B][k][TYPE]++;
-  //    ATOM->part_c[A][k][TYPE]++;
-  //    ATOM->part_c[B][A][TYPE]++;
-  //    ATOM->part_c[k][B][TYPE]++;
-  //    ATOM->MIDP[A][B][TYPE].x=X2_s;
-  //    ATOM->MIDP[A][B][TYPE].y=Y2_s;
-  //    ATOM->MIDP[A][B][TYPE].z=Z2_s;
-  //    ATOM->MIDP[B][A][TYPE].x=X2_s;
-  //    ATOM->MIDP[B][A][TYPE].y=Y2_s;
-  //    ATOM->MIDP[B][A][TYPE].z=Z2_s;
-  //    ATOM->MIDP[A][k][TYPE].x=X1_s;
-  //    ATOM->MIDP[A][k][TYPE].y=Y1_s;
-  //    ATOM->MIDP[A][k][TYPE].z=Z1_s;
-  //    ATOM->MIDP[k][A][TYPE].x=X1_s;
-  //    ATOM->MIDP[k][A][TYPE].y=Y1_s;
-  //    ATOM->MIDP[k][A][TYPE].z=Z1_s;
-  //    ATOM->MIDP[B][k][TYPE].x=X3_s;
-  //    ATOM->MIDP[B][k][TYPE].y=Y3_s;
-  //    ATOM->MIDP[B][k][TYPE].z=Z3_s;
-  //    ATOM->MIDP[k][B][TYPE].x=X3_s;
-  //    ATOM->MIDP[k][B][TYPE].y=Y3_s;
-  //    ATOM->MIDP[k][B][TYPE].z=Z3_s;
-  //    //ATOM->edge_index[k][TYPE]++;
-  //}
-  ////cout<<"look\t";
-  ////cout<<ATOM->edge_index[8][TYPE]<<"\t"<<A<<"\n";;
-  ////cout<<ATOM->part_c[12][10][TYPE]<<" track this\n";
-  //delunay *temp=nullptr;
-  //temp=D;
-  //while(1)
-  //{
-  //    if(temp->next)
-  //        temp=temp->next;
-  //    else
-  //        break;
-
-  //}
-  //temp->next= new delunay;
-  //if(flag)
-  //{
-  //    temp->next->A=ATOM->conti[TYPE];
-  //    temp->next->a=ATOM->contigous[ATOM->conti[TYPE]][TYPE];
-  //    ////temp->next->Ax=midbx;
-  //    ////temp->next->Ay=midby;
-  //}
-  //else
-  //{
-  //    temp->next->A=k;
-  //    temp->next->a=ATOM->contigous[k][TYPE];
-  //    ////temp->next->Ax=midbx;
-  //    ////temp->next->Ay=midby;
-  //}
-  //temp->next->B=A;
-  //temp->next->C=B;
-  //temp->next->b=ATOM->contigous[A][TYPE];
-  //temp->next->c=ATOM->contigous[B][TYPE];
-  //temp->next->Bx=D->Ax;
-  //temp->next->By=D->Ay;
-  //temp->next->circum_x=circx;
-  //temp->next->circum_y=circy;
-  //temp->next->circum_z=circz;
-  //if(flag)
-  //    ATOM->conti[TYPE]++;
 }
 void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 {
@@ -1987,24 +1572,17 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
     int flag=1;
     long double rA,rB,rC;
     for(int i=0; i<ATOM->conti[TYPE]; i++)
-    //for(int i=0; i<1; i++)
     {
+		//cout<<i<<"\n";
         int s=0;
-        //cout<<i<<"\n";
         for(int p=0; p<ATOM->conti[TYPE]; p++)
         {
             s=s+ATOM->part_c[i][p][TYPE];
         }
-        //cout<<s<<"\t"<<2*ATOM->edge_index[i][TYPE]<<"\n";
-      //if(s==2*ATOM->edge_index[i][TYPE])
-      //{
-      //    //		cout<<"somehting BDSBSDBSHBD\n";
-      //    //	cout<<"here\n";
-      //    break;
-      //}
 
         for(int j=0; j<ATOM->conti[TYPE]; j++)
         {
+			//cout<<j<<" j \n";
             if(i!=j)
             {
 				if(ATOM->part_c[i][j][TYPE]==1)
@@ -2015,18 +1593,12 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 						{
 							container_delunay *temp;
 							temp=ATOM->D_FIRST[TYPE];
-							//int flag=1;
-							//cout<<i<<"\t"<<j<<"\t"<<k<<"\n";
 							while(1)
 							{
 								std::vector<int> EV1 {ATOM->index,ATOM->contigous[i][TYPE],ATOM->contigous[j][TYPE],ATOM->contigous[k][TYPE]};//,A3,A4;
 								std::sort(EV1.begin(),EV1.end());
 								if(temp->D->AT[0]==EV1[0] && temp->D->AT[1]==EV1[1] && temp->D->AT[2]==EV1[2] && temp->D->AT[3]==EV1[3])
 								{
-								  //cout<<"existing delunay \t";
-								  //cout<<temp->D->AT[0]<<"\t"<<temp->D->AT[1]<<"\t"<<temp->D->AT[2]<<"\t"<<temp->D->AT[3]<<"\n";
-								  //cout<<EV1[0]<<"\t"<<EV1[1]<<"\t"<<EV1[2]<<"\t"<<EV1[3]<<"\n";
-								  //cout<<ATOM->index<<"\t"<<ATOM->contigous[i][TYPE]<<"\t"<<ATOM->contigous[j][TYPE]<<"\t";
 									delunay *D_ONE=nullptr,*D_TWO=nullptr;
 									D_ONE=temp->D;
 								    a=ATOM->p.x;
@@ -2043,9 +1615,6 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 								    Px=Atoms[ATOM->contigous[k][TYPE]].p.x-a;
 								    Py=Atoms[ATOM->contigous[k][TYPE]].p.y-b;
 								    Pz=Atoms[ATOM->contigous[k][TYPE]].p.z-c;
-								    //cout<<ATOM->contigous[k][TYPE]<<"\n";
-								    //	cout<<"otherside\n";
-								    //	cout<<"s\n";
 								    rC=Atoms[ATOM->contigous[k][TYPE]].radius+r_cut;
 								    p=(p-(tilt*lroundl(q/twob)));
 								    p=(p-(twob*lroundl(p/twob)));
@@ -2060,9 +1629,7 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 								    Py=(Py-(twob*lroundl(Py/twob)));
 								    Pz=(Pz-(twob*lroundl(Pz/twob)));
 								    int sign;
-								    //delunay *D=nullptr;
 								    if(ATOM->part_c[i][j][TYPE]==1)
-								    	//if(iBf==1)
 								    {
 								    	long double ax=(Sy*r-Sz*q);
 								    	long double ay=(Sz*p-Sx*r);
@@ -2072,8 +1639,6 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 								    		sign=1;
 								    	else
 								    		sign=-1;
-								    	//	cout<<"i\t"<<"1"<<"\n";
-										//cout<<"new del\n";
 								    	D_TWO=constr_del(ATOM,Atoms,TYPE,p,q,r,Sx,Sy,Sz,sign,i,j,k,rA,rB,D_TWO);
 
 										long double X1,Y1,Z1;
@@ -2237,6 +1802,19 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 
 									    add_connected(temp_vert_o,temp_vert_d,ATOM->D3bondinvoid[i][j][TYPE]);
 									    add_connected(temp_vert_d,temp_vert_o,ATOM->D3bondinvoid[i][j][TYPE]);
+
+										atom* Ai;
+										atom* Aj;
+										Ai=&(Atoms[ATOM->contigous[i][TYPE]]);
+										Aj=&(Atoms[ATOM->contigous[j][TYPE]]);
+										ATOM->bond_c[i][j][TYPE]=1;
+										Ai->bond_c[Ai->conti_index[ATOM->index][TYPE]][Ai->conti_index[Aj->index][TYPE]][TYPE]=1;
+										Aj->bond_c[Aj->conti_index[ATOM->index][TYPE]][Aj->conti_index[Ai->index][TYPE]][TYPE]=1;
+
+										ATOM->bond_c[j][i][TYPE]=1;
+										Ai->bond_c[Ai->conti_index[Aj->index][TYPE]][Ai->conti_index[ATOM->index][TYPE]][TYPE]=1;
+										Aj->bond_c[Aj->conti_index[Ai->index][TYPE]][Aj->conti_index[ATOM->index][TYPE]][TYPE]=1;
+
 								    }
 								    break;
 
@@ -2255,7 +1833,8 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 				}
 				else if (ATOM->part_c[i][j][TYPE]==2)
 				{
-					//if(ATOM->part_c[i][j][TYPE]==2)
+					//cout<<ATOM->index<<"\t"<<ATOM->contigous[i][TYPE]<<"\t"<<ATOM->contigous[j][TYPE]<<"\n";
+					if(!ATOM->bond_c[i][j][TYPE])
 					{
 						//break;
 				////	Atoms[SAM].MIDP[i][j][TYPE]=center_of_triangle(ATOM->p,Atoms[ATOM->contigous[i][TYPE]].p,Atoms[ATOM->contigous[j][TYPE]].p,ATOM->radius+r_cut,Atoms[ATOM->contigous[i][TYPE]].radius+r_cut,Atoms[ATOM->contigous[j][TYPE]].radius+r_cut);
@@ -2362,15 +1941,7 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 				    		long double disV1,disV2,disA;
 
 				    		disV1=sqrtl((V1x*V1x+V1y*V1y+V1z*V1z));
-				    	////if((disV1*disV1-rS*rS)>0.)
-				    	////{
-				    	////	temp_vert_o->is_void=1;
-				    	////}
 				    		disV2=sqrtl((V2x*V2x+V2y*V2y+V2z*V2z));
-				    	////if((disV2*disV2-rS*rS)>0.)
-				    	////{
-				    	////	temp_vert_d->is_void=1;
-				    	////}
 
 				    		disA=sqrtl((a*a+b*b+c*c));//V1x*V1x+V1y*V1y+V1z*V1z));
 				    		overlap1=a*V1x+b*V1y+c*V1z;
@@ -2423,6 +1994,19 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 				    		}
 							add_connected(temp_vert_o,temp_vert_d,ATOM->D3bondinvoid[i][j][TYPE]);
 							add_connected(temp_vert_d,temp_vert_o,ATOM->D3bondinvoid[i][j][TYPE]);
+
+							atom* Ai;
+							atom* Aj;
+							Ai=&(Atoms[ATOM->contigous[i][TYPE]]);
+							Aj=&(Atoms[ATOM->contigous[j][TYPE]]);
+
+							ATOM->bond_c[i][j][TYPE]=1;
+							Ai->bond_c[Ai->conti_index[ATOM->index][TYPE]][Ai->conti_index[Aj->index][TYPE]][TYPE]=1;
+							Aj->bond_c[Aj->conti_index[ATOM->index][TYPE]][Aj->conti_index[Ai->index][TYPE]][TYPE]=1;
+
+							ATOM->bond_c[j][i][TYPE]=1;
+							Ai->bond_c[Ai->conti_index[Aj->index][TYPE]][Ai->conti_index[ATOM->index][TYPE]][TYPE]=1;
+							Aj->bond_c[Aj->conti_index[Ai->index][TYPE]][Aj->conti_index[ATOM->index][TYPE]][TYPE]=1;
 						}
 					}
 				}
@@ -2432,9 +2016,7 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
         for(int p=0; p<ATOM->conti[TYPE]; p++)
         {
             s=s+ATOM->part_c[i][p][TYPE];
-			//cout<<p<<"\t"<<ATOM->part_c[i][p][TYPE]<<"\n";
         }
-        //cout<<s<<"\t"<<2*ATOM->edge_index[i][TYPE]<<"\n";
     }
 }
 
@@ -2509,28 +2091,7 @@ long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long
     VEx=(VEx-(twob*lroundl(VEx/twob)));
     VEy=(VEy-(twob*lroundl(VEy/twob)));
     VEz=(VEz-(twob*lroundl(VEz/twob)));
-    //cout<<ABx+Bx<<"\t"<<ABy+By<<"\t"<<ABz+Bz<<"}\tradius\t"<<r<<"\tresolution\t"<<500<<"\n";
-    //cout<<"mol new\n";
-    //cout<<"draw material Opaque\n";
-    //cout<<"draw color red\n";
-    //cout<<"draw line\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
-    //cout<<"draw line\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
-    //cout<<"draw line\t{";
-    //cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
-    //cout<<"draw line\t{";
-    //cout<<vx<<"\t"<<vy<<"\t"<<vz<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
-    //cout<<"draw line\t{";
-    //cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\t{"<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\n";
-////long double a,b,c;
-////long double a1,b1,c1;
-////a=(ABy*EBz-ABz*EBy);
-////b=(ABz*EBx-ABx*EBz);
-////c=(ABx*EBy-ABy*EBx);
-////a1=(VEy*c-VEz*b);
-////b1=(VEz*a-VEx*c);
-////c1=(VEx*b-VEy*a);
+
     DISB=ABx*ABx+ABy*ABy+ABz*ABz;
     DISBE=EBx*EBx+EBy*EBy+EBz*EBz;
     DISVE=VEx*VEx+VEy*VEy+VEz*VEz;
@@ -2546,24 +2107,6 @@ long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long
     vx=sqrtl(DISB);
     vy=sqrtl(DISBE);
     vz=sqrtl(DISVE);
-    //cout<<"mol new\n";
-    //cout<<"draw material Opaque\n";
-    //cout<<"draw sphere\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\tradius\t"<<r<<"\tresolution\t"<<500<<"\n";//{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
-    //cout<<"mol new\n";
-    //cout<<"draw material Opaque\n";
-    //cout<<"draw line\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\twidth 5\n";
-    //cout<<"draw line\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\twidth 5\n";
-    //cout<<"draw line\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\twidth 5\n";
-    //cout<<"draw line\t{";
-    //cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\twidth 5\n";
-    //cout<<"draw line\t{";
-    //cout<<vx<<"\t"<<vy<<"\t"<<vz<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\twidth 5\n";
-    //cout<<"draw line\t{";
-    //cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\t{"<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\twidth 5\n";
     long double x0,y0,z0;
     long double x0sq,y0sq,z0sq;
     x0=Bx;
@@ -2576,44 +2119,29 @@ long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long
     rV=sqrtl(vx*vx+vy*vy+vz*vz);
     rE=sqrtl(Ex*Ex+Ey*Ey+Ez*Ez);
     rB=sqrtl(DISB);
-////cout<<"x0="<<x0<<"\t"<<y0<<"\t"<<z0<<"\n";
-////cout<<"ra="<<r<<"\t"<<rB<<"\t"<<rE<<"\t"<<rV<<"\n";
     long double theta,x2,y2;
     x2=r*x0/rE;
     y2=r*y0/rE;
     theta=atanl(z0/y0);
-    //cout<<theta<<"\n";
-    //cout<<"#\t";
     long double Vc,Vt;
     Vt=(x0*y0*z0)/6.;
-    //cout<<(x0*y0*z0)/6.<<" vol\n";
     if(r<rB)
     {
         Vc=(r*r*r/6.)*(2*theta-M_PI/2.-asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
-        //return (x0*y0*z0)/6.-(r*r*r/6.)*(2*theta-M_PI/2.-asin((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
     }
     if(rB<r && r<rE)
     {
         Vc=theta/2.*(r*r*x0-x0*x0*x0/3.)-(r*r*r/6.)*(M_PI/2.+asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
-        //return (x0*y0*z0)/6.-theta/2.*(r*r*x0-x0*x0*x0/3.)-(r*r*r/6.)*(M_PI/2.+asin((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
     }
     if(rE<r && r<rV)
     {
-        //cout<<"hea\n";
         Vc=0.5*(theta-M_PI/2.+asin(y0/sqrtl(r*r-x0sq)))*(r*r*x0-x0*x0*x0/3.)+x0*y0/6.*sqrtl(r*r-rE*rE)+r*r*r/6.*asinl((x2*x2-y2*y2-x0sq)/(r*r-x0sq))-r*r*r/6.*asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq)));
-        //return (x0*y0*z0)/6.-0.5*(theta-M_PI/2.+asin(y0/sqrtl(r*r-x0sq)))*(r*r*x0-x0*x0*x0/3.)+x0*y0/6.*sqrtl(r*r-rE*rE)+r*r*r/6.*((x2*x2-y2*y2-x0sq)/(r*r-x0sq))-r*r*r/6.*asin((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq)));
     }
-    //cout<<Vt<<"\t"<<Vc<<"\t"<<Vt-Vc<<"\n";
     if(Vt<Vc)
     {
         cout<<"help \t"<<Vt<<"\t"<<Vc<<"\t"<<Vt-Vc<<"\n";
     }
     return Vt-Vc;
-    //cout<<a<<"\t"<<b<<"\t"<<c<<"\n";
-
-    //cout<<ABx*EBx+ABy*EBy+ABz*EBz<<"\n";
-////cout<<VEx*EBx+VEy*EBy+VEz*EBz<<"\n";
-////cout<<VEx*ABx+VEy*ABy+VEz*ABz<<"\n";
 }
 int sign_aaae(long double A1x,long double A1y,long double A1z,long double A2x,long double A2y,long double A2z,long double A3x,long double A3y,long double A3z,long double Ex,long double Ey,long double Ez)
 {
@@ -2689,29 +2217,10 @@ int main( int argc, char * argv[] )
     nAtoms=216;
     cout<<std::setprecision(5);
     //No of configurations in the input file
-    config_count=1;
+    config_count=2;
     //No of types of particle
     int ntypes=2;
     int SAM=0;
-	//delunay *****DSET;
-////DSET=new (nothrow) delunay***** [nAtoms];
-////for(int i=0;i<nAtoms;i++)
-////	DSET[i]=new (nothrow) delunay**** [nAtoms];
-////for(int i=0;i<nAtoms;i++)
-////	for(int j=0;j<nAtoms;j++)
-////		DSET[i][j]=new (nothrow) delunay*** [nAtoms];
-////for(int i=0;i<nAtoms;i++)
-////	for(int j=0;j<nAtoms;j++)
-////		for(int k=0;k<nAtoms;k++)
-////		{
-////			cout<<i<<"\t"<<j<<"\t"<<k<<"\n";
-////			DSET[i][j][k]=new (nothrow) delunay** [nAtoms];
-////		}
-//  for(int i=0;i<nAtoms;i++)
-//  	for(int j=0;j<nAtoms;j++)
-//  		for(int k=0;k<nAtoms;k++)
-//  			for(int l=0;l<nAtoms;l++)
-//  				DSET[i][j][k][l]=new (nothrow) delunay* [ntypes];
     long double *radius=new (nothrow) long double[ntypes];
     long double b,c,d,e,f;
     //radiuses of the particle
@@ -2724,6 +2233,16 @@ int main( int argc, char * argv[] )
     else
         LAYER_CUT=0.;
     //nAtoms=0;
+	contigous = new (nothrow) int ** [nAtoms] ;
+	for(int i=0;i<nAtoms;i++)
+	{
+		contigous[i] = new (nothrow) int * [nAtoms];
+		for(int j=0;j<nAtoms;j++)
+		{
+			contigous[i][j]=new (nothrow) int  [ntypes];
+		}
+			
+	}
     char buffer[64];
     vertice *temp_site=nullptr;
     temp_site=sites;
@@ -2731,6 +2250,7 @@ int main( int argc, char * argv[] )
     long double max_free_area=0.;
     long double width;
     long double dummy;
+	FULLSETD=new (nothrow) set_of_delunay[ntypes];
     //snprintf(buffer,sizeof(char)*64,"free_dist");//_%d_%f.dat",int(nAtoms),Press);
     //ofstream fdist;
     //fdist.open(buffer);
@@ -2819,11 +2339,22 @@ int main( int argc, char * argv[] )
                 }
             }
             Atoms[i].Cstart= new(nothrow) container_vertice*[ntypes];
+			Atoms[i].conti_index = new (nothrow) int * [nAtoms];
 			Atoms[i].D_FIRST= new (nothrow) container_delunay*[ntypes];
             Atoms[i].D= new(nothrow) set_of_delunay[ntypes];
             Atoms[i].conti = new (nothrow) int[ntypes];
             Atoms[i].save_conti = new (nothrow) int[ntypes];
             Atoms[i].save_D= new(nothrow) set_of_delunay[ntypes];
+			
+        	for(int j=0; j<nAtoms; j++)
+        	{
+				Atoms[i].conti_index[j]= new (nothrow) int [ntypes];
+            	for(int TYPE=0; TYPE<ntypes; TYPE++)
+            	{
+					Atoms[i].conti_index[j][TYPE]=-1;	
+					contigous[i][j][TYPE]=0;
+				}
+			}
             for(int t=0; t<500; t++)
             {
                 Atoms[i].contigous[t]= new (nothrow) int[ntypes];
@@ -2836,9 +2367,11 @@ int main( int argc, char * argv[] )
                 {
                     {
                         Atoms[i].part_c[t][j]=new (nothrow) int[ntypes];
+                        Atoms[i].bond_c[t][j]=new (nothrow) int[ntypes];
                         for(int TYPE=0; TYPE<ntypes; TYPE++)
                         {
                             Atoms[i].part_c[t][j][TYPE]=0;
+                            Atoms[i].bond_c[t][j][TYPE]=0;
                         }
                     }
                     if(t<100)
@@ -2849,17 +2382,24 @@ int main( int argc, char * argv[] )
                 for(int j=0; j<50 && t<50 ; j++)
                 {
                     Atoms[i].D3bondinvoid[t][j]= new (nothrow) int[ntypes];
+                	for(int TYPE=0; TYPE<ntypes; TYPE++)
+                	{
+						Atoms[i].D3bondinvoid[t][j][TYPE]=0;
+					}
                 }
                 for(int TYPE=0; TYPE<ntypes; TYPE++)
                 {
                     Atoms[i].contigous[t][TYPE]=0;
                     Atoms[i].edge_index[t][TYPE]=0;
                     Atoms[i].bondinvoid[t][TYPE]=0;
+					Atoms[i].D_FIRST[TYPE]=nullptr;
                 }
             }
             for(int TYPE=0; TYPE<ntypes; TYPE++)
             {
                 Atoms[i].Cstart[TYPE]=NULL;
+				Atoms[i].D_FIRST[TYPE]=NULL;
+				Atoms[i].conti[TYPE]=0;
                 start[TYPE]=NULL;
                 CSTART[TYPE]=NULL;
             }
@@ -2875,7 +2415,7 @@ int main( int argc, char * argv[] )
             r_cut=radius[TYPE];
             cout<<TYPE<<"\t"<<r_cut<<"\n";
             //This is the loop over all atoms: we construct the voronoi cell for each atom
-            for(SAM=0 ; SAM<nAtoms ; SAM++)
+            for(SAM=0 ; SAM< nAtoms; SAM++)
             {
 					if(!Atoms[SAM].D_FIRST[TYPE])
 					{
@@ -2883,6 +2423,7 @@ int main( int argc, char * argv[] )
 					}
                     complete_del_2(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
             }
+			//return 0;
 		    vertice *temp;
 		    temp=start[TYPE];
             void_vert_count=0;
@@ -2893,15 +2434,6 @@ int main( int argc, char * argv[] )
 		        	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"\n";
 			    	cout<<temp->v_neigh_count<<"\n";
 			    }
-			////else 	
-			////{
-			////	cout<<"####\n";
-		    ////	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"\n";
-			////	for(int i=0;i<temp->v_neigh_count;i++)
-			////	{
-		    ////		cout<<temp->neib_vert[i]->p->x<<"\t"<<temp->neib_vert[i]->p->y<<"\t"<<temp->neib_vert[i]->p->z<<"\t"<<temp->neib_ed[i]<<"\n";;
-			////	}
-			////}
 				if(temp->is_void==1)
 				{
 					void_vert_count++;
@@ -3384,28 +2916,28 @@ int main( int argc, char * argv[] )
             			A2A4E234=sign_aaae(A2.x,A2.y,A2.z,A4.x,A4.y,A4.z,A3.x,A3.y,A3.z,E234.x,E234.y,E234.z);
             			A3A4E234=sign_aaae(A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,A2.x,A2.y,A2.z,E234.x,E234.y,E234.z);
 
-            			//cout<<S123<<"\t"<<S124<<"\t"<<S134<<"\t"<<S234<<"\n";
+
             			cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
             			cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
             			cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
             			cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
             			cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
             			cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
-            			//cout<<"\n";                                            .    .    .
+
             			cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
             			cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
             			cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
             			cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
             			cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
             			cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
-            			//cout<<"\n";                                            .    .    .
+            			
             			cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
             			cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
             			cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
             			cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
             			cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
             			cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
-            			//cout<<"\n";                                            .    .    .
+
             			cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
             			cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
             			cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
@@ -3429,6 +2961,11 @@ int main( int argc, char * argv[] )
 	
         for(int i=0; i<nAtoms; i++)
         {
+			for(int j=0;j<nAtoms;j++)
+			{
+				delete[] Atoms[i].conti_index[j];
+			}
+			delete[] Atoms[i].conti_index;
             delete[] Atoms[i].conti;
             delete[] Atoms[i].save_conti;
             for(int t=0; t<500; t++)
@@ -3439,22 +2976,22 @@ int main( int argc, char * argv[] )
                 delete [] Atoms[i].save_contigous[t];
                 delete [] Atoms[i].save_edge_index[t];
                 delete [] Atoms[i].save_bondinvoid[t];
-				for(int j=0; j<100; j++)
-				{
-					{
-						delete [] Atoms[i].part_c[t][j];
-					}
-					if(t<100)
-					{
-						delete [] Atoms[i].MIDP[t][j];
-					}
-				}
-            
+	    		for(int j=0; j<100; j++)
+	    		{
+	    			{
+	    				delete [] Atoms[i].part_c[t][j];
+	    				delete [] Atoms[i].bond_c[t][j];
+	    			}
+	    			if(t<100)
+	    			{
+	    				delete [] Atoms[i].MIDP[t][j];
+	    			}
+	    		}
                 for(int j=0; j<50 && t<50 ; j++)
                 {
                     delete [] Atoms[i].D3bondinvoid[t][j];
                 }
-			}
+	    	}
         }
         for(int t=0; t<ntypes; t++)
         {
@@ -3500,33 +3037,53 @@ int main( int argc, char * argv[] )
           //}
         }
         delete [] start;
+	    delunay *D;
+	    delunay *temp;
+	    for(int t=0;t<ntypes;t++)
+	    {
+	    	temp=FULLSETD[t].initial;
+	    	while(1)
+	    	{
+	    		D=temp;
+	    		if(temp->next)
+	    		{
+	    			temp=temp->next;	
+	    			delete D;
+	    		}
+	    		else
+	    		{
+	    			delete D;
+					break;
+	    		}
+	    	}
+	    }
         for(int n=0; n<nAtoms; n++)
         {
-            delete[] Atoms[n].Cstart;
-          //container_delunay *D=nullptr;
-          //for(int t=0; t<ntypes; t++)
-          //{
-          //    D=Atoms[n].D_FIRST[t]
-          //    while(1)
-          //    {
-          //        container_delunay *temp=nullptr;
-          //        temp=D;
-          //        if(D->next)
-          //        {
-          //            D=D->next;
-          //            delete temp;
-          //        }
-          //        else
-          //        {
-          //            delete temp;
-          //            break;
-          //        }
-          //    }
-          //}
-          //delete [] Atoms[n].D;
-          //delete [] Atoms[n].save_D;
-        }
-        delete[] Atoms;
+            //delete[] Atoms[n].Cstart;
+          	container_delunay *D=nullptr;
+            for(int t=0; t<ntypes; t++)
+            {
+                D=Atoms[n].D_FIRST[t];
+                while(1)
+                {
+                    container_delunay *temp=nullptr;
+                    temp=D;
+                    if(D->next)
+                    {
+                        D=D->next;
+                        delete temp;
+                    }
+                    else
+                    {
+                        delete temp;
+                        break;
+                    }
+                }
+            }
+			delete[] Atoms[n].D_FIRST;
+	    }
+	
+    	delete[] Atoms;
     }
     delete[] radius;
 }
