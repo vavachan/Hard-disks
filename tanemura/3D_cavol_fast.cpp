@@ -1369,6 +1369,7 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
     A1=ATOM->index;
     A2=ATOM->contigous[A][TYPE];
     A3=ATOM->contigous[B][TYPE];
+	int atleastoneatom=0;
     for(int j=0; j<ATOM->neighbours; j++)
     {
         if(debug)
@@ -1417,6 +1418,10 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
 
         if(debug)
             cout<<sign<<"\t"<<sign_N<<"\t"<<flag<<"\n";
+		if(sign!=sign_N)
+		{
+			atleastoneatom=1;	
+		}
         if(sign!=sign_N && flag)
         {
             long double XA,YA,ZA,XB,YB,ZB;
@@ -1536,22 +1541,28 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             }
         }
     }//j loop
-
-    A4=DIS_atom;
-    //cout<<A1<<"\t"<<A2<<"\t"<<A3<<"\t"<<A4<<"\n";
-    std::vector<int> EV1 {A1,A2,A3,A4};
-    std::sort(EV1.begin(),EV1.end());
-    D=new delunay;
-    FULLSETD[TYPE].insert_delunay(D);
-    D->AT[0]=EV1[0];
-    D->AT[1]=EV1[1];
-    D->AT[2]=EV1[2];
-    D->AT[3]=EV1[3];
-    D->circum_x=circx;
-    D->circum_y=circy;
-    D->circum_z=circz;
-    create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
-    return D;
+	if(atleastoneatom)
+	{
+		A4=DIS_atom;
+		//cout<<A1<<"\t"<<A2<<"\t"<<A3<<"\t"<<A4<<"\n";
+		std::vector<int> EV1 {A1,A2,A3,A4};
+		std::sort(EV1.begin(),EV1.end());
+		D=new delunay;
+		FULLSETD[TYPE].insert_delunay(D);
+		D->AT[0]=EV1[0];
+		D->AT[1]=EV1[1];
+		D->AT[2]=EV1[2];
+		D->AT[3]=EV1[3];
+		D->circum_x=circx;
+		D->circum_y=circy;
+		D->circum_z=circz;
+		create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
+		return D;
+	}
+	else
+	{
+		return D;
+	}
 }
 void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 {
