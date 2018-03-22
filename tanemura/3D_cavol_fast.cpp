@@ -22,7 +22,7 @@ long double DMIN=0.000000000001;//std::numeric_limits<long double>::min();
 long double epsilon=0.00000000000;
 int void_vert_count=0;
 int ***contigous;
-int PBC=1;
+int PBC=0;
 long double *radius;
 struct atom;
 struct face;
@@ -2644,7 +2644,7 @@ int main( int argc, char * argv[] )
             r_cut=radius[TYPE];
             cout<<TYPE<<"\t"<<r_cut<<"\n";
             //This is the loop over all atoms: we construct the voronoi cell for each atom
-            for(SAM=0 ; SAM< 1; SAM++)
+            for(SAM=0 ; SAM< nAtoms; SAM++)
             {
                 if(!Atoms[SAM].D_FIRST[TYPE])
                 {
@@ -2658,7 +2658,7 @@ int main( int argc, char * argv[] )
             temp_d=FULLSETD[TYPE].initial;
             while(1)
             {
-		    	//if(temp_d->hull)
+		    	if(temp_d->hull)
 		    		print_delunay(temp_d,Atoms,nAtoms);
                 if(temp_d->next)
                 {
@@ -2689,27 +2689,24 @@ int main( int argc, char * argv[] )
             vertice *temp;
             temp=start[TYPE];
             void_vert_count=0;
-			cout<<"draw color yellow\n";
             while(1)
             {
 				if(temp->D->hull)
 				{
 				    if(inside_delunay(temp,temp->D,Atoms,nAtoms))
 				    {
+						cout<<"draw color yellow\n";
+			  	    	cout<<"draw sphere\t{";
+              	    	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.05\tresolution 100\n";
+				    }
+					else
+					{
+						cout<<"draw color pink\n";
 			  	    	cout<<"draw sphere\t{";
               	    	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.02\tresolution 100\n";
-				    }
+					}
 				}
-              //if(temp->v_neigh_count!=4)
-              //{
-			  //	//cout<<"draw sphere\t{";
-              //    //cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.01\tresolution 100\n";
-			  //////if(!temp->D->hull)
-			  //////{
-			  //////	cout<<"???\n";
-			  //////}
-              //    //cout<<temp->v_neigh_count<<"\n";
-              //}
+
                 if(temp->is_void==1)
                 {
                     void_vert_count++;
