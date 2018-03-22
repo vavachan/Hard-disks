@@ -22,7 +22,7 @@ long double DMIN=0.000000000001;//std::numeric_limits<long double>::min();
 long double epsilon=0.00000000000;
 int void_vert_count=0;
 int ***contigous;
-int PBC=0;
+int PBC=1;
 long double *radius;
 struct atom;
 struct face;
@@ -836,14 +836,14 @@ void print_delunay(delunay *D,atom Atoms[],int TYPE)
     cout<<"draw line\t{";
     cout<<ATOM->p.x-Px<<"\t"<<ATOM->p.y-Py<<"\t"<<ATOM->p.z-Pz<<"}\t{"<<ATOM->p.x-Sx<<"\t"<<ATOM->p.y-Sy<<"\t"<<ATOM->p.z-Sz<<"}\twidth	1\n";
 }
-////	vector cross_product(vector a1,vector a2)
-////	{
-////		vector cp;
-////		cp.x=a2.z*a1.y-a1.z*a2.y;
-////		cp.y=a1.z*a2.x-a1.x*a2.z;
-////		cp.z=a2.y*a1.x-a1.y*a2.x;
-////		return cp;
-////	}
+site cross_product(site a1,site a2)
+{
+	site cp;
+	cp.x=a2.z*a1.y-a1.z*a2.y;
+	cp.y=a1.z*a2.x-a1.x*a2.z;
+	cp.z=a2.y*a1.x-a1.y*a2.x;
+	return cp;
+}
 site center_of_triangle(site A1,site A2,site A3,long double rS,long double rA,long double rB)
 {
     long double ax,ay,az;
@@ -2345,38 +2345,136 @@ void delete_everything(atom Atoms[],int nAtoms,int ntypes)
         }
   	}
 }
-bool inside_voronoi(vertice *v,delunay *D)
+bool inside_delunay(vertice *v,delunay *D,atom Atoms[],int nAtoms)
 {
-	
-}
-  //for(int i=0; i<nAtoms; i++)
-  //{
+	site V1;	
+	site V2;	
+	site V;
+	site A;
+	int sign1,sign2;
+	long double overlap1,overlap2;	
+	atom *a1=&(Atoms[D->AT[0]]);
+	atom *a2=&(Atoms[D->AT[1]]);;
+	atom *a3=&(Atoms[D->AT[2]]);;
+	atom *a4=&(Atoms[D->AT[3]]);;
+	V1.x=a2->p.x-a1->p.x;
+	V1.y=a2->p.y-a1->p.y;
+	V1.z=a2->p.z-a1->p.z;
+	V2.x=a3->p.x-a1->p.x;
+	V2.y=a3->p.y-a1->p.y;
+	V2.z=a3->p.z-a1->p.z;
+	V.x=v->p->x-a1->p.x;
+	V.y=v->p->y-a1->p.y;
+	V.z=v->p->z-a1->p.z;
+	A.x=a4->p.x-a1->p.x;
+	A.y=a4->p.y-a1->p.y;
+	A.z=a4->p.z-a1->p.z;
+	site cross_12;
+	cross_12=cross_product(V1,V2);
+	overlap1=cross_12.x*A.x+cross_12.y*A.y+cross_12.z*A.z;
+	overlap2=cross_12.x*V.x+cross_12.y*V.y+cross_12.z*V.z;
+	if(overlap1<0.)
+		sign1=1;
+	else
+		sign1=-1;
 
-  //    for(int j=0; j<nAtoms; j++)
-  //    {
-  //        for(int TYPE=0; TYPE<ntypes; TYPE++)
-  //        {
-  //        }
-  //    }
-  //    for(int t=0; t<500; t++)
-  //    {
-  //        for(int j=0; j<100; j++)
-  //        {
-  //            {
-  //            }
-  //            if(t<100)
-  //            {
-  //            }
-  //        }
-  //        for(int j=0; j<50 && t<50 ; j++)
-  //        {
-  //            for(int TYPE=0; TYPE<ntypes; TYPE++)
-  //            {
-  //                
-  //            }
-  //        }
-  //    }
-  //}
+	if(overlap2<0.)
+		sign2=1;
+	else
+		sign2=-1;
+	
+	if(sign1==sign2)
+	{
+		V1.x=a2->p.x-a1->p.x;
+		V1.y=a2->p.y-a1->p.y;
+		V1.z=a2->p.z-a1->p.z;
+		V2.x=a4->p.x-a1->p.x;
+		V2.y=a4->p.y-a1->p.y;
+		V2.z=a4->p.z-a1->p.z;
+		V.x=v->p->x-a1->p.x;
+		V.y=v->p->y-a1->p.y;
+		V.z=v->p->z-a1->p.z;
+		A.x=a3->p.x-a1->p.x;
+		A.y=a3->p.y-a1->p.y;
+		A.z=a3->p.z-a1->p.z;
+		cross_12=cross_product(V1,V2);
+		overlap1=cross_12.x*A.x+cross_12.y*A.y+cross_12.z*A.z;
+		overlap2=cross_12.x*V.x+cross_12.y*V.y+cross_12.z*V.z;
+		if(overlap1<0.)
+			sign1=1;
+		else
+			sign1=-1;
+
+		if(overlap2<0.)
+			sign2=1;
+		else
+			sign2=-1;
+		if(sign1==sign2)
+		{
+			V1.x=a3->p.x-a1->p.x;
+			V1.y=a3->p.y-a1->p.y;
+			V1.z=a3->p.z-a1->p.z;
+			V2.x=a4->p.x-a1->p.x;
+			V2.y=a4->p.y-a1->p.y;
+			V2.z=a4->p.z-a1->p.z;
+			V.x=v->p->x-a1->p.x;
+			V.y=v->p->y-a1->p.y;
+			V.z=v->p->z-a1->p.z;
+			A.x=a2->p.x-a1->p.x;
+			A.y=a2->p.y-a1->p.y;
+			A.z=a2->p.z-a1->p.z;
+			cross_12=cross_product(V1,V2);
+			overlap1=cross_12.x*A.x+cross_12.y*A.y+cross_12.z*A.z;
+			overlap2=cross_12.x*V.x+cross_12.y*V.y+cross_12.z*V.z;
+			if(overlap1<0.)
+				sign1=1;
+			else
+				sign1=-1;
+
+			if(overlap2<0.)
+				sign2=1;
+			else
+				sign2=-1;
+			if(sign1==sign2)
+			{
+				V1.x=a3->p.x-a2->p.x;
+				V1.y=a3->p.y-a2->p.y;
+				V1.z=a3->p.z-a2->p.z;
+				V2.x=a4->p.x-a2->p.x;
+				V2.y=a4->p.y-a2->p.y;
+				V2.z=a4->p.z-a2->p.z;
+				V.x=v->p->x-a2->p.x;
+				V.y=v->p->y-a2->p.y;
+				V.z=v->p->z-a2->p.z;
+				A.x=a1->p.x-a2->p.x;
+				A.y=a1->p.y-a2->p.y;
+				A.z=a1->p.z-a2->p.z;
+				cross_12=cross_product(V1,V2);
+				overlap1=cross_12.x*A.x+cross_12.y*A.y+cross_12.z*A.z;
+				overlap2=cross_12.x*V.x+cross_12.y*V.y+cross_12.z*V.z;
+				if(overlap1<0.)
+					sign1=1;
+				else
+					sign1=-1;
+
+				if(overlap2<0.)
+					sign2=1;
+				else
+					sign2=-1;
+				if(sign1==sign2)
+					return true;
+				else 
+					return false;
+			}
+			else
+				return false;
+		}
+		else
+			return false;
+	}	
+	else
+		return false;
+}
 int main( int argc, char * argv[] )
 {
     int nAtoms=0;
@@ -2546,7 +2644,7 @@ int main( int argc, char * argv[] )
             r_cut=radius[TYPE];
             cout<<TYPE<<"\t"<<r_cut<<"\n";
             //This is the loop over all atoms: we construct the voronoi cell for each atom
-            for(SAM=0 ; SAM< nAtoms; SAM++)
+            for(SAM=0 ; SAM< 1; SAM++)
             {
                 if(!Atoms[SAM].D_FIRST[TYPE])
                 {
@@ -2560,7 +2658,7 @@ int main( int argc, char * argv[] )
             temp_d=FULLSETD[TYPE].initial;
             while(1)
             {
-		    	if(temp_d->hull)
+		    	//if(temp_d->hull)
 		    		print_delunay(temp_d,Atoms,nAtoms);
                 if(temp_d->next)
                 {
@@ -2591,19 +2689,27 @@ int main( int argc, char * argv[] )
             vertice *temp;
             temp=start[TYPE];
             void_vert_count=0;
-			//cout<<"draw color red\n";
+			cout<<"draw color yellow\n";
             while(1)
             {
-                if(temp->v_neigh_count!=4)
-                {
-			    	//cout<<"draw sphere\t{";
-                    //cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.01\tresolution 100\n";
-				////if(!temp->D->hull)
-				////{
-				////	cout<<"???\n";
-				////}
-                    //cout<<temp->v_neigh_count<<"\n";
-                }
+				if(temp->D->hull)
+				{
+				    if(inside_delunay(temp,temp->D,Atoms,nAtoms))
+				    {
+			  	    	cout<<"draw sphere\t{";
+              	    	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.02\tresolution 100\n";
+				    }
+				}
+              //if(temp->v_neigh_count!=4)
+              //{
+			  //	//cout<<"draw sphere\t{";
+              //    //cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.01\tresolution 100\n";
+			  //////if(!temp->D->hull)
+			  //////{
+			  //////	cout<<"???\n";
+			  //////}
+              //    //cout<<temp->v_neigh_count<<"\n";
+              //}
                 if(temp->is_void==1)
                 {
                     void_vert_count++;
