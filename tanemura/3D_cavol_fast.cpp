@@ -2445,7 +2445,11 @@ void delete_everything(atom Atoms[],int nAtoms,int ntypes)
         }
         delete[] Atoms[i].conti_index;
         delete[] Atoms[i].conti;
+		delete[] Atoms[i].Cstart;
+		delete[] Atoms[i].D_FIRST;
         delete[] Atoms[i].save_conti;
+		delete[] Atoms[i].D;
+        delete[] Atoms[i].save_D;
         for(int t=0; t<50; t++)
         {
             delete [] Atoms[i].contigous[t];
@@ -2755,7 +2759,7 @@ int main( int argc, char * argv[] )
 
         //This a loop over the types ,  if you have 2 kinds of atoms you have to do voronoi tessellation twice
         //for(int TYPE=0; TYPE<ntypes; TYPE++)
-        for(int TYPE=0; TYPE<ntypes; TYPE++)
+        for(int TYPE=1; TYPE<ntypes; TYPE++)
         {
             snprintf(buffer,sizeof(char)*64,"vor_%d",int(TYPE));//_%d_%f.dat",int(nAtoms),Press);
             ofstream vor;
@@ -2771,41 +2775,42 @@ int main( int argc, char * argv[] )
                 }
                 complete_del_2(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
             }
-			cout<<"draw color red\n";
-			
-		    delunay *temp_d;
-            temp_d=FULLSETD[TYPE].initial;
-            while(1)
-            {
-		    	//if(temp_d->hull)
-		    		//print_delunay(temp_d,Atoms,nAtoms);
-                if(temp_d->next)
-                {
-                    temp_d=temp_d->next;
-                }
-		    	else
-		    	{
-                    break;
-                }
-            }
+		////cout<<"draw color red\n";
+		////
+		////delunay *temp_d;
+        ////temp_d=FULLSETD[TYPE].initial;
+        ////while(1)
+        ////{
+		////	if(temp_d->hull)
+		////		print_delunay(temp_d,Atoms,nAtoms);
+        ////    if(temp_d->next)
+        ////    {
+        ////        temp_d=temp_d->next;
+        ////    }
+		////	else
+		////	{
+        ////        break;
+        ////    }
+        ////}
 
-			cout<<"draw color blue\n";
-		    //face *temp_f;
-            //temp_f=CH[TYPE].initial;
-			set_of_cvert *dang_edge;
-          //while(1)
-          //{
-		  //	//if(temp_d->hull)
-		  //	///print_face(temp_f);
-          //    if(temp_f->next)
-          //    {
-          //        temp_f=temp_f->next;
-          //    }
-		  //	else
-		  //	{
-          //        break;
-          //    }
-          //}
+		////cout<<"mol new\n";
+		////cout<<"draw material Transparent\n";
+		////cout<<"draw color blue\n";
+		////face *temp_f;
+        ////temp_f=CH[TYPE].initial;
+        ////while(1)
+        ////{
+		////	//if(temp_d->hull)
+		////	print_face(temp_f);
+        ////    if(temp_f->next)
+        ////    {
+        ////        temp_f=temp_f->next;
+        ////    }
+		////	else
+		////	{
+        ////        break;
+        ////    }
+        ////}
             //return 0;
             vertice *temp;
             temp=start[TYPE];
@@ -2816,6 +2821,7 @@ int main( int argc, char * argv[] )
 			    {
 					temp->dangling=1;
 			    }
+				
               //if(temp->is_void==1)
               //{
               //    void_vert_count++;
@@ -2829,36 +2835,51 @@ int main( int argc, char * argv[] )
                 else
                     break;
             }
-			int flag=1;
-			int color=0;
-			while(flag)
-			{	
-				
-				temp=start[TYPE];	
-				flag=0;
-				color++;
-				while(temp)
+		    int flag=1;
+		    int color=0;
+		    while(flag)
+		    {	
+		    	
+		    	temp=start[TYPE];	
+		    	flag=0;
+		    	color++;
+		    	while(temp)
+		    	{
+		    	 // if(temp->dangling)
+		    	 // {
+		    	 // 	cout<<"draw color "<<color%16<<"\n";
+		    	 // 	cout<<"draw sphere \t{";
+		    	 // 	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
+		    	 // }
+		    		if(temp->dangling)// && temp->is_void)
+		    		{
+		    			if(!inside_delunay(temp,temp->D,Atoms,nAtoms))
+		    			{
+		    				flag=1;
+		    				for(int i=0;i<temp->v_neigh_count;i++)
+		    				{
+								//if(temp->neib_ed[i])
+		    						temp->neib_vert[i]->dangling=1;
+		    				}	
+		    				V->delete_vertice(temp,TYPE);	
+		    			}
+		    		}	
+		    		temp=temp->next;
+		    	}
+		    }
+            temp=start[TYPE];
+			while(temp)
+			{
+				if(temp->dangling)
 				{
-					if(temp->dangling)
-					{
-						cout<<"draw color "<<color%16<<"\n";
-						cout<<"draw sphere \t{";
-						cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
-					}
-					if(temp->dangling)
-					{
-						if(!inside_delunay(temp,temp->D,Atoms,nAtoms))
-						{
-							flag=1;
-							for(int i=0;i<temp->v_neigh_count;i++)
-							{
-								temp->neib_vert[i]->dangling=1;
-							}	
-							V->delete_vertice(temp,TYPE);	
-						}
-					}	
-					temp=temp->next;
-				}
+		    		cout<<"draw sphere \t{";
+		    		cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
+				}	
+			////if(inside_delunay(temp,temp->D,Atoms,nAtoms) && temp->dangling==0 && temp->is_void);
+			////{
+			////	cout<<"???\n";
+			////}
+				temp=temp->next;
 			}
             //vertice *temp;
             temp=start[TYPE];
@@ -2952,30 +2973,22 @@ int main( int argc, char * argv[] )
                 }
 
             }
+			delete[] old_label;
             //cout<<"here end\n";
             ofstream cav;
             cav.open("cav");
             for(int i=0; i<void_vert_count; i++)
             {
-                color=1;
-                cav<<"#"<<i<<"\n\n";
                 for(int j=0; j<void_vert_count; j++)
+				{
                     if(cavity_list[j]->cluster_index==i)
                     {
 						if(cavity_list[j]->dangling)
 						{
 							pocket[i]=1;
 						}
-                      //if(color)
-                      //{
-                      //    cav<<"draw color "<<i%16<<"\n";;
-                      //    color=0;
-                      //}
-                      ////cav<<"
-                      ////cout<<cavity_list[j]->A<<"\t"<<cavity_list[j]->D->A<<"\t"<<cavity_list[j]->D->B<<"\n";
-                      //cav<<"draw sphere\t{";
-                      //cav<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\t"<<cavity_list[j]->p->z<<"}\tradius\t"<<0.03<<"\t"<<"resolution\t100\n";
                     }
+				}
             }
             for(int i=0; i<void_vert_count; i++)
             {
@@ -3413,6 +3426,10 @@ int main( int argc, char * argv[] )
                 //cout<<i<<"\t"<<cav_area[i]<<"\t"<<cav_lenght[i]<<"\n";
             }
             cout<<r_cut<<"\t"<<cav_tot<<"\t"<<ca_per_tot<<"\n";
+			delete [] pocket;
+			delete [] cav_vol;
+			delete [] cav_area;
+			delete [] cavity_list;
 			return 0;
         }
 
@@ -3488,5 +3505,7 @@ int main( int argc, char * argv[] )
             }
         }
     }
+	delete_everything(Atoms,nAtoms,ntypes);
+	delete[] Atoms;
     delete[] radius;
 }
