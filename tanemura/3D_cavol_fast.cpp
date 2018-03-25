@@ -62,7 +62,7 @@ struct face
 class vert_list
 {
 public:
-    void delete_vertice(vertice *,vertice *,int type,int);
+    void delete_vertice(vertice *,int type,int);
     vertice* insert_vertice(vertice *,vertice *,int,int);
     void display_vertex(vertice *);
     void display_conn(vertice *ve);
@@ -119,6 +119,7 @@ struct vertice
     struct half_edge *leaving=NULL;
     struct vertice *next=NULL;
     struct vertice *prev=NULL;
+	int dangling=0;
     int A,B,C,Da;
     delunay *D=nullptr;
     int is_void=0;
@@ -237,7 +238,60 @@ void set_of_delunay :: insert_delunay(delunay *d1)
         end=end->next;
     }
 }
+class set_of_cvert
+{
+public :
+    container_vertice *initial=NULL;
+    container_vertice *end=NULL;
+    void insert_cvert(container_vertice *d1);
+    void delete_cvert(container_vertice *d1);
+};
 
+void set_of_cvert:: insert_cvert(container_vertice *d1)
+{
+    if(!initial)
+    {
+        initial=d1;
+        end=d1;
+    }
+    else
+    {
+        end->next=d1;
+        end=end->next;
+    }
+}
+void set_of_cvert::delete_cvert(container_vertice *d1)
+{
+	container_vertice *temp;
+	temp=initial;
+	while(temp)
+	{
+		if(temp->V->D->AT[0]==d1->V->D->AT[0] && temp->V->D->AT[1]==d1->V->D->AT[1] && temp->V->D->AT[2]==d1->V->D->AT[2] && temp->V->D->AT[3]==d1->V->D->AT[3] )
+		{
+			if(temp==initial)
+			{
+				initial=temp->next;
+				delete temp;
+				return ;
+			}	
+			else if(temp==end)
+			{
+				end=temp->prev;
+				delete temp;
+				return ;
+			}
+			else
+			{
+				temp->prev->next=temp->next;
+				temp->next->prev=temp->prev;
+				delete temp;
+				return ;
+			}
+		}
+		temp->next;
+	}
+	cout<<"not found\n";
+}
 class convex_hull
 {
 public : 
@@ -339,91 +393,91 @@ void reset_atom(atom *Atom,int TYPE)
     Atom->conti[TYPE]=Atom->save_conti[TYPE];
     Atom->D[TYPE]=Atom->save_D[TYPE];
 }
-int insert_cvertice(container_vertice *EV,container_vertice *v,container_vertice *&Cstart,int debug=0)
-{
-    int flag;
-    flag=compare(EV->V->p,v->V->p);
-    if(debug)
-    {
-        cout<<"insert\n";
-        display_SITE(v->V->p);
-        cout<<"vetfoc\n";
-        display_SITE(EV->V->p);
-        cout<<flag<<"\n";
-    }
-    if(flag==0)
-    {
-        std::vector<int> EV1 {EV->V->A,EV->V->D->a,EV->V->D->b};
-        std::vector<int> v1 {v->V->A,v->V->D->a,v->V->D->b};
-        std::sort(EV1.begin(),EV1.end());
-        std::sort(v1.begin(),v1.end());
-        if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
-        {
-            flag=0;
-            ////////delete v->p;
-            ////////delete v;
-            ////////return EV;
-        }
-        else
-            flag=1;
+	////int insert_cvertice(container_vertice *EV,container_vertice *v,container_vertice *&Cstart,int debug=0)
+	////{
+	////	int flag;
+	////	flag=compare(EV->V->p,v->V->p);
+	////	if(debug)
+	////	{
+	////		cout<<"insert\n";
+	////		display_SITE(v->V->p);
+	////		cout<<"vetfoc\n";
+	////		display_SITE(EV->V->p);
+	////		cout<<flag<<"\n";
+	////	}
+	////	if(flag==0)
+	////	{
+	////		std::vector<int> EV1 {EV->V->A,EV->V->D->a,EV->V->D->b};
+	////		std::vector<int> v1 {v->V->A,v->V->D->a,v->V->D->b};
+	////		std::sort(EV1.begin(),EV1.end());
+	////		std::sort(v1.begin(),v1.end());
+	////		if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+	////		{
+	////			flag=0;
+	////			////////delete v->p;
+	////			////////delete v;
+	////			////////return EV;
+	////		}
+	////		else
+	////			flag=1;
 
-    }
-    if(flag==1)
-    {
-        if(EV->next)
-        {
-            //		cout<<"everytime?\n";
-            insert_cvertice(EV->next,v,Cstart,debug);
-        }
-        else
-        {
-            EV->next=v;
-            v->prev=EV;
-            v->next=NULL;
-            ///		cout<<"here?\n";
-            return flag;
-        }
-    }
-    else if (flag==-1)
-    {
-        v->next=EV;
-        if(EV->prev)
-        {
-            v->prev=EV->prev;
-            EV->prev->next=v;
-        }
-        else
-        {
-            Cstart=v;
-        }
-        EV->prev=v;
-        //	cout<<"here2?\n";
-        return flag;
-    }
-    else if (flag==0)
-    {
-        //cout<<"vertice already exists\n";
-        if(EV->V->p->y-v->V->p->y)
-        {
-            v->next=EV;
-            if(EV->prev)
-            {
-                v->prev=EV->prev;
-                EV->prev->next=v;
-            }
-            else
-            {
-                Cstart=v;
-            }
-            EV->prev=v;
-        }
-        else
-        {
-            delete v;
-        }
-        return flag;
-    }
-}
+	////	}
+	////	if(flag==1)
+	////	{
+	////		if(EV->next)
+	////		{
+	////			//		cout<<"everytime?\n";
+	////			insert_cvertice(EV->next,v,Cstart,debug);
+	////		}
+	////		else
+	////		{
+	////			EV->next=v;
+	////			v->prev=EV;
+	////			v->next=NULL;
+	////			///		cout<<"here?\n";
+	////			return flag;
+	////		}
+	////	}
+	////	else if (flag==-1)
+	////	{
+	////		v->next=EV;
+	////		if(EV->prev)
+	////		{
+	////			v->prev=EV->prev;
+	////			EV->prev->next=v;
+	////		}
+	////		else
+	////		{
+	////			Cstart=v;
+	////		}
+	////		EV->prev=v;
+	////		//	cout<<"here2?\n";
+	////		return flag;
+	////	}
+	////	else if (flag==0)
+	////	{
+	////		//cout<<"vertice already exists\n";
+	////		if(EV->V->p->y-v->V->p->y)
+	////		{
+	////			v->next=EV;
+	////			if(EV->prev)
+	////			{
+	////				v->prev=EV->prev;
+	////				EV->prev->next=v;
+	////			}
+	////			else
+	////			{
+	////				Cstart=v;
+	////			}
+	////			EV->prev=v;
+	////		}
+	////		else
+	////		{
+	////			delete v;
+	////		}
+	////		return flag;
+	////	}
+	////}
 vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
 {
     int flag;
@@ -527,104 +581,163 @@ vertice* vert_list::insert_vertice(vertice *EV,vertice *v,int type,int debug=0)
         return v;
     }
 }
-void vert_list::delete_vertice(vertice *EV,vertice *v,int type,int debug=0)
+void vert_list::delete_vertice(vertice *v,int type,int debug=0)
 {
-    int flag;
-    flag=compare(EV->p,v->p,1);
-    if(flag==0)
-    {
-        std::vector<int> EV1 {EV->A,EV->D->a,EV->D->b};
-        std::vector<int> v1 {v->A,v->D->a,v->D->b};
-        std::sort(EV1.begin(),EV1.end());
-        std::sort(v1.begin(),v1.end());
-        if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
-        {
-            flag=0;
-            ////////delete v->p;
-            ////////delete v;
-            ////////return EV;
-        }
-        else
-            flag=1;
-
-    }
-    if(debug)
-    {
-        cout<<flag<<"\n";
-        display_SITE(EV->p);
-        display_SITE(v->p);
-        cout<<"\n"<<std::flush;
-    }
-    if (flag==0)
-    {
-        if(EV->prev)
-            EV->prev->next=EV->next;
-        else
-            start[type]=EV->next;
-        if(EV->next)
-            EV->next->prev=EV->prev;
-        else
-            EV->prev->next=NULL;
-        if(debug)
-        {
-            cout<<v->v_neigh_count<<"\n"<<std::flush;
-        }
-        for(int n=0; n<v->v_neigh_count; n++)
-        {
-            if(debug)
-            {
-                cout<<n<<"\n";
-            }
-            if(v->neib_vert[n])
-            {
-                //display_SITE(v->p);
-                //	    display_SITE(v->neib_vert[n]->p);
-                for(int m=0; m<v->neib_vert[n]->v_neigh_count; m++)
-                {
-                    if(v->neib_vert[n]->neib_vert[m])
-                    {
-                        if(!(compare(v->neib_vert[n]->neib_vert[m]->p,v->p,1)))
-                        {
-
-                            std::vector<int> EV1 {v->neib_vert[n]->neib_vert[m]->A,v->neib_vert[n]->neib_vert[m]->D->a,v->neib_vert[n]->neib_vert[m]->D->b};
-                            std::vector<int> v1 {v->A,v->D->a,v->D->b};
-                            std::sort(EV1.begin(),EV1.end());
-                            std::sort(v1.begin(),v1.end());
-                            if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
-                            {
-                                flag=0;
-                                v->neib_vert[n]->neib_vert[m]=NULL;
-                                if(m==0)
-                                {
-                                    v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
-                                    v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
-                                    v->neib_vert[n]->neib_vert[m+2]=v->neib_vert[n]->neib_vert[m+3];
-                                }
-                                if(m==1)
-                                {
-                                    v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
-                                    v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
-                                }
-                                if(m==2)
-                                {
-                                    v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
-                                }
-                                v->neib_vert[n]->v_neigh_count=v->neib_vert[n]->v_neigh_count-1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        if(EV->next)
-            delete_vertice(EV->next,v,type,debug);
-        else
-            return;
-    }
+	if(v->next)
+	{
+		if(v->prev)
+		{
+			v->prev->next=v->next;
+			v->next->prev=v->prev;
+		}
+		else
+		{
+			start[type]=v->next;
+			v->next->prev=nullptr;
+		}
+	}	
+	else
+	{
+		v->prev->next=nullptr;
+	}
+	vertice *v_neib;
+	for(int i=0;i<v->v_neigh_count;i++)
+	{
+		v_neib=v->neib_vert[i];	
+		int temp_index=0;
+		for(int j=0;j<v_neib->v_neigh_count;j++)
+		{
+			if(v_neib->neib_vert[j]==v)
+			{
+				v_neib->neib_vert[j]=nullptr;
+			}	
+		}
+		for(int j=0;j<v_neib->v_neigh_count;j++)
+		{
+			if(v_neib->neib_vert[j]==nullptr)
+			{
+				if(v_neib->neib_vert[j+1])
+				{
+					v_neib->neib_vert[j]=v_neib->neib_vert[j+1];
+					v_neib->neib_ed[j]=v_neib->neib_ed[j+1];
+					v_neib->neib_vert[j+1]=nullptr;
+				}
+			}
+		}
+		v_neib->v_neigh_count=v_neib->v_neigh_count-1;
+	}	
+	delete v->p;
+	delete v;
 }
+////while(temp)
+////{
+////	if(temp->D->AT[0]==v->D->AT[0] && temp->D->AT[1]==v->D->AT[1] && temp->D->AT[2]==v->D->AT[2] && temp->D->AT[3]==v->D->AT[3])
+////	{
+////		if(	
+////		delete v->p;
+////		delete v;
+////		
+////	}
+////}
+
+////////void vert_list::delete_vertice(vertice *EV,vertice *v,int type,int debug=0)
+////////{
+////////	int flag;
+////////	flag=compare(EV->p,v->p,1);
+////////	if(flag==0)
+////////	{
+////////		std::vector<int> EV1 {EV->A,EV->D->a,EV->D->b};
+////////		std::vector<int> v1 {v->A,v->D->a,v->D->b};
+////////		std::sort(EV1.begin(),EV1.end());
+////////		std::sort(v1.begin(),v1.end());
+////////		if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+////////		{
+////////			flag=0;
+////////			////////delete v->p;
+////////			////////delete v;
+////////			////////return EV;
+////////		}
+////////		else
+////////			flag=1;
+
+////////	}
+////////	if(debug)
+////////	{
+////////		cout<<flag<<"\n";
+////////		display_SITE(EV->p);
+////////		display_SITE(v->p);
+////////		cout<<"\n"<<std::flush;
+////////	}
+////////	if (flag==0)
+////////	{
+////////		if(EV->prev)
+////////			EV->prev->next=EV->next;
+////////		else
+////////			start[type]=EV->next;
+////////		if(EV->next)
+////////			EV->next->prev=EV->prev;
+////////		else
+////////			EV->prev->next=NULL;
+////////		if(debug)
+////////		{
+////////			cout<<v->v_neigh_count<<"\n"<<std::flush;
+////////		}
+////////		for(int n=0; n<v->v_neigh_count; n++)
+////////		{
+////////			if(debug)
+////////			{
+////////				cout<<n<<"\n";
+////////			}
+////////			if(v->neib_vert[n])
+////////			{
+////////				//display_SITE(v->p);
+////////				//	    display_SITE(v->neib_vert[n]->p);
+////////				for(int m=0; m<v->neib_vert[n]->v_neigh_count; m++)
+////////				{
+////////					if(v->neib_vert[n]->neib_vert[m])
+////////					{
+////////						if(!(compare(v->neib_vert[n]->neib_vert[m]->p,v->p,1)))
+////////						{
+
+////////							std::vector<int> EV1 {v->neib_vert[n]->neib_vert[m]->A,v->neib_vert[n]->neib_vert[m]->D->a,v->neib_vert[n]->neib_vert[m]->D->b};
+////////							std::vector<int> v1 {v->A,v->D->a,v->D->b};
+////////							std::sort(EV1.begin(),EV1.end());
+////////							std::sort(v1.begin(),v1.end());
+////////							if(EV1[0]==v1[0] && EV1[1]==v1[1] && EV1[2]==v1[2])
+////////							{
+////////								flag=0;
+////////								v->neib_vert[n]->neib_vert[m]=NULL;
+////////								if(m==0)
+////////								{
+////////									v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
+////////									v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
+////////									v->neib_vert[n]->neib_vert[m+2]=v->neib_vert[n]->neib_vert[m+3];
+////////								}
+////////								if(m==1)
+////////								{
+////////									v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
+////////									v->neib_vert[n]->neib_vert[m+1]=v->neib_vert[n]->neib_vert[m+2];
+////////								}
+////////								if(m==2)
+////////								{
+////////									v->neib_vert[n]->neib_vert[m]=v->neib_vert[n]->neib_vert[m+1];
+////////								}
+////////								v->neib_vert[n]->v_neigh_count=v->neib_vert[n]->v_neigh_count-1;
+////////							}
+////////						}
+////////					}
+////////				}
+////////			}
+////////		}
+////////	}
+////////	else
+////////	{
+////////		if(EV->next)
+////////			delete_vertice(EV->next,v,type,debug);
+////////		else
+////////			return;
+////////	}
+////////}
 void vert_list::display_vertex(vertice *start)
 {
     display_SITE(start->p);
@@ -1841,6 +1954,9 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 												}
 											}
 
+									////	cout<<"draw line\t{";
+									////	cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"}\t{";
+									////	cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"}\n";
 
 											add_connected(temp_vert_o,temp_vert_d,ATOM->D3bondinvoid[i][j][TYPE]);
 											add_connected(temp_vert_d,temp_vert_o,ATOM->D3bondinvoid[i][j][TYPE]);
@@ -2067,6 +2183,9 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                                     ATOM->D3bondinvoid[j][i][TYPE]=1;
                                 }
                             }
+						////cout<<"draw line\t{";
+						////cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"}\t{";
+						////cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"}\n";
                             add_connected(temp_vert_o,temp_vert_d,ATOM->D3bondinvoid[i][j][TYPE]);
                             add_connected(temp_vert_d,temp_vert_o,ATOM->D3bondinvoid[i][j][TYPE]);
 
@@ -2484,7 +2603,7 @@ int main( int argc, char * argv[] )
     //The file with configurations
     std::ifstream infile(argv[1]);///dat_trial");//config_2000_0.38_2_0.70.dat");
     //No of Atoms
-    nAtoms=216;
+    nAtoms=64;
     cout<<std::setprecision(5);
     //No of configurations in the input file
     config_count=1;
@@ -2658,8 +2777,8 @@ int main( int argc, char * argv[] )
             temp_d=FULLSETD[TYPE].initial;
             while(1)
             {
-		    	if(temp_d->hull)
-		    		print_delunay(temp_d,Atoms,nAtoms);
+		    	//if(temp_d->hull)
+		    		//print_delunay(temp_d,Atoms,nAtoms);
                 if(temp_d->next)
                 {
                     temp_d=temp_d->next;
@@ -2669,49 +2788,92 @@ int main( int argc, char * argv[] )
                     break;
                 }
             }
+
 			cout<<"draw color blue\n";
-		    face *temp_f;
-            temp_f=CH[TYPE].initial;
-            while(1)
-            {
-		    	//if(temp_d->hull)
-		    	print_face(temp_f);
-                if(temp_f->next)
-                {
-                    temp_f=temp_f->next;
-                }
-		    	else
-		    	{
-                    break;
-                }
-            }
+		    //face *temp_f;
+            //temp_f=CH[TYPE].initial;
+			set_of_cvert *dang_edge;
+          //while(1)
+          //{
+		  //	//if(temp_d->hull)
+		  //	///print_face(temp_f);
+          //    if(temp_f->next)
+          //    {
+          //        temp_f=temp_f->next;
+          //    }
+		  //	else
+		  //	{
+          //        break;
+          //    }
+          //}
             //return 0;
             vertice *temp;
             temp=start[TYPE];
             void_vert_count=0;
             while(1)
             {
-				if(temp->D->hull)
-				{
-				    if(inside_delunay(temp,temp->D,Atoms,nAtoms))
-				    {
-						cout<<"draw color yellow\n";
-			  	    	cout<<"draw sphere\t{";
-              	    	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.05\tresolution 100\n";
-				    }
-					else
-					{
-						cout<<"draw color pink\n";
-			  	    	cout<<"draw sphere\t{";
-              	    	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\tradius 0.02\tresolution 100\n";
-					}
-				}
+			    if(temp->D->hull)
+			    {
+					temp->dangling=1;
+			    }
+              //if(temp->is_void==1)
+              //{
+              //    void_vert_count++;
+              //    temp->cluster_index=void_vert_count;
+              //}
 
+                if(temp->next)
+                {
+                    temp=temp->next;
+                }
+                else
+                    break;
+            }
+			int flag=1;
+			int color=0;
+			while(flag)
+			{	
+				
+				temp=start[TYPE];	
+				flag=0;
+				color++;
+				while(temp)
+				{
+					if(temp->dangling)
+					{
+						cout<<"draw color "<<color%16<<"\n";
+						cout<<"draw sphere \t{";
+						cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
+					}
+					if(temp->dangling)
+					{
+						if(!inside_delunay(temp,temp->D,Atoms,nAtoms))
+						{
+							flag=1;
+							for(int i=0;i<temp->v_neigh_count;i++)
+							{
+								temp->neib_vert[i]->dangling=1;
+							}	
+							V->delete_vertice(temp,TYPE);	
+						}
+					}	
+					temp=temp->next;
+				}
+			}
+            //vertice *temp;
+            temp=start[TYPE];
+            void_vert_count=0;
+            while(1)
+            {
                 if(temp->is_void==1)
                 {
                     void_vert_count++;
                     temp->cluster_index=void_vert_count;
                 }
+			////if(	!temp->dangling )
+			////{
+			////	cout<<"????\n";		
+			////}
 
                 if(temp->next)
                 {
@@ -2723,6 +2885,8 @@ int main( int argc, char * argv[] )
             //cout<<void_vert_count<<"\n";
             vertice **cavity_list;
             cavity_list = new (nothrow) vertice*[void_vert_count];
+			int *pocket;
+			pocket = new (nothrow) int[void_vert_count];
             //cout<<"here\n";
             vertice *temp_start;
             temp_start=start[TYPE];
@@ -2733,6 +2897,7 @@ int main( int argc, char * argv[] )
                     if(temp_start->is_void)
                     {
                         cavity_list[i]=temp_start;
+						pocket[i]=0;
                         i++;
                     }
                     if(temp_start->next)
@@ -2790,7 +2955,6 @@ int main( int argc, char * argv[] )
             //cout<<"here end\n";
             ofstream cav;
             cav.open("cav");
-            int color;
             for(int i=0; i<void_vert_count; i++)
             {
                 color=1;
@@ -2798,16 +2962,48 @@ int main( int argc, char * argv[] )
                 for(int j=0; j<void_vert_count; j++)
                     if(cavity_list[j]->cluster_index==i)
                     {
-                        if(color)
-                        {
-                            cav<<"draw color "<<i%16<<"\n";;
-                            color=0;
-                        }
-                        //cav<<"
-                        //cout<<cavity_list[j]->A<<"\t"<<cavity_list[j]->D->A<<"\t"<<cavity_list[j]->D->B<<"\n";
-                        cav<<"draw sphere\t{";
-                        cav<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\t"<<cavity_list[j]->p->z<<"}\tradius\t"<<0.03<<"\t"<<"resolution\t100\n";
+						if(cavity_list[j]->dangling)
+						{
+							pocket[i]=1;
+						}
+                      //if(color)
+                      //{
+                      //    cav<<"draw color "<<i%16<<"\n";;
+                      //    color=0;
+                      //}
+                      ////cav<<"
+                      ////cout<<cavity_list[j]->A<<"\t"<<cavity_list[j]->D->A<<"\t"<<cavity_list[j]->D->B<<"\n";
+                      //cav<<"draw sphere\t{";
+                      //cav<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\t"<<cavity_list[j]->p->z<<"}\tradius\t"<<0.03<<"\t"<<"resolution\t100\n";
                     }
+            }
+            for(int i=0; i<void_vert_count; i++)
+            {
+                color=1;
+                cav<<"#"<<i<<"\n\n";
+				//cav<<"#\t"<<pocket[i]<<"\n";
+				if(pocket[i])
+				{
+					for(int j=0; j<void_vert_count; j++)
+					{
+						if(cavity_list[j]->cluster_index==i)
+						{
+						////if(cavity_list[j]->dangling)
+						////{
+						////	pocket[i]=1;
+						////}
+							if(color)
+							{
+								cav<<"draw color "<<i%16<<"\n";;
+								color=0;
+							}
+							//cav<<"
+							//cout<<cavity_list[j]->A<<"\t"<<cavity_list[j]->D->A<<"\t"<<cavity_list[j]->D->B<<"\n";
+							cav<<"draw sphere\t{";
+							cav<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\t"<<cavity_list[j]->p->z<<"}\tradius\t"<<0.03<<"\t"<<"resolution\t100\n";
+                    	}
+					}
+				}
             }
             double *cav_vol;
             cav_vol= new (nothrow) double[void_vert_count];
@@ -2821,6 +3017,7 @@ int main( int argc, char * argv[] )
                 {
                     if(cavity_list[j]->cluster_index==i)
                     {
+		    			//print_delunay(cavity_list[j]->D,Atoms,nAtoms);
                         site A1,A2,A3,A4;
                         long double E1x,E1y,E1z;
                         long double r1,r2,r3,r4;
@@ -3216,6 +3413,7 @@ int main( int argc, char * argv[] )
                 //cout<<i<<"\t"<<cav_area[i]<<"\t"<<cav_lenght[i]<<"\n";
             }
             cout<<r_cut<<"\t"<<cav_tot<<"\t"<<ca_per_tot<<"\n";
+			return 0;
         }
 
         for(int t=0; t<ntypes; t++)
