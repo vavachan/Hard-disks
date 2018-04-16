@@ -334,7 +334,7 @@ struct atom
     //long double x=0;
     //long double y=0;
     //long double z=0;
-    int neighlist[500];
+    int neighlist[2000];
     int *contigous[50];
     int **conti_index;
     int *part_c[50][50];
@@ -822,21 +822,21 @@ void update_neighbours(atom Atoms[],int nAtoms)
 {
     long double R_CUT;
     //R_CUT=sqrtl(200./(4*3.14*density));
-    R_CUT=powl(20./((4./3.)*3.14*density),1./3.);
+    //R_CUT=powl(20./((4./3.)*3.14*density),1./3.);
     for(int i=0; i<nAtoms-1; i++)
     {
         for(int j=i+1; j<nAtoms; j++)
         {
-            long double drx,dry,drz,dr;
-            drx=Atoms[i].p.x-Atoms[j].p.x;
-            dry=Atoms[i].p.y-Atoms[j].p.y;
-            drz=Atoms[i].p.z-Atoms[j].p.z;
-            drx=(drx-(tilt*PBC*lroundl(dry/twob)));
-            drx=(drx-(twob*PBC*lroundl(drx/twob)));
-            dry=(dry-(twob*PBC*lroundl(dry/twob)));
-            drz=(drz-(twob*PBC*lroundl(drz/twob)));
-            dr=drx*drx+dry*dry+drz*drz;
-            if(dr<R_CUT*R_CUT)
+         // long double drx,dry,drz,dr;
+         // drx=Atoms[i].p.x-Atoms[j].p.x;
+         // dry=Atoms[i].p.y-Atoms[j].p.y;
+         // drz=Atoms[i].p.z-Atoms[j].p.z;
+         // drx=(drx-(tilt*PBC*lroundl(dry/twob)));
+         // drx=(drx-(twob*PBC*lroundl(drx/twob)));
+         // dry=(dry-(twob*PBC*lroundl(dry/twob)));
+         // drz=(drz-(twob*PBC*lroundl(drz/twob)));
+         // dr=drx*drx+dry*dry+drz*drz;
+         // if(dr<R_CUT*R_CUT)
             {
                 Atoms[i].neighlist[Atoms[i].neighbours]=j;
                 Atoms[j].neighlist[Atoms[j].neighbours]=i;
@@ -956,6 +956,73 @@ site cross_product(site a1,site a2)
 	cp.y=a1.z*a2.x-a1.x*a2.z;
 	cp.z=a2.y*a1.x-a1.y*a2.x;
 	return cp;
+}
+long double determinant(long double a[3][3])
+{   
+    return a[0][0]*(a[1][1]*a[2][2]-a[1][2]*a[2][1])-a[0][1]*(a[1][0]*a[2][2]-a[1][2]*a[2][0])+a[0][2]*(a[1][0]*a[2][1]-a[1][1]*a[2][0]);
+}
+site cramer(long double a[3][3],long double b[3])
+{   
+    long double x[3];
+    long double det_a=determinant(a);
+    long double det_a1=0.;
+    long double a_1[3][3];
+////cout<<"[";
+////for(int i=0;i<3;i++)
+////{
+////    cout<<"[";
+////    for(int j=0;j<3;j++)
+////    {
+////        cout<<a[i][j]<<",";
+////        //a_1[i][j]=a[i][j];
+////    }
+////    cout<<"]";
+////    //cout<<"\n";
+////}
+////cout<<"]\n";
+////cout<<"[";
+////for(int i=0;i<3;i++)
+////{
+////    cout<<b[i]<<",";
+////}
+////cout<<"]\n";
+////cout<<det_a<<"\n";
+    
+    for(int i=0;i<3;i++)
+    {
+        for(int j=0;j<3;j++)
+        {
+            for(int k=0;k<3;k++)
+            {
+                a_1[j][k]=a[j][k];
+            }
+        }       
+        for(int j=0;j<3;j++)
+        {
+            a_1[j][i]=b[j]/det_a;
+        }
+      //for(int i=0;i<3;i++)
+      //{
+      //    for(int j=0;j<3;j++)
+      //    {
+      //        cout<<a_1[i][j]<<"\t";
+      //    }
+      //    cout<<"\n";
+      //}
+        //cout<<"\n\n";
+        det_a1=determinant(a_1);
+        //cout<<det_a1<<"\n";
+        x[i]=det_a1;
+    ////for(int j=0;j<3;j++)
+    ////{
+    ////    a_1[j][i]=a[j][i];
+    ////}       
+    }
+    site p;
+    p.x=x[0];
+    p.y=x[1];
+    p.z=x[2];
+    return p;
 }
 site center_of_triangle(site A1,site A2,site A3,long double rS,long double rA,long double rB)
 {
@@ -1575,92 +1642,44 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             DISA=sqrtl(p*p+q*q+r*r);
             DISB=sqrtl(Sx*Sx+Sy*Sy+Sz*Sz);
             DIS=sqrtl(x*x+y*y+z*z);
-            l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
-            xA=l/DISA*p;
-            yA=l/DISA*q;
-            zA=l/DISA*r;
-            l=0.5*(DIS+(rS*rS-rN*rN)/DIS);
-            xB=l/DIS*x;
-            yB=l/DIS*y;
-            zB=l/DIS*z;
-            l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
-            xC=l/DISB*Sx;
-            yC=l/DISB*Sy;
-            zC=l/DISB*Sz;
-            long double v1x,v1y,v1z;
-            long double v2x,v2y,v2z;
-            long double v3x,v3y,v3z;
-            v1x=yA*zB-zA*yB;
-            v1y=zA*xB-xA*zB;
-            v1z=xA*yB-yA*xB;
-            v2x=yC*zA-zC*yA;
-            v2y=zC*xA-xC*zA;
-            v2z=xC*yA-yC*xA;
-            v3x=yC*zB-zC*yB;
-            v3y=zC*xB-xC*zB;
-            v3z=xC*yB-yC*xB;
-            long double a1,b1,c1;
-            long double a2,b2,c2;
-            long double a3,b3,c3;
-            long double a4,b4,c4;
-            long double a5,b5,c5;
-            long double a6,b6,c6;
-            a1=v1y*zA-v1z*yA;
-            b1=v1z*xA-v1x*zA;
-            c1=v1x*yA-v1y*xA;
-            a2=v1y*zB-v1z*yB;
-            b2=v1z*xB-v1x*zB;
-            c2=v1x*yB-v1y*xB;
-            a3=v2y*zC-v2z*yC;
-            b3=v2z*xC-v2x*zC;
-            c3=v2x*yC-v2y*xC;
-            a4=v2y*zA-v2z*yA;
-            b4=v2z*xA-v2x*zA;
-            c4=v2x*yA-v2y*xA;
-            a5=v3y*zC-v3z*yC;
-            b5=v3z*xC-v3x*zC;
-            c5=v3x*yC-v3y*xC;
-            a6=v3y*zB-v3z*yB;
-            b6=v3z*xB-v3x*zB;
-            c6=v3x*yB-v3y*xB;
-            long double t1,t2,X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3;
-            t2=(b1*xA-a1*yA-b1*xB+a1*yB)/(b1*a2-a1*b2);
+			long double B[3],A[3][3];
+			B[0]=(DISA*DISA+rS*rS-rA*rA)/2.;
+			B[1]=(DISB*DISB+rS*rS-rB*rB)/2.;
+			B[2]=(DIS*DIS+rS*rS-rN*rN)/2.;
+			A[0][0]=p;
+			A[0][1]=q;
+			A[0][2]=r;
+			A[1][0]=Sx;
+			A[1][1]=Sy;
+			A[1][2]=Sz;
+			A[2][0]=x;
+			A[2][1]=y;
+			A[2][2]=z;
+			site center;
+			center=cramer(A,B);
+   			long double norm=sqrtl(ax*ax+ay*ay+az*az);
+   			X=center.x;
+  			Y=center.y;
+   			Z=center.z;
+      		long double Y_AXIS;//=sqrtl(powl(X-X2,2)+powl(Y-Y2,2)+powl(Z-Z2,2));
+  ////cout<<Y_AXIS<<" 1\n";
+      		Y_AXIS=1./norm*(ax*X+ay*Y+az*Z);
+      		Y_AXIS=abs(Y_AXIS);
+      //cout<<Y_AXIS<<" 2\n";
+      		int sign_C;
+      		long double overlap=(X*ax+Y*ay+Z*az);
+		    if(overlap<0.)
+		        sign_C=1;
+		    else
+		        sign_C=-1;
+		    if(sign_C!=sign_N)
+		    {
+		        Y_AXIS=-1.*Y_AXIS;
+		    }
+		    X=X+a;
+		    Y=Y+b;
+		    Z=Z+c;
 
-            X1=xB+a2*t2;
-            Y1=yB+b2*t2;
-            Z1=zB+c2*t2;
-            t2=(b3*xC-a3*yC-b3*xA+a3*yA)/(b3*a4-a3*b4);
-
-            X2=xA+a4*t2;
-            Y2=yA+b4*t2;
-            Z2=zA+c4*t2;
-            t2=(b5*xC-a5*yC-b5*xB+a5*yB)/(b5*a6-a5*b6);
-
-            X3=xB+a6*t2;
-            Y3=yB+b6*t2;
-            Z3=zB+c6*t2;
-            t2=(v1y*X1-v1x*Y1-v1y*X2+v1x*Y2)/(v1y*v2x-v1x*v2y);
-
-            X=X2+v2x*t2;
-            Y=Y2+v2y*t2;
-            Z=Z2+v2z*t2;
-            tan_sq=X*X+Y*Y+Z*Z-rS*rS;
-            long double Y_AXIS=sqrtl(powl(X-X2,2)+powl(Y-Y2,2)+powl(Z-Z2,2));
-            int sign_C;
-            long double overlap=(X*ax+Y*ay+Z*az);
-            if(overlap<0.)
-                sign_C=1;
-            else
-                sign_C=-1;
-            if(sign_C!=sign_N)
-                Y_AXIS=-1.*Y_AXIS;
-            X=X+a;
-            Y=Y+b;
-            Z=Z+c;
-            if(debug)
-            {
-                cout<<ATOM->neighlist[j]<<"\t"<<Y_AXIS<<"\n";
-            }
             if(Y_AXIS<Y_MIN)
             {
                 ;
@@ -1669,15 +1688,6 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
                 circx=X;
                 circy=Y;
                 circz=Z;
-                X1_s=X1+a;
-                Y1_s=Y1+b;
-                Z1_s=Z1+c;
-                X2_s=X2+a;
-                Y2_s=Y2+b;
-                Z2_s=Z2+c;
-                X3_s=X3+a;
-                Y3_s=Y3+b;
-                Z3_s=Z3+c;
             }
         }
     }//j loop
@@ -2607,12 +2617,12 @@ int main( int argc, char * argv[] )
     //The file with configurations
     std::ifstream infile(argv[1]);///dat_trial");//config_2000_0.38_2_0.70.dat");
     //No of Atoms
-    nAtoms=500;
+    nAtoms=1001;
     cout<<std::setprecision(5);
     //No of configurations in the input file
     config_count=1;
     //No of types of particle
-    int ntypes=2;
+    int ntypes=5;
     int SAM=0;
 
     long double b,c,d,e,f;
@@ -2621,8 +2631,15 @@ int main( int argc, char * argv[] )
     Atoms = new (nothrow) atom[nAtoms];
     initialization(Atoms,nAtoms,ntypes);
 
-    radius[0]=0.5;
-    radius[1]=0.7;
+  //radius[0]=0.5;
+  //radius[1]=0.7;
+
+	radius[0]=1.4;
+	radius[1]=1.5;
+	radius[2]=1.7;
+	radius[3]=1.85;
+	radius[4]=2.0;
+
     if(3*2*radius[1]<box)
     {
         LAYER_CUT=3*2*radius[1]-box;
@@ -2663,7 +2680,7 @@ int main( int argc, char * argv[] )
             snprintf(buffer,sizeof(char)*64,"free_dist_%f",float(tilt));//_%d_%f.dat",int(nAtoms),Press);
             fdist.open(buffer);
         }
-        while(infile>>b>>c>>d>>e>>f)
+        while(infile>>b>>c>>d>>e)
         {
             //while(infile>>b>>c>>d>>e)
             {
@@ -2759,7 +2776,7 @@ int main( int argc, char * argv[] )
 
         //This a loop over the types ,  if you have 2 kinds of atoms you have to do voronoi tessellation twice
         //for(int TYPE=0; TYPE<ntypes; TYPE++)
-        for(int TYPE=1; TYPE<ntypes; TYPE++)
+        for(int TYPE=0; TYPE<ntypes; TYPE++)
         {
             snprintf(buffer,sizeof(char)*64,"vor_%d",int(TYPE));//_%d_%f.dat",int(nAtoms),Press);
             ofstream vor;
@@ -2769,48 +2786,54 @@ int main( int argc, char * argv[] )
             //This is the loop over all atoms: we construct the voronoi cell for each atom
             for(SAM=0 ; SAM< nAtoms; SAM++)
             {
+				cout<<"##\t"<<SAM<<"\n";
+			  //if(SAM==731 && !Atoms[SAM].D_FIRST[TYPE])
+			  //{
+			  //   cout<<"whewq\n";    
+			  //}
+
                 if(!Atoms[SAM].D_FIRST[TYPE])
                 {
                     first_delunay(&(Atoms[SAM]),Atoms,TYPE);
                 }
                 complete_del_2(&(Atoms[SAM]),Atoms,nAtoms,TYPE);
             }
-		    cout<<"draw color red\n";
-		    
-		    delunay *temp_d;
-            temp_d=FULLSETD[TYPE].initial;
-            while(1)
-            {
-		    	if(temp_d->hull)
-		    		print_delunay(temp_d,Atoms,nAtoms);
-                if(temp_d->next)
-                {
-                    temp_d=temp_d->next;
-                }
-		    	else
-		    	{
-                    break;
-                }
-            }
+		 // cout<<"draw color red\n";
+		 // 
+		 // delunay *temp_d;
+         // temp_d=FULLSETD[TYPE].initial;
+         // while(1)
+         // {
+		 // 	if(temp_d->hull)
+		 // 		print_delunay(temp_d,Atoms,nAtoms);
+         //     if(temp_d->next)
+         //     {
+         //         temp_d=temp_d->next;
+         //     }
+		 // 	else
+		 // 	{
+         //         break;
+         //     }
+         // }
 
-		    cout<<"mol new\n";
-		    cout<<"draw material Transparent\n";
-		    cout<<"draw color blue\n";
-		    face *temp_f;
-            temp_f=CH[TYPE].initial;
-            while(1)
-            {
-		    	//if(temp_d->hull)
-		    	print_face(temp_f);
-                if(temp_f->next)
-                {
-                    temp_f=temp_f->next;
-                }
-		    	else
-		    	{
-                    break;
-                }
-            }
+		 // cout<<"mol new\n";
+		 // cout<<"draw material Transparent\n";
+		 // cout<<"draw color blue\n";
+		 // face *temp_f;
+         // temp_f=CH[TYPE].initial;
+         // while(1)
+         // {
+		 // 	//if(temp_d->hull)
+		 // 	print_face(temp_f);
+         //     if(temp_f->next)
+         //     {
+         //         temp_f=temp_f->next;
+         //     }
+		 // 	else
+		 // 	{
+         //         break;
+         //     }
+         // }
             //return 0;
             vertice *temp;
             temp=start[TYPE];
@@ -2821,8 +2844,19 @@ int main( int argc, char * argv[] )
 			    {
 					temp->dangling=1;
 			    }
-				
-              //if(temp->is_void==1)
+			
+       
+		       if(temp->v_neigh_count!=4 && temp->dangling==0)
+    		   {
+		    		V->delete_vertice(temp,TYPE);	
+				    //cout<<"#\t"<<temp->D->AT[0]<<"\t"<<temp->D->AT[1]<<"\t"<<temp->D->AT[2]<<"\t"<<temp->D->AT[3]<<"\n";
+				////for(int i=0;i<temp->v_neigh_count;i++)
+				////{
+				////	cout<<"draw line\t{";
+				////	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t{\t";//radius 0.05\t resolution 10\n";
+				////	cout<<temp->neib_vert[i]->p->x<<"\t"<<temp->neib_vert[i]->p->y<<"\t"<<temp->neib_vert[i]->p->z<<"}\n";// radius 0.05\t resolution 10\n";
+				////}
+       		   }		
               //{
               //    void_vert_count++;
               //    temp->cluster_index=void_vert_count;
@@ -2878,6 +2912,10 @@ int main( int argc, char * argv[] )
 			////if(inside_delunay(temp,temp->D,Atoms,nAtoms) && temp->dangling==0 && temp->is_void);
 			////{
 			////	cout<<"???\n";
+			////}
+		    ////if(temp->v_neigh_count!=4 && temp->dangling==0)
+    		////{
+			////	cout<<"error\n";
 			////}
 				temp=temp->next;
 			}
