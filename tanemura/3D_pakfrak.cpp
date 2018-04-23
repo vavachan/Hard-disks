@@ -1178,6 +1178,10 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             {
                 DIS_MIN=tan_sq;
                 DIS_atom=ATOM->neighlist[i];
+				circx_s=center.x+L.p.x;
+				circy_s=center.y+L.p.y;
+				circz_s=center.z+L.p.z;
+				
             }
         }
     }
@@ -1195,9 +1199,9 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     D->AT[2]=EV1[2];
     D->AT[3]=EV1[3];
 
-    D->circum_x=center.x;
-    D->circum_y=center.y;
-    D->circum_z=center.z;
+    D->circum_x=circx_s;
+    D->circum_y=circy_s;
+    D->circum_z=circz_s;
 
     create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
 }
@@ -2408,14 +2412,14 @@ int main( int argc, char * argv[] )
 				  //for(int i=0;i<temp->v_neigh_count;i++)
 				  //{
 		    	  //	cout<<"draw line\t{";
-		    	  //	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t{";
+		    	  	//cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\n";
 		    	  //	cout<<temp->neib_vert[i]->p->x<<"\t"<<temp->neib_vert[i]->p->y<<"\t"<<temp->neib_vert[i]->p->z<<"}\n";
 				  //	
 				  //}	
                     void_vert_count=void_vert_count+1;
                 }
-				if(temp->D->hull==0 && temp->v_neigh_count!=4)
-					cout<<"error\n";
+				//if(temp->D->hull==0 && temp->v_neigh_count!=4)
+					//cout<<"error\n";
 
                 if(temp->next)
                 {
