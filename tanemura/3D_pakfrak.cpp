@@ -22,7 +22,7 @@ long double DMIN=0.000000000001;//std::numeric_limits<long double>::min();
 long double epsilon=0.00000000000;
 int void_vert_count=0;
 int **contigous;
-int PBC=0;
+int PBC=1;
 long double *radius;
 long double convex_vol=0.;
 int nAtoms=0;
@@ -35,6 +35,12 @@ struct site
     long double y=0;
     long double z=0;
 };
+long double distancesq(site p,site q)
+{
+	long double dist=0.;
+	dist=(p.x-q.x)*(p.x-q.x)+(p.y-q.y)*(p.y-q.y)+(p.z-q.z)*(p.z-q.z);
+	return dist;
+}
 struct vect
 {
     long double x=0;
@@ -517,55 +523,6 @@ void vert_list::display_conn(vertice *ve)
     else
         return;
 
-}
-void insert_site(vertice *EV,vertice *v,int debug=0)
-{
-    int flag;
-    //cout<<"here\n";
-    if(debug)
-    {
-        cout<<"insert\n";
-        display_SITE(v->p);
-        cout<<"vetfoc\n"<<flush;
-        display_SITE(EV->p);
-    }
-    flag=compare(EV->p,v->p);
-    if(debug)
-    {
-        cout<<"flag\t"<<flag<<"\n";
-    }
-    if(flag==1)
-    {
-        if(EV->next)
-        {
-            insert_site(EV->next,v,debug);
-        }
-        else
-        {
-            EV->next=v;
-            v->prev=EV;
-            v->next=nullptr;
-        }
-    }
-    else if (flag==-1)
-    {
-        v->next=EV;
-        if(EV->prev)
-        {
-            v->prev=EV->prev;
-            EV->prev->next=v;
-        }
-        else
-            sites=v;
-        EV->prev=v;
-        //	cout<<"here2?\n";
-    }
-    else if (flag==0)
-    {
-        //cout<<"vertice already exists\n";
-        delete v->p;
-        delete v;
-    }
 }
 void update_neighbours(atom Atoms[],int nAtoms)
 {
@@ -1126,85 +1083,13 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             atom L=*ATOM;
             atom M=Atoms[nearest];
             atom R=Atoms[ATOM->neighlist[i]];
-            long double ax=M.p.x-L.p.x;
-            long double ay=M.p.y-L.p.y;
-            long double az=M.p.z-L.p.z;
-            long double bx=R.p.x-L.p.x;
-            long double by=R.p.y-L.p.y;
-            long double bz=R.p.z-L.p.z;
-            ax=(ax-(tilt*PBC*lroundl(ay/twob)));
-            ax=(ax-(twob*PBC*lroundl(ax/twob)));
-            ay=(ay-(twob*PBC*lroundl(ay/twob)));
-            az=(az-(twob*PBC*lroundl(az/twob)));
-            bx=(bx-(tilt*PBC*lroundl(by/twob)));
-            bx=(bx-(twob*PBC*lroundl(bx/twob)));
-            by=(by-(twob*PBC*lroundl(by/twob)));
-            bz=(bz-(twob*PBC*lroundl(bz/twob)));
-            long double rA,rS,rB;
-            long double XA,YA,ZA,XB,YB,ZB;
-            long double xA,yA,zA,xB,yB,zB;
-            long double l;
-            long double DISA;
-            long double DISB;
-            long double MA,MB,INMA,INMB;
-            long double CA,CB;
-            long double tan_sq;
-            XA=ax;
-            YA=ay;
-            ZA=az;
-            XB=bx;
-            YB=by;
-            ZB=bz;
-            DISA=sqrtl(XA*XA+YA*YA+ZA*ZA);
-            DISB=sqrtl(XB*XB+YB*YB+ZB*ZB);
-            rA=M.radius+r_cut;
-            rB=R.radius+r_cut;
-            rS=L.radius+r_cut;
-            l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
-            xA=l/DISA*XA;
-            yA=l/DISA*YA;
-            zA=l/DISA*ZA;
-            l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
-//			cout<<l<<"\t"<<rB<<"\t"<<DISB<<"\n";
-            xB=l/DISB*XB;
-            yB=l/DISB*YB;
-            zB=l/DISB*ZB;
-            long double a1,b1,c1,a2,b2,c2,a,b,c;
-            a=zB*yA-zA*yB;
-            b=zA*xB-xA*zB;
-            c=yB*xA-yA*xB;
-            a1=c*yA-zA*b;
-            b1=zA*a-xA*c;
-            c1=b*xA-yA*a;
-            a2=c*yB-zB*b;
-            b2=zB*a-xB*c;
-            c2=b*xB-yB*a;
-            long double t1,t2;
-            t2=(b1*xA-a1*yA-b1*xB+a1*yB)/(b1*a2-a1*b2);
-            t1=(xB-xA+a2*t2)/a1;
-            X=xB+a2*t2;
-            Y=yB+b2*t2;
-            Z=zB+c2*t2;
-            tan_sq=X*X+Y*Y+Z*Z-rS*rS;
+			site center;
+			center=center_of_triangle(L.p,M.p,R.p,L.radius,M.radius,R.radius);
+			long double tan_sq=distancesq(center,L.p)-L.radius*L.radius;	
             if(DIS_MIN > tan_sq)
             {
                 DIS_MIN=tan_sq;
                 DIS_atom=ATOM->neighlist[i];
-                circx=X;
-                circy=Y;
-                circz=Z;
-                norm_x=a;
-                norm_y=b;
-                norm_z=c;
-                binv1=0;
-                midbx=xB+L.p.x;
-                midby=yB+L.p.y;
-                midbz=zB+L.p.z;
-                lmin=l;
-                if(DISB>(rB+rS+2*r_cut))
-                {
-                    binv1=1;
-                }
             }
         }
     }
@@ -1218,6 +1103,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     atom L=*ATOM;
     atom M=Atoms[nearest];
     atom N=Atoms[DIS_atom];
+	site center;
     for(int i=0; i<ATOM->neighbours; i++)
     {
         if(ATOM->neighlist[i]!=nearest && ATOM->neighlist[i]!=A3)
@@ -1226,12 +1112,15 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             long double ax=M.p.x-L.p.x;
             long double ay=M.p.y-L.p.y;
             long double az=M.p.z-L.p.z;
+
             long double bx=R.p.x-L.p.x;
             long double by=R.p.y-L.p.y;
             long double bz=R.p.z-L.p.z;
+
             long double cx=N.p.x-L.p.x;
             long double cy=N.p.y-L.p.y;
             long double cz=N.p.z-L.p.z;
+
             ax=(ax-(tilt*PBC*lroundl(ay/twob)));
             ax=(ax-(twob*PBC*lroundl(ax/twob)));
             ay=(ay-(twob*PBC*lroundl(ay/twob)));
@@ -1244,79 +1133,51 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             cx=(cx-(twob*PBC*lroundl(cx/twob)));
             cy=(cy-(twob*PBC*lroundl(cy/twob)));
             cz=(cz-(twob*PBC*lroundl(cz/twob)));
-            long double rA,rS,rB;
-            long double XA,YA,ZA,XB,YB,ZB;
+            long double rA,rS,rB,rN;
+            long double XA,YA,ZA,XB,YB,ZB,XC,YC,ZC;
             long double xA,yA,zA,xB,yB,zB;
             long double l;
             long double DISA;
             long double DISB;
+            long double DISC;
             long double MA,MB,INMA,INMB;
             long double CA,CB;
             long double tan_sq;
+			long double B[3],A[3][3];
             XA=ax;
             YA=ay;
             ZA=az;
             XB=bx;
             YB=by;
             ZB=bz;
-            DISA=sqrtl(XA*XA+YA*YA+ZA*ZA);
-            DISB=sqrtl(XB*XB+YB*YB+ZB*ZB);
-            //MA=YA/XA;
-            //MB=YB/XB;
-            //INMA=-1./MA;
-            //INMB=-1./MB;
+            XC=cx;
+            YC=cy;
+            ZC=cz;
             rA=M.radius+r_cut;
             rB=R.radius+r_cut;
             rS=L.radius+r_cut;
-            l=0.5*(DISA+(rS*rS-rA*rA)/DISA);
-            xA=l/DISA*XA;
-            yA=l/DISA*YA;
-            zA=l/DISA*ZA;
-            l=0.5*(DISB+(rS*rS-rB*rB)/DISB);
-            xB=l/DISB*XB;
-            yB=l/DISB*YB;
-            zB=l/DISB*ZB;
-            long double a1,b1,c1,a2,b2,c2,a,b,c;
-            a=zB*yA-zA*yB;
-            b=zA*xB-xA*zB;
-            c=yB*xA-yA*xB;
-            a1=c*yA-zA*b;
-            b1=zA*a-xA*c;
-            c1=b*xA-yA*a;
-            a2=c*yB-zB*b;
-            b2=zB*a-xB*c;
-            c2=b*xB-yB*a;
-            long double t1,t2,X1,Y1,Z1;
-            t2=(b1*xA-a1*yA-b1*xB+a1*yB)/(b1*a2-a1*b2);
-            t1=(xB-xA+a2*t2)/a1;
-            X=xB+a2*t2;
-            Y=yB+b2*t2;
-            Z=zB+c2*t2;
-            t2=(norm_y*circx_s-norm_x*circy_s-norm_y*X+norm_x*Y)/(norm_y*a-norm_x*b);
-            t1=(X-circx_s+a*t2)/norm_x;
-            X1=X+a*t2;
-            Y1=Y+b*t2;
-            Z1=Z+c*t2;
-            X1=circx_s+norm_x*t1;
-            Y1=circy_s+norm_y*t1;
-            Z1=circz_s+norm_z*t1;
-            tan_sq=X1*X1+Y1*Y1+Z1*Z1-rS*rS;
+			rN=N.radius+r_cut;
+            DISA=sqrtl(XA*XA+YA*YA+ZA*ZA);
+            DISB=sqrtl(XB*XB+YB*YB+ZB*ZB);
+            DISC=sqrtl(XC*XC+YC*YC+ZC*ZC);
+			B[0]=(DISA*DISA+rS*rS-rA*rA)/2.;
+			B[1]=(DISB*DISB+rS*rS-rB*rB)/2.;
+			B[2]=(DISC*DISC+rS*rS-rN*rN)/2.;
+			A[0][0]=XA;
+			A[0][1]=YA;
+			A[0][2]=ZA;
+			A[1][0]=XB;
+			A[1][1]=YB;
+			A[1][2]=ZB;
+			A[2][0]=XC;
+			A[2][1]=YC;
+			A[2][2]=ZC;
+			center=cramer(A,B);
+            tan_sq=center.x*center.x+center.y*center.y+center.z*center.z-rS*rS;
             if(DIS_MIN > tan_sq)
             {
                 DIS_MIN=tan_sq;
                 DIS_atom=ATOM->neighlist[i];
-                circx=X1+L.p.x;
-                circy=Y1+L.p.y;
-                circz=Z1+L.p.z;
-                binv1=0;
-                midbx=xB+L.p.x;
-                midby=yB+L.p.y;
-                midbz=zB+L.p.z;
-                lmin=l;
-                if(DISB>(rB+rS+2*r_cut))
-                {
-                    binv1=1;
-                }
             }
         }
     }
@@ -1334,9 +1195,9 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     D->AT[2]=EV1[2];
     D->AT[3]=EV1[3];
 
-    D->circum_x=circx;
-    D->circum_y=circy;
-    D->circum_z=circz;
+    D->circum_x=center.x;
+    D->circum_y=center.y;
+    D->circum_z=center.z;
 
     create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
 }
@@ -1515,10 +1376,8 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
     long double rA,rB,rC;
     for(int i=0; i<ATOM->conti; i++)
     {
-	////cout<<"draw sphere\t{";
-	////cout<<Atoms[ATOM->contigous[i]].p.x<<"\t"<<Atoms[ATOM->contigous[i]].p.y<<"\t"<<Atoms[ATOM->contigous[i]].p.z<<"}\tradius\t"<<Atoms[ATOM->contigous[i]].radius+r_cut<<"\tresolution 25\n";
-        //cout<<i<<"\n";
         int s=0;
+
         for(int p=0; p<ATOM->conti; p++)
         {
             s=s+ATOM->part_c[i][p];
@@ -1526,7 +1385,7 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 
         for(int j=0; j<ATOM->conti; j++)
         {
-            //cout<<j<<" j \n";
+
             if(i!=j)
             {
                 if(ATOM->part_c[i][j]==1)
@@ -1591,52 +1450,7 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 
 											vertice *temp_vert_o=nullptr;
 											vertice *temp_vert_d=nullptr;
-											//THe D_ONE->circum_x/y are the co-ordinates of the voronoi vertice that is defined by the delunay triangle D_ONE
-										////vertice *temp_v=nullptr;
-										////vertice *temp_v2=nullptr;
-										////temp_v=new vertice;
-										////temp_v->p=new site;
-										////temp_v->p->x=D_ONE->circum_x;
-										////temp_v->p->y=D_ONE->circum_y;
-										////temp_v->p->z=D_ONE->circum_z;
-										////temp_v->D=D_TWO;
-										////V->insert_vertice(temp_v,TYPE);
-										////temp_vert_o=D_ONE->v;
-										//////And we add them to the list of vertices / again in descending order
-										////temp_v2=new vertice;
-										////temp_v2->p=new site;
-										////temp_v2->p->x=D_TWO->circum_x;
-										////temp_v2->p->y=D_TWO->circum_y;
-										////temp_v2->p->z=D_TWO->circum_z;
-										////temp_v2->D=D_TWO;
-										////V->insert_vertice(temp_v2,TYPE);
-										////temp_vert_d=temp_v2;
-////										if(!start)
-////										{
-////											start=new vertice;
-////											start->p=new site;
-////											start->p->x=D_ONE->circum_x;
-////											start->p->y=D_ONE->circum_y;
-////											start->p->z=D_ONE->circum_z;
-////											start->D=D_ONE;
-////											temp_vert_o=start;
-////										}
-////										else
-////										{
-////											vertice *temp_v=nullptr;
-////											temp_v=new vertice;
-////											temp_v->p=new site;
-////											temp_v->p->x=D_ONE->circum_x;
-////											temp_v->p->y=D_ONE->circum_y;
-////											temp_v->p->z=D_ONE->circum_z;
-////											temp_v->D=D_ONE;
-////											temp_v=V->insert_vertice(start,temp_v,TYPE);
-////											temp_vert_o=temp_v;
-////										}
 
-////										vertice *temp_v=nullptr;
-											//temp_v=V->insert_vertice(start,temp_v,TYPE);
-											//temp_vert_d=temp_v;
 											temp_vert_o=D_ONE->v;
 											temp_vert_d=D_TWO->v;
 
@@ -2408,7 +2222,7 @@ int main( int argc, char * argv[] )
     //No of configurations in the input file
     config_count=1;
     //No of types of particle
-    int ntypes=4;
+    int ntypes=2;
     int SAM=0;
 
     long double b,c,d,e,f;
@@ -2417,13 +2231,13 @@ int main( int argc, char * argv[] )
     Atoms = new (nothrow) atom[nAtoms];
     initialization(Atoms,nAtoms,ntypes);
 
-  //radius[0]=0.5;
-  //radius[1]=0.7;
+    radius[0]=0.5;
+    radius[1]=0.7;
 
-    radius[0]=1.52;
-    radius[1]=1.55;
-    radius[2]=1.7;
-    radius[3]=1.8;
+ // radius[0]=1.52;
+ // radius[1]=1.55;
+ // radius[2]=1.7;
+ // radius[3]=1.8;
 
     if(3*2*radius[1]<box)
     {
@@ -2548,7 +2362,7 @@ int main( int argc, char * argv[] )
 			int max_conti_index=-1;
             for(SAM=0; SAM< nAtoms; SAM++)
             {
-			  cout<<"##\t"<<SAM<<"\n";
+			  //cout<<"##\t"<<SAM<<"\n";
 			  //cout<<"draw color red\n";
 			  //cout<<"draw sphere\t{";
 			  //cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<Atoms[SAM].radius+r_cut<<"\tresolution 25\n";
@@ -2759,18 +2573,24 @@ int main( int argc, char * argv[] )
             }
 			long double uni_sphere=0.;
 			long double sum_sphere=0.;
+			int borat=0;
 			for(int i=0;i<nAtoms;i++)
 			{
 				if(!Atoms[i].bor)
 				{
 					uni_sphere=uni_sphere+Atoms[i].vor_vol;
 					sum_sphere=sum_sphere+4./3.*M_PI*powl(Atoms[i].radius+r_cut,3);
+					//cout<<Atoms[i].p.x<<"\t"<<Atoms[i].p.y<<"\t"<<Atoms[i].p.z<<"\t"<<Atoms[i].radius<<"\n";
 					//cout<<i<<"\t"<<4./3.*M_PI*powl(Atoms[i].radius+r_cut,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
+				}
+				else
+				{
+					borat=borat+1;
 				}
 				//cout<<4./3.*M_PI*powl(Atoms[i].radius,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
 			}
 			cout<<std::setprecision(16)<<"\n";
-			cout<<uni_sphere<<"\t"<<convex_vol<<"\t"<<sum_sphere<<"\n";	
+			cout<<uni_sphere<<"\t"<<convex_vol<<"\t"<<sum_sphere<<"\t"<<uni_sphere/convex_vol<<"\t"<<borat<<"\t"<<borat*1./nAtoms<<"\n";	
           //double cav_tot=0.;
           //double ca_per_tot=0.;
           //for(int i=0; i<void_vert_count; i++)
