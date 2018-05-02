@@ -317,7 +317,6 @@ void vert_list::insert_vertice(vertice *v,int type,int debug=0)
 		end->next=v;
 		v->prev=end;
 		end=v;
-		
 	}
 }
 void vert_list::delete_vertice(vertice *v,int type,int debug=0)
@@ -2321,7 +2320,7 @@ int main( int argc, char * argv[] )
 				//if(SAM==24 || SAM==456 || SAM==487 || SAM==531 || SAM==104 || SAM==41 || SAM==123 || SAM == 135 || SAM==463 || SAM==824 || SAM==67 || SAM==666 )
 				{
 				  //cout<<"draw color red\n";
-				  //  cout<<"##\t"<<SAM<<"\n";
+				    cout<<"##\t"<<SAM<<"\n";
 				////cout<<"draw sphere\t{";
 				//////cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<Atoms[SAM].radius+r_cut<<"\tresolution 25\n";
 				////cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<0.3<<"\tresolution 25\n";
@@ -2482,7 +2481,7 @@ int main( int argc, char * argv[] )
                 else
                     break;
             }
-            cout<<void_vert_count<<"\n";
+            //cout<<void_vert_count<<"\n";
             vertice **cavity_list=nullptr;
             cavity_list = new (nothrow) vertice*[void_vert_count];
 		    int *pocket;
@@ -2759,7 +2758,7 @@ int main( int argc, char * argv[] )
             for(int i=0; i<void_vert_count; i++)
             {
 			    if(cav_vol[i])
-                	cout<<i<<"\t"<<cav_vol[i]<<"\n";
+                	cout<<i<<"\t"<<cav_vol[i]<<"\t"<<resno<<"\t"<<pocket[i]<<"\n";
                 cav_tot=cav_tot+cav_vol[i];
                 ca_per_tot=ca_per_tot+cav_area[i];
                 //cout<<i<<"\t"<<cav_area[i]<<"\t"<<cav_lenght[i]<<"\n";
