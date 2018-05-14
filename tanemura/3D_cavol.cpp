@@ -272,7 +272,7 @@ public :
 	face *initial=nullptr;
 	face *end=nullptr;
 	void insert_face(face *f);
-}CH;
+}CH,solid_wall;
 
 void convex_hull :: insert_face(face *f1)
 {
@@ -447,23 +447,33 @@ void update_neighbours(atom Atoms[],int nAtoms)
         }
     }
 }
-void print_face(face *f)
+void print_face(face *f,int trans=0)
 {
+	if(trans)
+	{
+		cout<<"mol new\n";
+		cout<<"draw material Transparent\n";
+	}
+	else
+	{
+		cout<<"mol new\n";
+		cout<<"draw material Opaque\n";
+	}
 	cout<<"draw color blue\n";
 	cout<<"draw triangle \t{";
 	cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
 	cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\t{";
 	cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
-	cout<<"draw color black\n";
-	cout<<"draw line\t{";
-	cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
-	cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\n";
-	cout<<"draw line\t{";
-	cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
-	cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
-	cout<<"draw line\t{";
-	cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\t{";
-	cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
+////cout<<"draw color black\n";
+////cout<<"draw line\t{";
+////cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
+////cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\n";
+////cout<<"draw line\t{";
+////cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
+////cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
+////cout<<"draw line\t{";
+////cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\t{";
+////cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
 }
 void print_delunay_solid(delunay *D,atom Atoms[],int TYPE)
 {
@@ -1624,16 +1634,57 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 													ATOM->D3bondinvoid[j][i]=1;
 												}
 											}
+											atom* Ai;
+											atom* Aj;
+											atom* Ak;
 
-									////	cout<<"draw line\t{";
-									////	cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"}\t{";
-									////	cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"}\n";
+											Ai=&(Atoms[ATOM->contigous[i]]);
+											Aj=&(Atoms[ATOM->contigous[j]]);
+											Ak=&(Atoms[ATOM->contigous[k]]);
+											if(temp_vert_o->is_void && !temp_vert_d->is_void)
+											{
+												face *f=nullptr;	
+												f= new face;
+												f->A1=ATOM->p;
+												f->A2=Ai->p;
+												f->A3=Aj->p;
+												f->B=Ak->p;
+												solid_wall.insert_face(f);
+											
+											}
+											if(!temp_vert_o->is_void && temp_vert_d->is_void)
+											{
+												face *f=nullptr;	
+												f= new face;
+												f->A1=ATOM->p;
+												f->A2=Ai->p;
+												f->A3=Aj->p;
+												f->B=Ak->p;
+												solid_wall.insert_face(f);
+											}
+										  //if(temp_vert_o->is_void && temp_vert_d->is_void && temp_vert_d->D->hull)
+										  //{
+										  //	face *f=nullptr;	
+										  //	f= new face;
+										  //	f->A1=ATOM->p;
+										  //	f->A2=Ai->p;
+										  //	f->A3=Aj->p;
+										  //	f->B=Ak->p;
+										  //	solid_wall.insert_face(f);
+										  //}
+										////if(temp_vert_o->is_void && temp_vert_d->is_void)
+										////{
+										////	cout<<"draw color red\n";
+										////	cout<<"draw line\t{";
+										////	cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"}\t{";
+										////	cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"}\n";
+										////}
 
 											add_connected(temp_vert_o,temp_vert_d,ATOM->D3bondinvoid[i][j]);
 											add_connected(temp_vert_d,temp_vert_o,ATOM->D3bondinvoid[i][j]);
 
-											atom* Ai;
-											atom* Aj;
+										////atom* Ai;
+										////atom* Aj;
 											Ai=&(Atoms[ATOM->contigous[i]]);
 											Aj=&(Atoms[ATOM->contigous[j]]);
 											ATOM->bond_c[i][j]=1;
@@ -1670,10 +1721,15 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 											Ai->bond_c[Ai->conti_index[Aj->index]][Ai->conti_index[ATOM->index]]=1;
 											Aj->bond_c[Aj->conti_index[Ai->index]][Aj->conti_index[ATOM->index]]=1;
 											face *f=nullptr;	
+											face *f_sw=nullptr;	
 											f= new face;
 											f->A1=ATOM->p;
 											f->A2=Ai->p;
 											f->A3=Aj->p;
+											f_sw= new face;
+											f_sw->A1=ATOM->p;
+											f_sw->A2=Ai->p;
+											f_sw->A3=Aj->p;
 											f->B=Ak->p;
 											if(!ATOM->bor)
 											{
@@ -1688,6 +1744,14 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 												Aj->bor=1;
 											}
 											CH.insert_face(f);
+										    if(D_ONE->v->is_void==0)
+										    {
+										    	solid_wall.insert_face(f_sw);
+										    }
+											else
+											{
+												//print_face(f,1);
+											}
 										////if(!convex_hull)
 										////{
 										////	convex_hull=new face;
@@ -1872,25 +1936,67 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
                                     ATOM->D3bondinvoid[j][i]=1;
                                 }
                             }
-						    if(D_ONE->AT[0]==60 && D_ONE->AT[1]==128 && D_ONE->AT[2]==146 && D_ONE->AT[3]==150) 
-						    {
-						    	if(D_TWO->AT[0]==62 && D_TWO->AT[1]==128 && D_TWO->AT[2]==146 && D_TWO->AT[3]==150) 
-						    	{
-                                    cout<<ATOM->D3bondinvoid[i][j]<<"\n";
-						    		cout<<"draw color blue\n";
-						    		cout<<"draw sphere\t{";
-						    		cout<<ATOM->MIDP[i][j].x<<"\t"<<ATOM->MIDP[i][j].y<<"\t"<<ATOM->MIDP[i][j].z<<"} radius 0.1\n";
+							atom* Ai;
+							atom* Aj;
+							atom* Ak;
 
-						    	}
-						    }
-						////cout<<"draw line\t{";
-						////cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"}\t{";
-						////cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"}\n";
+							Ai=&(Atoms[ATOM->contigous[i]]);
+							Aj=&(Atoms[ATOM->contigous[j]]);
+							//Ak=&(Atoms[ATOM->contigous[k]]);
+							if(temp_vert_o->is_void && !temp_vert_d->is_void)
+							{
+								face *f=nullptr;	
+								f= new face;
+								f->A1=ATOM->p;
+								f->A2=Ai->p;
+								f->A3=Aj->p;
+								//f->B=Ak->p;
+								solid_wall.insert_face(f);
+							
+							}
+							if(!temp_vert_o->is_void && temp_vert_d->is_void)
+							{
+								face *f=nullptr;	
+								f= new face;
+								f->A1=ATOM->p;
+								f->A2=Ai->p;
+								f->A3=Aj->p;
+								//f->B=Ak->p;
+								solid_wall.insert_face(f);
+							}
+						////if(temp_vert_o->is_void && temp_vert_d->is_void && ATOM->D3bondinvoid[i][j]==0)
+						////{
+						////	face *f=nullptr;	
+						////	f= new face;
+						////	f->A1=ATOM->p;
+						////	f->A2=Ai->p;
+						////	f->A3=Aj->p;
+						////	//f->B=Ak->p;
+						////	solid_wall.insert_face(f);
+						////}
+						  //if(D_ONE->AT[0]==60 && D_ONE->AT[1]==128 && D_ONE->AT[2]==146 && D_ONE->AT[3]==150) 
+						  //{
+						  //	if(D_TWO->AT[0]==62 && D_TWO->AT[1]==128 && D_TWO->AT[2]==146 && D_TWO->AT[3]==150) 
+						  //	{
+                          //        cout<<ATOM->D3bondinvoid[i][j]<<"\n";
+						  //		cout<<"draw color blue\n";
+						  //		cout<<"draw sphere\t{";
+						  //		cout<<ATOM->MIDP[i][j].x<<"\t"<<ATOM->MIDP[i][j].y<<"\t"<<ATOM->MIDP[i][j].z<<"} radius 0.1\n";
+
+						  //	}
+						  //}
+						////if(temp_vert_o->is_void && !temp_vert_d->is_void)
+						////{
+						////	cout<<"draw color red\n";
+						////	cout<<"draw line\t{";
+						////	cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"}\t{";
+						////	cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"}\n";
+						////}
                             add_connected(temp_vert_o,temp_vert_d,ATOM->D3bondinvoid[i][j]);
                             add_connected(temp_vert_d,temp_vert_o,ATOM->D3bondinvoid[i][j]);
 
-                            atom* Ai;
-                            atom* Aj;
+                          //atom* Ai;
+                          //atom* Aj;
                             Ai=&(Atoms[ATOM->contigous[i]]);
                             Aj=&(Atoms[ATOM->contigous[j]]);
 
@@ -2485,10 +2591,10 @@ int main( int argc, char * argv[] )
 					//cout<<"draw material Transparent\n";
 				 // if(SAM==146 || SAM==150 || SAM==128)
 				 // {
-				    ////cout<<"draw color red\n";
-				    ////cout<<"##\t"<<SAM<<"\n";
-				    ////cout<<"draw sphere\t{";
-				    ////cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<Atoms[SAM].radius+r_cut<<"\tresolution 15\n";
+				   //   cout<<"draw color blue\n";
+				   //   cout<<"##\t"<<SAM<<"\n";
+				   //   cout<<"draw sphere\t{";
+				   //   cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<Atoms[SAM].radius+r_cut<<"\tresolution 15\n";
 				 // }
 				////cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<0.3<<"\tresolution 25\n";
 				////if(!Atoms[SAM].D_FIRST)
@@ -2767,21 +2873,22 @@ int main( int argc, char * argv[] )
 			}	
 		    //cout<<"mol new\n";
 	    //cout<<"draw color blue\n";
-	    //face *temp_f;
-        //temp_f=CH.initial;
-        //while(1)
-        //{
-	    //	//if(temp_d->hull)
-	    //	print_face(temp_f);
-        //    if(temp_f->next)
-        //    {
-        //        temp_f=temp_f->next;
-        //    }
-	    //	else
-	    //	{
-        //        break;
-        //    }
-        //}
+	      face *temp_f;
+          temp_f=solid_wall.initial;
+          //temp_f=CH.initial;
+          while(1)
+          {
+	      	//if(temp_d->hull)
+	      	  //print_face(temp_f);
+              if(temp_f->next)
+              {
+                  temp_f=temp_f->next;
+              }
+	      	else
+	      	{
+                  break;
+              }
+          }
           vertice *temp=nullptr;
           temp=V->initial;
           //void_vert_count=0;
@@ -2793,10 +2900,10 @@ int main( int argc, char * argv[] )
 		    		temp->dangling=1;
 			        //print_delunay_solid(temp->D,Atoms,nAtoms); 
 		        }
-				if(temp->is_void==0)
-				{
-			        print_delunay_solid(temp->D,Atoms,nAtoms); 
-				}
+			////if(temp->is_void==0)
+			////{
+			////    print_delunay_solid(temp->D,Atoms,nAtoms); 
+			////}
 				if(temp->v_neigh_count!=4 && temp->dangling==0)
 				{
 				 	cout<<"error\n";
@@ -2819,39 +2926,57 @@ int main( int argc, char * argv[] )
             }
 		    int flag=1;
 		    int color=0;
-		    while(flag)
-		    {	
-		    	temp=V->initial;	
-		    	flag=0;
-		    	color++;
-		    	while(temp)
-		    	{
-		    	 // if(temp->dangling)
-		    	 // {
-		    	 // 	cout<<"draw color "<<color%16<<"\n";
-		    	 // 	cout<<"draw sphere \t{";
-		    	 // 	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
-		    	 // }
-		    		if(temp->dangling && temp->is_void)
-		    		{
-		    			//if(void_vol(temp,Atoms)>0. )
-		    			if(!inside_delunay(temp,temp->D,Atoms,nAtoms))
-		    			{
-		    				flag=1;
-		    				for(int i=0;i<temp->v_neigh_count;i++)
-		    				{
-		    					if(temp->neib_ed[i])
-		    					{
-		    						//cout<<"helllow\n";
-		    						temp->neib_vert[i]->dangling=1;
-		    					}
-		    				}	
-		    				V->delete_vertice(temp,TYPE);	
-		    			}
-		    		}	
-		    		temp=temp->next;
-		    	}
-		    }
+		  //while(flag)
+		  //{	
+		  //	temp=V->initial;	
+		  //	flag=0;
+		  //	color++;
+		  //	while(temp)
+		  //	{
+		  //	 // if(temp->dangling)
+		  //	 // {
+		  //	 // 	cout<<"draw color "<<color%16<<"\n";
+		  //	 // 	cout<<"draw sphere \t{";
+		  //	 // 	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
+		  //	 // }
+		  //		if(temp->dangling && temp->is_void)
+		  //		{
+		  //			//if(void_vol(temp,Atoms)>0. )
+		  //			if(!inside_delunay(temp,temp->D,Atoms,nAtoms))
+		  //			{
+		  //				flag=1;
+		  //				for(int i=0;i<temp->v_neigh_count;i++)
+		  //				{
+		  //					if(temp->neib_ed[i])
+		  //					{
+		  //						//cout<<"helllow\n";
+		  //						temp->neib_vert[i]->dangling=1;
+		  //					}
+		  //				}	
+		  //	 	    ////cout<<"draw color red"<<"\n";
+		  //	  	    ////cout<<"draw sphere \t{";
+		  //	  	    ////cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.3\t resolution 100\n";
+		  //			////V->delete_vertice(temp,TYPE);	
+		  //			}
+		  //			else
+		  //			{
+		  //	 	    	cout<<"draw color white"<<"\n";
+		  //	  	    	cout<<"draw sphere \t{";
+		  //	  	    	cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.3\t resolution 100\n";
+		  //			   	for(int i=0;i<temp->v_neigh_count;i++)
+		  //			   	{	
+		  //					if(temp->neib_vert[i]->is_void)
+		  //					{
+		  //						cout<<"draw line\t{";
+		  //						cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t{";//radius 0.05\t resolution 10\n";
+		  //						cout<<temp->neib_vert[i]->p->x<<"\t"<<temp->neib_vert[i]->p->y<<"\t"<<temp->neib_vert[i]->p->z<<"}\n";// radius 0.05\t resolution 10\n";
+		  //					}
+		  //			   	}
+		  //			}
+		  //		}	
+		  //		temp=temp->next;
+		  //	}
+		  //}
 			//cout<<"draw color red\n";
 		    temp=V->initial;	
 			while(1)
@@ -2939,8 +3064,11 @@ int main( int argc, char * argv[] )
                     {
                         if(cavity_list[i]->neib_vert[n]->cluster_index != -1 && cavity_list[i]->neib_ed[n])
                         {
-                            if(min>cavity_list[i]->neib_vert[n]->cluster_index)
-                                min=cavity_list[i]->neib_vert[n]->cluster_index;
+							if(!(cavity_list[i]->dangling && cavity_list[i]->neib_vert[n]->dangling))
+							{
+                            	if(min>cavity_list[i]->neib_vert[n]->cluster_index)
+                                	min=cavity_list[i]->neib_vert[n]->cluster_index;
+							}
                         }
                         else
                         {
@@ -2989,7 +3117,7 @@ int main( int argc, char * argv[] )
                 color=1;
                 cav<<"#"<<i<<"\n\n";
 		    	//cav<<"#\t"<<pocket[i]<<"\n";
-		    	//if(pocket[i])
+		    	if(pocket[i])
 		    	{
 		    		for(int j=0; j<void_vert_count; j++)
 		    		{
@@ -3024,21 +3152,21 @@ int main( int argc, char * argv[] )
             {
                 cav_vol[i]=0;
                 cav_area[i]=0;
-				cout<<"##\t"<<i<<"\n";
+				//cout<<"##\t"<<i<<"\n";
                 for(int j=0; j<void_vert_count; j++)
                 {
                     if(cavity_list[j]->cluster_index==i)
                     {
-						if(i==0)
-						{
-							cout<<"draw color "<<i%16<<"\n";;
-							print_delunay_solid(cavity_list[j]->D,Atoms,nAtoms);
-						////for(int p=0;p<cavity_list[j]->v_neigh_count;p++)
-						////{
-						////	cout<<cavity_list[j]->neib_ed[p]<<"\n";
-						////	print_delunay_solid(cavity_list[j]->neib_vert[p]->D,Atoms,nAtoms);
-						////}
-						}
+					////if(i==0)
+					////{
+					////	cout<<"draw color "<<i%16<<"\n";;
+					////	print_delunay_solid(cavity_list[j]->D,Atoms,nAtoms);
+					////////for(int p=0;p<cavity_list[j]->v_neigh_count;p++)
+					////////{
+					////////	cout<<cavity_list[j]->neib_ed[p]<<"\n";
+					////////	print_delunay_solid(cavity_list[j]->neib_vert[p]->D,Atoms,nAtoms);
+					////////}
+					////}
                         site A1,A2,A3,A4;
                         long double E1x,E1y,E1z;
                         long double r1,r2,r3,r4;
