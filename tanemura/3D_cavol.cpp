@@ -96,6 +96,7 @@ struct vertice
     int is_void=0;
     int cluster_index=-1;
     long double r;
+	long double ball_r=0.;
     //vert_list *V;
     vertice *neib_vert[10]= {nullptr};
     int neib_ed[10];
@@ -449,31 +450,31 @@ void update_neighbours(atom Atoms[],int nAtoms)
 }
 void print_face(face *f,int trans=0)
 {
-	if(trans)
-	{
-		cout<<"mol new\n";
-		cout<<"draw material Transparent\n";
-	}
-	else
-	{
-		cout<<"mol new\n";
-		cout<<"draw material Opaque\n";
-	}
+////if(trans)
+////{
+////	cout<<"mol new\n";
+////	cout<<"draw material Transparent\n";
+////}
+////else
+////{
+////	cout<<"mol new\n";
+////	cout<<"draw material Opaque\n";
+////}
 	cout<<"draw color blue\n";
 	cout<<"draw triangle \t{";
 	cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
 	cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\t{";
 	cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
-////cout<<"draw color black\n";
-////cout<<"draw line\t{";
-////cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
-////cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\n";
-////cout<<"draw line\t{";
-////cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
-////cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
-////cout<<"draw line\t{";
-////cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\t{";
-////cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
+    cout<<"draw color black\n";
+    cout<<"draw line\t{";
+    cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
+    cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\n";
+    cout<<"draw line\t{";
+    cout<<f->A1.x<<"\t"<<f->A1.y<<"\t"<<f->A1.z<<"}\t{";
+    cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
+    cout<<"draw line\t{";
+    cout<<f->A2.x<<"\t"<<f->A2.y<<"\t"<<f->A2.z<<"}\t{";
+    cout<<f->A3.x<<"\t"<<f->A3.y<<"\t"<<f->A3.z<<"}\n";
 }
 void print_delunay_solid(delunay *D,atom Atoms[],int TYPE)
 {
@@ -1576,11 +1577,13 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
 											if((disV1*disV1-rS*rS)>0.)
 											{
 												temp_vert_o->is_void=1;
+												temp_vert_o->ball_r=sqrtl(disV1*disV1-rS*rS);
 											}
 											disV2=sqrtl((V2x*V2x+V2y*V2y+V2z*V2z));
 											if((disV2*disV2-rS*rS)>0.)
 											{
 												temp_vert_d->is_void=1;
+												temp_vert_d->ball_r=sqrtl(disV2*disV2-rS*rS);
 											}
 
 											disA=sqrtl((a*a+b*b+c*c));//V1x*V1x+V1y*V1y+V1z*V1z));
@@ -2873,13 +2876,14 @@ int main( int argc, char * argv[] )
 			}	
 		    //cout<<"mol new\n";
 	    //cout<<"draw color blue\n";
+	   	  cout<<"draw material Transparent\n";
 	      face *temp_f;
-          temp_f=solid_wall.initial;
-          //temp_f=CH.initial;
+          //dtemp_f=solid_wall.initial;
+          temp_f=CH.initial;
           while(1)
           {
 	      	//if(temp_d->hull)
-	      	  //print_face(temp_f);
+	      	  print_face(temp_f);
               if(temp_f->next)
               {
                   temp_f=temp_f->next;
@@ -2904,6 +2908,17 @@ int main( int argc, char * argv[] )
 			////{
 			////    print_delunay_solid(temp->D,Atoms,nAtoms); 
 			////}
+				if(temp->is_void)
+				{
+					//cout<<temp->ball_r<<"\n";
+				////if(temp->ball_r>3.0)
+				////{
+				////////cout<<"draw sphere\t{";
+				////////cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"} radius 0.3\t resolution 10\n";
+				////	V->delete_vertice(temp,TYPE);
+				////		
+				////}
+				}
 				if(temp->v_neigh_count!=4 && temp->dangling==0)
 				{
 				 	cout<<"error\n";
@@ -3064,7 +3079,7 @@ int main( int argc, char * argv[] )
                     {
                         if(cavity_list[i]->neib_vert[n]->cluster_index != -1 && cavity_list[i]->neib_ed[n])
                         {
-							if(!(cavity_list[i]->dangling && cavity_list[i]->neib_vert[n]->dangling))
+							//if(!(cavity_list[i]->dangling && cavity_list[i]->neib_vert[n]->dangling))
 							{
                             	if(min>cavity_list[i]->neib_vert[n]->cluster_index)
                                 	min=cavity_list[i]->neib_vert[n]->cluster_index;
@@ -3117,7 +3132,7 @@ int main( int argc, char * argv[] )
                 color=1;
                 cav<<"#"<<i<<"\n\n";
 		    	//cav<<"#\t"<<pocket[i]<<"\n";
-		    	if(pocket[i])
+		    	//if(pocket[i])
 		    	{
 		    		for(int j=0; j<void_vert_count; j++)
 		    		{
