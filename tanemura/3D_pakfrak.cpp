@@ -2585,8 +2585,8 @@ int main( int argc, char * argv[] )
             ofstream vor;
             vor.open(buffer);
             //r_cut=radius;
-			r_cut=0.0;
-			//r_cut=1.4;
+			//r_cut=0.0;
+			r_cut=0.3;
 			int max_conti=0;
 			int max_conti_index=-1;
             for(SAM=0; SAM< nAtoms; SAM++)
