@@ -84,7 +84,8 @@ struct vect
 void display_SITE(struct site *p)
 {
 
-    cout<<p->x<<"\t"<<p->y<<"\t"<<p->z<<"\n";
+    cout<<"draw sphere\t{";
+    cout<<p->x<<"\t"<<p->y<<"\t"<<p->z<<"}\tradius\t0.1\n";
 }
 //definition of half-edge
 struct edge
@@ -2177,17 +2178,10 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE)
     }
 }
 
-long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long double Ex,long double Ey,long double Ez,long double Bx,long double By,long double Bz,long double vx,long double vy,long double vz,long double r,int compliment=0)
+long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long double Ex,long double Ey,long double Ez,long double Bx,long double By,long double Bz,long double vx,long double vy,long double vz,long double r,int compliment=0,int debug=0)
 {
     long double ABx,ABy,ABz,EBx,EBy,EBz,VEx,VEy,VEz,DISB,DISBE,DISVE;
-    //cout<<"draw sphere\t{";
-    //cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\tradius 0.3\n";
-    //cout<<"draw sphere\t{";
-    //cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\tradius 0.3\n";
-    //cout<<"draw sphere\t{";
-    //cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\tradius 0.3\n";
-    //cout<<"draw sphere\t{";
-    //cout<<vx<<"\t"<<vy<<"\t"<<vz<<"}\tradius 0.3\n";
+
     ABx=Ax-Bx;
     ABy=Ay-By;
     ABz=Az-Bz;
@@ -2197,6 +2191,7 @@ long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long
     VEx=Ex-vx;
     VEy=Ey-vy;
     VEz=Ez-vz;
+
     ABx=(ABx-(tilt*PBC*lroundl(ABy/twob)));
     ABx=(ABx-(twob*PBC*lroundl(ABx/twob)));
     ABy=(ABy-(twob*PBC*lroundl(ABy/twob)));
@@ -2222,6 +2217,42 @@ long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long
     Ex=sqrtl(DISB);
     Ey=sqrtl(DISBE);
     Ez=0.;
+	site* ABs;
+	site* AEs;
+	site* AVs;
+	site* BVs;
+	site* BEs;
+	site* VEs;
+    if(debug)
+    {
+        cout<<"###\n";
+        cout<<"mol new\n";
+        cout<<"draw material Transparent\n";
+        cout<<"draw sphere\t{";
+        cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\tradius\t"<<r<<"\t"<<"resolution 10\n";
+        ////cout<<"draw sphere\t{";
+        ////cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\tradius 0.3\n";
+        ////cout<<"draw sphere\t{";
+        ////cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\tradius 0.3\n";
+        cout<<"mol new\n";
+        cout<<"draw material Opaque\n";
+        cout<<"draw color red\n";
+        cout<<"draw line\t{";
+        cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
+        cout<<"draw line\t{";
+        cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\n";
+        cout<<"draw line\t{";
+        cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        cout<<"draw line\t{";
+        cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        cout<<"draw line\t{";
+        cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
+        cout<<"draw line\t{";
+        cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        cout<<"draw sphere\t{";
+        cout<<vx<<"\t"<<vy<<"\t"<<vz<<"}\tradius 0.3\n";
+        cout<<"###\n";
+    }
     vx=sqrtl(DISB);
     vy=sqrtl(DISBE);
     vz=sqrtl(DISVE);
@@ -2273,6 +2304,237 @@ long double volume_tetrahedron(long double Ax,long double Ay,long double Az,long
         else
             return Vc;
     }
+}
+long double volume_segment(site *a1,site *a2,site *a3,long double r)
+{
+	long double theta=acosl((a1->x*a2->x+a1->y*a2->y+a1->z*a2->z)/(r*r));		
+	long double phi=acosl((a1->x*a3->x+a1->y*a3->y+a1->z*a3->z)/(r*r));		
+	long double rm=r-r_cut;
+	//cout<<theta<<"\t"<<phi<<"\n";
+	return r*r*r/6.*theta*phi-rm*rm*rm/6.*theta*phi;
+}
+long double volume_of_roling_probe(long double ra,long double theta,long double alpha)
+{
+	return (2.*r_cut*r_cut*r_cut*sinl(alpha)*theta/3.)/2.;	
+}
+long double removesurface(long double Ax,long double Ay,long double Az,long double Ex,long double Ey,long double Ez,long double Bx,long double By,long double Bz,long double vx,long double vy,long double vz,long double r,int compliment=0,int debug=0)
+{
+    long double ABx,ABy,ABz,EBx,EBy,EBz,VEx,VEy,VEz,DISB,DISBE,DISVE;
+
+    ABx=Ax-Bx;
+    ABy=Ay-By;
+    ABz=Az-Bz;
+    EBx=Ex-Bx;
+    EBy=Ey-By;
+    EBz=Ez-Bz;
+    VEx=Ex-vx;
+    VEy=Ey-vy;
+    VEz=Ez-vz;
+
+    ABx=(ABx-(tilt*PBC*lroundl(ABy/twob)));
+    ABx=(ABx-(twob*PBC*lroundl(ABx/twob)));
+    ABy=(ABy-(twob*PBC*lroundl(ABy/twob)));
+    ABz=(ABz-(twob*PBC*lroundl(ABz/twob)));
+    EBx=(EBx-(tilt*PBC*lroundl(EBy/twob)));
+    EBx=(EBx-(twob*PBC*lroundl(EBx/twob)));
+    EBy=(EBy-(twob*PBC*lroundl(EBy/twob)));
+    EBz=(EBz-(twob*PBC*lroundl(EBz/twob)));
+    VEx=(VEx-(tilt*PBC*lroundl(VEy/twob)));
+    VEx=(VEx-(twob*PBC*lroundl(VEx/twob)));
+    VEy=(VEy-(twob*PBC*lroundl(VEy/twob)));
+    VEz=(VEz-(twob*PBC*lroundl(VEz/twob)));
+
+    DISB=ABx*ABx+ABy*ABy+ABz*ABz;
+    DISBE=EBx*EBx+EBy*EBy+EBz*EBz;
+    DISVE=VEx*VEx+VEy*VEy+VEz*VEz;
+    Ax=0.;
+    Ay=0.;
+    Az=0.;
+    Bx=sqrtl(DISB);
+    By=0.;
+    Bz=0.;
+    Ex=sqrtl(DISB);
+    Ey=sqrtl(DISBE);
+    Ez=0.;
+    vx=sqrtl(DISB);
+    vy=sqrtl(DISBE);
+    vz=sqrtl(DISVE);
+    long double x0,y0,z0;
+    long double x0sq,y0sq,z0sq;
+    x0=Bx;
+    y0=Ey;
+    z0=vz;
+    x0sq=DISB;
+    y0sq=DISBE;
+    z0sq=DISVE;
+    long double rB,rV,rE;
+    rV=sqrtl(vx*vx+vy*vy+vz*vz);
+    rE=sqrtl(Ex*Ex+Ey*Ey+Ez*Ez);
+    rB=sqrtl(DISB);
+    long double theta,x2,y2;
+    x2=r*x0/rE;
+    y2=r*y0/rE;
+    theta=atanl(z0/y0);
+    long double Vc,Vt;
+    Vt=(x0*y0*z0)/6.;
+    Vc=0.;
+	site* ABs;
+	site* AEs;
+	site* AVs;
+	site* BVs;
+	site* BEs;
+	site* EVs;
+    if(r<rB)
+    {
+        Vc=Vc+(r*r*r/6.)*(2*theta-M_PI/2.-asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
+		r=r-r_cut;
+        Vc=Vc-(r*r*r/6.)*(2*theta-M_PI/2.-asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
+        //cout<<Vc<<"\n";
+    }
+    if(rB<r && r<rE)
+    {
+		long double ra=sqrtl(r*r-rB*rB);
+		long double l=r/rV;
+		AVs=new site;	
+		BVs=new site;	
+		BEs=new site;	
+		AEs=new site;	
+		AVs->x=vx*l;
+		AVs->y=vy*l;
+		AVs->z=vz*l;
+		BVs->x=x0;
+		BVs->y=ra*cosl(theta);
+		BVs->z=ra*sinl(theta);
+		BEs->x=x0;
+		BEs->y=ra;
+		BEs->z=0.;
+		l=r/rE;
+		AEs->x=Ex*l;
+		AEs->y=Ey*l;
+		AEs->z=Ez*l;
+		long double alpha=M_PI/2.-acosl((BEs->x*Bx+BEs->y*By+BEs->z*Bz)/(r*rB));		
+		alpha=abs(alpha);
+		long double V_rp=volume_of_roling_probe(ra,theta,alpha);	
+		Vc=Vc+volume_segment(AVs,BVs,BEs,r);
+		Vc=Vc+volume_segment(AVs,AEs,BEs,r);
+		Vc=Vc+V_rp;
+        if(debug)
+        {
+        	cout<<"###\n";
+        	cout<<"mol new\n";
+        	cout<<"draw material Transparent\n";
+        	cout<<"draw sphere\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\tradius\t"<<r<<"\t"<<"resolution 25\n";
+        	////cout<<"draw sphere\t{";
+        	////cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\tradius 0.3\n";
+        	////cout<<"draw sphere\t{";
+        	////cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\tradius 0.3\n";
+        	cout<<"mol new\n";
+        	cout<<"draw material Opaque\n";
+        	cout<<"draw color red\n";
+        	cout<<"draw line\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        	cout<<"draw sphere\t{";
+        	cout<<vx<<"\t"<<vy<<"\t"<<vz<<"}\tradius 0.3\n";
+        	cout<<"###\n";
+        	cout<<"draw color green\n";
+        	display_SITE(AVs);
+        	display_SITE(BVs);
+        	display_SITE(BEs);
+        	display_SITE(AEs);
+        }
+	
+        //Vc=theta/2.*(r*r*x0-x0*x0*x0/3.)-(r*r*r/6.)*(M_PI/2.+asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq))));
+        //cout<<Vc<<"\n";
+    }
+    if(rE<r && r<rV)
+    {
+		long double ra=sqrtl(r*r-rB*rB);
+		long double l=r/rV;
+		AVs=new site;	
+		BVs=new site;	
+		EVs=new site;	
+		AVs->x=vx*l;
+		AVs->y=vy*l;
+		AVs->z=vz*l;
+		BVs->x=x0;
+		BVs->y=ra*cosl(theta);
+		BVs->z=ra*sinl(theta);
+		long double theta_1=acosl(Ey/ra);
+		theta_1=abs(theta_1);
+		EVs->x=Ex;
+		EVs->y=Ey;
+		EVs->z=ra*sinl(theta_1);
+        if(debug)
+        {
+        	cout<<"###\n";
+        	cout<<"mol new\n";
+        	cout<<"draw material Transparent\n";
+        	cout<<"draw sphere\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\tradius\t"<<r<<"\t"<<"resolution 25\n";
+        	////cout<<"draw sphere\t{";
+        	////cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\tradius 0.3\n";
+        	////cout<<"draw sphere\t{";
+        	////cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\tradius 0.3\n";
+        	cout<<"mol new\n";
+        	cout<<"draw material Opaque\n";
+        	cout<<"draw color red\n";
+        	cout<<"draw line\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Ax<<"\t"<<Ay<<"\t"<<Az<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Bx<<"\t"<<By<<"\t"<<Bz<<"}\t{"<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\n";
+        	cout<<"draw line\t{";
+        	cout<<Ex<<"\t"<<Ey<<"\t"<<Ez<<"}\t{"<<vx<<"\t"<<vy<<"\t"<<vz<<"}\n";
+        	cout<<"draw sphere\t{";
+        	cout<<vx<<"\t"<<vy<<"\t"<<vz<<"}\tradius 0.3\n";
+        	cout<<"###\n";
+        	cout<<"draw color green\n";
+        	display_SITE(AVs);
+        	display_SITE(BVs);
+        	display_SITE(EVs);
+        }
+		Vc=Vc+volume_segment(AVs,BVs,EVs,r);
+		long double alpha=M_PI/2.-acosl((BVs->x*Bx+BVs->y*By+BVs->z*Bz)/(r*rB));		
+		alpha=abs(alpha);
+		long double V_rp=volume_of_roling_probe(ra,theta-theta_1,alpha);	
+		Vc=Vc+r_cut*r_cut*r_cut/6.*alpha*theta_1;
+		Vc=Vc+V_rp;
+        //Vc=0.5*(theta-M_PI/2.+asin(y0/sqrtl(r*r-x0sq)))*(r*r*x0-x0*x0*x0/3.)+x0*y0/6.*sqrtl(r*r-rE*rE)+r*r*r/6.*asinl((x2*x2-y2*y2-x0sq)/(r*r-x0sq))-r*r*r/6.*asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq)));
+        //cout<<Vc<<"\n";
+    }
+	if(Vc<0.)
+		cout<<"error\n";
+	return -1.*Vc;
+ // if(Vt<Vc)
+ // {
+ //     //cout<<"help \t"<<Vt<<"\t"<<Vc<<"\t"<<Vt-Vc<<"\n";
+ // }
+ // if(!compliment)
+ //     return Vt-Vc;
+ // else
+ // {
+ //     //cout<<"###\t"<<Vt<<"\t"<<Vc<<"\t"<<r<<"\t"<<rB<<"\t"<<rE<<"\t"<<rV<<"\n";
+ //     if(Vc==0.)
+ //         return Vt;
+ //     else
+ //         return Vc;
+ // }
 }
 int sign_aaav(long double A1x,long double A1y,long double A1z,long double A2x,long double A2y,long double A2z,long double A3x,long double A3y,long double A3z,long double A4x,long double A4y,long double A4z,long double Vx,long double Vy,long double Vz)
 {
@@ -2878,7 +3140,7 @@ int main( int argc, char * argv[] )
                     // if(SAM==146 || SAM==150 || SAM==128)
                     // {
                     //   cout<<"draw color blue\n";
-                    cout<<"##\t"<<SAM<<"\n";
+                    //cout<<"##\t"<<SAM<<"\n";
                     //   cout<<"draw sphere\t{";
                     //   cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<Atoms[SAM].radius+r_cut<<"\tresolution 15\n";
                     // }
@@ -2919,11 +3181,11 @@ int main( int argc, char * argv[] )
                 }
             }
             //cout<<"draw color red\n";
-			vertice *temp;
+            vertice *temp;
             temp=V->initial;
             void_vert_count=0;
-			int vert_count=0;
-			int color;
+            int vert_count=0;
+            int color;
             while(1)
             {
                 if(temp->is_void==1)
@@ -2933,7 +3195,7 @@ int main( int argc, char * argv[] )
                     ////cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
                     void_vert_count=void_vert_count+1;
                 }
-				vert_count++;
+                vert_count++;
 
                 if(temp->next)
                 {
@@ -2954,7 +3216,7 @@ int main( int argc, char * argv[] )
             temp_start=V->initial;
             {
                 int i=0;
-				int j=0;
+                int j=0;
                 while(1)
                 {
                     if(temp_start->is_void)
@@ -2964,7 +3226,7 @@ int main( int argc, char * argv[] )
                         i++;
                     }
                     vertex_list[j]=temp_start;
-					j++;
+                    j++;
                     if(temp_start->next)
                         temp_start=temp_start->next;
                     else
@@ -2981,8 +3243,8 @@ int main( int argc, char * argv[] )
             //cout<<"draw material Opaque\n";
             //for(int i=0; i<void_vert_count; i++)
             {
-              //cav_vol[i]=0;
-              //cav_area[i]=0;
+                //cav_vol[i]=0;
+                //cav_area[i]=0;
                 //cout<<"##\t"<<i<<"\n";
                 for(int j=0; j<vert_count; j++)
                 {
@@ -3020,6 +3282,7 @@ int main( int argc, char * argv[] )
                         r2=Atoms[vertex_list[j]->D->AT[1]].radius+r_cut;
                         r3=Atoms[vertex_list[j]->D->AT[2]].radius+r_cut;
                         r4=Atoms[vertex_list[j]->D->AT[3]].radius+r_cut;
+
                         site E123,E124,E134,E234;
                         site B12,B13,B14,B23,B34,B24;
                         long double MIDP234x,MIDP234y,MIDP234z;
@@ -3060,33 +3323,33 @@ int main( int argc, char * argv[] )
                         A2A4E234=sign_aaae(A2.x,A2.y,A2.z,A4.x,A4.y,A4.z,A3.x,A3.y,A3.z,E234.x,E234.y,E234.z);
                         A3A4E234=sign_aaae(A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,A2.x,A2.y,A2.z,E234.x,E234.y,E234.z);
 
-                   //   cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
-                   //   cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
-                   //   cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
-                   //   cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
-                   //   cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
-                   //   cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
+                        //   cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
+                        //   cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
+                        //   cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
+                        //   cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
+                        //   cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
+                        //   cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
 
-                   //   cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
-                   //   cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
-                   //   cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
-                   //   cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
-                   //   cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
-                   //   cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
+                        //   cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
+                        //   cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
+                        //   cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
+                        //   cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
+                        //   cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
+                        //   cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
 
-                   //   cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
-                   //   cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
-                   //   cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
-                   //   cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
-                   //   cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
-                   //   cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
+                        //   cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
+                        //   cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
+                        //   cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
+                        //   cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
+                        //   cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
+                        //   cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
 
-                   //   cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
-                   //   cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
-                   //   cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
-                   //   cav_vol[i]=cav_vol[i]+S234*A3A4E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
-                   //   cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
-                   //   cav_vol[i]=cav_vol[i]+S234*A3A4E234*volume_tetrahedron(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
+                        //   cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
+                        //   cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
+                        //   cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
+                        //   cav_vol[i]=cav_vol[i]+S234*A3A4E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
+                        //   cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
+                        //   cav_vol[i]=cav_vol[i]+S234*A3A4E234*volume_tetrahedron(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
 
                         Atoms[vertex_list[j]->D->AT[0]].vor_vol=Atoms[vertex_list[j]->D->AT[0]].vor_vol+S123*A1A2E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1,1);
                         Atoms[vertex_list[j]->D->AT[0]].vor_vol=Atoms[vertex_list[j]->D->AT[0]].vor_vol+S123*A1A3E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1,1);
@@ -3124,33 +3387,189 @@ int main( int argc, char * argv[] )
             long double uni_sphere=0.;
             long double sum_sphere=0.;
             int borat=0;
-            for(int i=0;i<nAtoms;i++)
+            for(int i=0; i<nAtoms; i++)
             {
-            	if(!Atoms[i].bor)
-            	{
-            		uni_sphere=uni_sphere+Atoms[i].vor_vol;
-            		sum_sphere=sum_sphere+4./3.*M_PI*powl(Atoms[i].radius+r_cut,3);
-            		//cout<<Atoms[i].p.x<<"\t"<<Atoms[i].p.y<<"\t"<<Atoms[i].p.z<<"\t"<<Atoms[i].radius+r_cut<<"\n";
-            		cout<<i<<"\t"<<4./3.*M_PI*powl(Atoms[i].radius+r_cut,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
-            	}
-            	else
-            	{
-            		borat=borat+1;
-            	}
-            	//cout<<4./3.*M_PI*powl(Atoms[i].radius,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
+                if(Atoms[i].radius!=1.0)
+                {
+                    uni_sphere=uni_sphere+Atoms[i].vor_vol;
+                    sum_sphere=sum_sphere+4./3.*M_PI*powl(Atoms[i].radius+r_cut,3);
+                    //cout<<Atoms[i].p.x<<"\t"<<Atoms[i].p.y<<"\t"<<Atoms[i].p.z<<"\t"<<Atoms[i].radius+r_cut<<"\n";
+                    cout<<i<<"\t"<<4./3.*M_PI*powl(Atoms[i].radius+r_cut,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
+                }
+                else
+                {
+                    borat=borat+1;
+                }
+                //cout<<4./3.*M_PI*powl(Atoms[i].radius,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
             }
             cout<<std::setprecision(16);
             cout<<resno<<"\t"<<uni_sphere<<"\t"<<convex_vol<<"\t"<<sum_sphere<<"\t"<<uni_sphere/convex_vol<<"\t"<<borat<<"\t"<<borat*1./nAtoms<<"\n";
-          //double cav_tot=0.;
-          //double ca_per_tot=0.;
-          //for(int i=0; i<void_vert_count; i++)
-          //{
-          //    if(cav_vol[i])
-          //        cout<<i<<"\t"<<cav_vol[i]<<"\t"<<resno<<"\t"<<pocket[i]<<"\n";
-          //    cav_tot=cav_tot+cav_vol[i];
-          //    ca_per_tot=ca_per_tot+cav_area[i];
-          //    //cout<<i<<"\t"<<cav_area[i]<<"\t"<<cav_lenght[i]<<"\n";
-          //}
+            for(int j=0; j<void_vert_count; j++)
+            {
+                site A1,A2,A3,A4;
+                long double E1x,E1y,E1z;
+                long double r1,r2,r3,r4;
+                int S123,S124,S234,S134;
+                int A1A2E123,A1A3E123,A2A3E123;
+                int A1A2E124,A1A4E124,A2A4E124;
+                int A1A3E134,A1A4E134,A3A4E134;
+                int A2A3E234,A2A4E234,A3A4E234;
+                //long double Vx,Vy,Vz;
+                long double Vx=cavity_list[j]->p->x;
+                long double Vy=cavity_list[j]->p->y;
+                long double Vz=cavity_list[j]->p->z;
+
+                A1=Atoms[cavity_list[j]->D->AT[0]].p;
+                A2=Atoms[cavity_list[j]->D->AT[1]].p;
+                A3=Atoms[cavity_list[j]->D->AT[2]].p;
+                A4=Atoms[cavity_list[j]->D->AT[3]].p;
+
+                //print_delunay(cavity_list[j]->D,Atoms,nAtoms);
+
+                r1=Atoms[cavity_list[j]->D->AT[0]].radius+r_cut;
+                r2=Atoms[cavity_list[j]->D->AT[1]].radius+r_cut;
+                r3=Atoms[cavity_list[j]->D->AT[2]].radius+r_cut;
+                r4=Atoms[cavity_list[j]->D->AT[3]].radius+r_cut;
+
+                site E123,E124,E134,E234;
+                site B12,B13,B14,B23,B34,B24;
+                long double MIDP234x,MIDP234y,MIDP234z;
+                site a1,a2,a3,a4;
+                long double X,Y,Z;
+
+                S123=sign_aaav(A1.x,A1.y,A1.z,A2.x,A2.y,A2.z,A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,Vx,Vy,Vz);
+                S124=sign_aaav(A1.x,A1.y,A1.z,A2.x,A2.y,A2.z,A4.x,A4.y,A4.z,A3.x,A3.y,A3.z,Vx,Vy,Vz);
+                S234=sign_aaav(A2.x,A2.y,A2.z,A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,A1.x,A1.y,A1.z,Vx,Vy,Vz);
+                S134=sign_aaav(A1.x,A1.y,A1.z,A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,A2.x,A2.y,A2.z,Vx,Vy,Vz);
+
+                E123=cavity_list[j]->D->MID[0][1][2];
+                E124=cavity_list[j]->D->MID[0][1][3];
+                E134=cavity_list[j]->D->MID[0][2][3];
+                E234=cavity_list[j]->D->MID[1][2][3];
+
+            //  display_SITE(&E123);
+            //  display_SITE(&E124);
+            //  display_SITE(&E134);
+            //  display_SITE(&E234);
+			////cout<<"draw color red\n";
+            ////for(int p=0; p<cavity_list[j]->v_neigh_count; p++)
+            ////{
+            ////	cout<<"draw line\t{";
+            ////	cout<<cavity_list[j]->p->x<<"\t"<<cavity_list[j]->p->y<<"\t"<<cavity_list[j]->p->z<<"}\t{";
+            ////	cout<<cavity_list[j]->neib_vert[p]->p->x<<"\t"<<cavity_list[j]->neib_vert[p]->p->y<<"\t"<<cavity_list[j]->neib_vert[p]->p->z<<"}\n";
+            ////}
+                B12=cavity_list[j]->D->MIDP[0][1];
+                B13=cavity_list[j]->D->MIDP[0][2];
+                B14=cavity_list[j]->D->MIDP[0][3];
+                B23=cavity_list[j]->D->MIDP[1][2];
+                B24=cavity_list[j]->D->MIDP[1][3];
+                B34=cavity_list[j]->D->MIDP[2][3];
+
+
+                A1A2E123=sign_aaae(A1.x,A1.y,A1.z,A2.x,A2.y,A2.z,A3.x,A3.y,A3.z,E123.x,E123.y,E123.z);
+                A1A3E123=sign_aaae(A1.x,A1.y,A1.z,A3.x,A3.y,A3.z,A2.x,A2.y,A2.z,E123.x,E123.y,E123.z);
+                A2A3E123=sign_aaae(A2.x,A2.y,A2.z,A3.x,A3.y,A3.z,A1.x,A1.y,A1.z,E123.x,E123.y,E123.z);
+
+                A1A2E124=sign_aaae(A1.x,A1.y,A1.z,A2.x,A2.y,A2.z,A4.x,A4.y,A4.z,E124.x,E124.y,E124.z);
+                A1A4E124=sign_aaae(A1.x,A1.y,A1.z,A4.x,A4.y,A4.z,A2.x,A2.y,A2.z,E124.x,E124.y,E124.z);
+                A2A4E124=sign_aaae(A2.x,A2.y,A2.z,A4.x,A4.y,A4.z,A1.x,A1.y,A1.z,E124.x,E124.y,E124.z);
+
+                A1A3E134=sign_aaae(A1.x,A1.y,A1.z,A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,E134.x,E134.y,E134.z);
+                A1A4E134=sign_aaae(A1.x,A1.y,A1.z,A4.x,A4.y,A4.z,A3.x,A3.y,A3.z,E134.x,E134.y,E134.z);
+                A3A4E134=sign_aaae(A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,A1.x,A1.y,A1.z,E134.x,E134.y,E134.z);
+
+                A2A3E234=sign_aaae(A2.x,A2.y,A2.z,A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,E234.x,E234.y,E234.z);
+                A2A4E234=sign_aaae(A2.x,A2.y,A2.z,A4.x,A4.y,A4.z,A3.x,A3.y,A3.z,E234.x,E234.y,E234.z);
+                A3A4E234=sign_aaae(A3.x,A3.y,A3.z,A4.x,A4.y,A4.z,A2.x,A2.y,A2.z,E234.x,E234.y,E234.z);
+
+                //cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
+                //cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
+                //cav_vol[i]=cav_vol[i]+S123*A1A2E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
+                //cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
+                //cav_vol[i]=cav_vol[i]+S123*A1A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
+                //cav_vol[i]=cav_vol[i]+S123*A2A3E123*volume_tetrahedron(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
+
+                //cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1);
+                //cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
+                //cav_vol[i]=cav_vol[i]+S124*A1A2E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2);
+                //cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
+                //cav_vol[i]=cav_vol[i]+S124*A1A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
+                //cav_vol[i]=cav_vol[i]+S124*A2A4E124*volume_tetrahedron(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
+
+                //cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1);
+                //cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1);
+                //cav_vol[i]=cav_vol[i]+S134*A1A3E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3);
+                //cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
+                //cav_vol[i]=cav_vol[i]+S134*A1A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4);
+                //cav_vol[i]=cav_vol[i]+S134*A3A4E134*volume_tetrahedron(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
+
+                //cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2);
+                //cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2);
+                //cav_vol[i]=cav_vol[i]+S234*A2A3E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3);
+                //cav_vol[i]=cav_vol[i]+S234*A3A4E234*volume_tetrahedron(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3);
+                //cav_vol[i]=cav_vol[i]+S234*A2A4E234*volume_tetrahedron(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4);
+                //cav_vol[i]=cav_vol[i]+S234*A3A4E234*volume_tetrahedron(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4);
+
+                Atoms[cavity_list[j]->D->AT[0]].vor_vol=Atoms[cavity_list[j]->D->AT[0]].vor_vol+S123*A1A2E123*removesurface(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1,1,0);
+                Atoms[cavity_list[j]->D->AT[0]].vor_vol=Atoms[cavity_list[j]->D->AT[0]].vor_vol+S123*A1A3E123*removesurface(A1.x,A1.y,A1.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1,1,0);
+                Atoms[cavity_list[j]->D->AT[0]].vor_vol=Atoms[cavity_list[j]->D->AT[0]].vor_vol+S124*A1A2E124*removesurface(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r1,1,0);
+                Atoms[cavity_list[j]->D->AT[0]].vor_vol=Atoms[cavity_list[j]->D->AT[0]].vor_vol+S124*A1A4E124*removesurface(A1.x,A1.y,A1.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1,1,0);
+                Atoms[cavity_list[j]->D->AT[0]].vor_vol=Atoms[cavity_list[j]->D->AT[0]].vor_vol+S134*A1A3E134*removesurface(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r1,1,0);
+                Atoms[cavity_list[j]->D->AT[0]].vor_vol=Atoms[cavity_list[j]->D->AT[0]].vor_vol+S134*A1A4E134*removesurface(A1.x,A1.y,A1.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r1,1,0);
+
+                Atoms[cavity_list[j]->D->AT[1]].vor_vol=Atoms[cavity_list[j]->D->AT[1]].vor_vol+S123*A1A2E123*removesurface(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2,1,0);
+                Atoms[cavity_list[j]->D->AT[1]].vor_vol=Atoms[cavity_list[j]->D->AT[1]].vor_vol+S123*A2A3E123*removesurface(A2.x,A2.y,A2.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2,1,0);
+                Atoms[cavity_list[j]->D->AT[1]].vor_vol=Atoms[cavity_list[j]->D->AT[1]].vor_vol+S124*A1A2E124*removesurface(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B12.x,B12.y,B12.z,Vx,Vy,Vz,r2,1,0);
+                Atoms[cavity_list[j]->D->AT[1]].vor_vol=Atoms[cavity_list[j]->D->AT[1]].vor_vol+S124*A2A4E124*removesurface(A2.x,A2.y,A2.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2,1,0);
+                Atoms[cavity_list[j]->D->AT[1]].vor_vol=Atoms[cavity_list[j]->D->AT[1]].vor_vol+S234*A2A3E234*removesurface(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r2,1,0);
+                Atoms[cavity_list[j]->D->AT[1]].vor_vol=Atoms[cavity_list[j]->D->AT[1]].vor_vol+S234*A2A4E234*removesurface(A2.x,A2.y,A2.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r2,1,0);
+
+                Atoms[cavity_list[j]->D->AT[2]].vor_vol=Atoms[cavity_list[j]->D->AT[2]].vor_vol+S123*A1A3E123*removesurface(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3,1,0);
+                Atoms[cavity_list[j]->D->AT[2]].vor_vol=Atoms[cavity_list[j]->D->AT[2]].vor_vol+S123*A2A3E123*removesurface(A3.x,A3.y,A3.z,E123.x,E123.y,E123.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3,1,0);
+                Atoms[cavity_list[j]->D->AT[2]].vor_vol=Atoms[cavity_list[j]->D->AT[2]].vor_vol+S134*A1A3E134*removesurface(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B13.x,B13.y,B13.z,Vx,Vy,Vz,r3,1,0);
+                Atoms[cavity_list[j]->D->AT[2]].vor_vol=Atoms[cavity_list[j]->D->AT[2]].vor_vol+S134*A3A4E134*removesurface(A3.x,A3.y,A3.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3,1,0);
+                Atoms[cavity_list[j]->D->AT[2]].vor_vol=Atoms[cavity_list[j]->D->AT[2]].vor_vol+S234*A2A3E234*removesurface(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B23.x,B23.y,B23.z,Vx,Vy,Vz,r3,1,0);
+                Atoms[cavity_list[j]->D->AT[2]].vor_vol=Atoms[cavity_list[j]->D->AT[2]].vor_vol+S234*A3A4E234*removesurface(A3.x,A3.y,A3.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r3,1,0);
+
+                Atoms[cavity_list[j]->D->AT[3]].vor_vol=Atoms[cavity_list[j]->D->AT[3]].vor_vol+S124*A1A4E124*removesurface(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4,1,0);
+                Atoms[cavity_list[j]->D->AT[3]].vor_vol=Atoms[cavity_list[j]->D->AT[3]].vor_vol+S124*A2A4E124*removesurface(A4.x,A4.y,A4.z,E124.x,E124.y,E124.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4,1,0);
+                Atoms[cavity_list[j]->D->AT[3]].vor_vol=Atoms[cavity_list[j]->D->AT[3]].vor_vol+S134*A1A4E134*removesurface(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B14.x,B14.y,B14.z,Vx,Vy,Vz,r4,1,0);
+                Atoms[cavity_list[j]->D->AT[3]].vor_vol=Atoms[cavity_list[j]->D->AT[3]].vor_vol+S134*A3A4E134*removesurface(A4.x,A4.y,A4.z,E134.x,E134.y,E134.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4,1,0);
+                Atoms[cavity_list[j]->D->AT[3]].vor_vol=Atoms[cavity_list[j]->D->AT[3]].vor_vol+S234*A2A4E234*removesurface(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B24.x,B24.y,B24.z,Vx,Vy,Vz,r4,1,0);
+                Atoms[cavity_list[j]->D->AT[3]].vor_vol=Atoms[cavity_list[j]->D->AT[3]].vor_vol+S234*A3A4E234*removesurface(A4.x,A4.y,A4.z,E234.x,E234.y,E234.z,B34.x,B34.y,B34.z,Vx,Vy,Vz,r4,1,0);
+
+            }
+          uni_sphere=0.;
+          sum_sphere=0.;
+          //int borat=0;
+            for(int i=0; i<nAtoms; i++)
+            {
+                if(Atoms[i].radius!=1.0)
+                {
+                    uni_sphere=uni_sphere+Atoms[i].vor_vol;
+                    sum_sphere=sum_sphere+4./3.*M_PI*powl(Atoms[i].radius+r_cut,3);
+                    //cout<<Atoms[i].p.x<<"\t"<<Atoms[i].p.y<<"\t"<<Atoms[i].p.z<<"\t"<<Atoms[i].radius+r_cut<<"\n";
+                    cout<<i<<"\t"<<4./3.*M_PI*powl(Atoms[i].radius+r_cut,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
+                }
+                else
+                {
+                    borat=borat+1;
+                }
+                //cout<<4./3.*M_PI*powl(Atoms[i].radius,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
+            }
+            cout<<std::setprecision(16);
+            cout<<resno<<"\t"<<uni_sphere<<"\t"<<convex_vol<<"\t"<<sum_sphere<<"\t"<<uni_sphere/convex_vol<<"\t"<<borat<<"\t"<<borat*1./nAtoms<<"\n";
+
+            //double cav_tot=0.;
+            //double ca_per_tot=0.;
+            //for(int i=0; i<void_vert_count; i++)
+            //{
+            //    if(cav_vol[i])
+            //        cout<<i<<"\t"<<cav_vol[i]<<"\t"<<resno<<"\t"<<pocket[i]<<"\n";
+            //    cav_tot=cav_tot+cav_vol[i];
+            //    ca_per_tot=ca_per_tot+cav_area[i];
+            //    //cout<<i<<"\t"<<cav_area[i]<<"\t"<<cav_lenght[i]<<"\n";
+            //}
             //cout<<r_cut<<"\t"<<cav_tot<<"\t"<<ca_per_tot<<"\n";
             delete [] pocket;
             delete [] cav_vol;
