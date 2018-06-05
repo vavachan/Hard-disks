@@ -2499,7 +2499,7 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
 		long double ra=sqrtl(r*r-rB*rB);
 	////if(ra>r_cut)
 	////	cout<<"ra>r_cut\n";
-	    cout<<"3rd\n";
+	    //cout<<"3rd\n";
 		long double l=r/rV;
 		AVs=new site;	
 		BVs=new site;	
@@ -3184,8 +3184,7 @@ int main( int argc, char * argv[] )
             ofstream vor;
             vor.open(buffer);
             //r_cut=radius;
-            r_cut=0.0;
-            //r_cut=1.4;
+			r_cut=atof(argv[2]);
             int max_conti=0;
             int max_conti_index=-1;
             for(SAM=0; SAM< nAtoms; SAM++)
@@ -3196,7 +3195,7 @@ int main( int argc, char * argv[] )
                     // if(SAM==146 || SAM==150 || SAM==128)
                     // {
                     //   cout<<"draw color blue\n";
-                    cout<<"##\t"<<SAM<<"\n";
+                    //cout<<"##\t"<<SAM<<"\n";
                     //   cout<<"draw sphere\t{";
                     //   cout<<Atoms[SAM].p.x<<"\t"<<Atoms[SAM].p.y<<"\t"<<Atoms[SAM].p.z<<"}\tradius\t"<<Atoms[SAM].radius+r_cut<<"\tresolution 15\n";
                     // }
@@ -3431,8 +3430,8 @@ int main( int argc, char * argv[] )
                 }
                 //cout<<4./3.*M_PI*powl(Atoms[i].radius,3)<<"\t"<<Atoms[i].vor_vol<<"\n";
             }
-            cout<<std::setprecision(16);
-            cout<<resno<<"\t"<<uni_sphere<<"\t"<<convex_vol<<"\t"<<sum_sphere<<"\t"<<uni_sphere/convex_vol<<"\t"<<borat<<"\t"<<borat*1./nAtoms<<"\n";
+          //cout<<std::setprecision(16);
+          //cout<<resno<<"\t"<<uni_sphere<<"\t"<<convex_vol<<"\t"<<sum_sphere<<"\t"<<uni_sphere/convex_vol<<"\t"<<borat<<"\t"<<borat*1./nAtoms<<"\n";
             for(int j=0; j<void_vert_count; j++)
             {
 				//display_SITE(cavity_list[j]->p);
@@ -3551,7 +3550,7 @@ int main( int argc, char * argv[] )
                     uni_sphere=uni_sphere+Atoms[i].vor_vol;
                     sum_sphere=sum_sphere+4./3.*M_PI*powl(Atoms[i].radius+r_cut,3);
                     //cout<<Atoms[i].p.x<<"\t"<<Atoms[i].p.y<<"\t"<<Atoms[i].p.z<<"\t"<<Atoms[i].radius+r_cut<<"\n";
-                    cout<<i<<"\t"<<4./3.*M_PI*powl(Atoms[i].radius+r_cut,3)<<"\t"<<Atoms[i].vor_vol<<"\t"<<Atoms[i].radius<<"\n";
+                    //cout<<i<<"\t"<<4./3.*M_PI*powl(Atoms[i].radius+r_cut,3)<<"\t"<<Atoms[i].vor_vol<<"\t"<<Atoms[i].radius<<"\n";
                 }
                 else
                 {
