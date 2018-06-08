@@ -19,7 +19,7 @@ boxx=maxx-minx
 boxy=maxy-miny
 boxz=maxz-minz
 dp=2
-epsilon=0.5
+epsilon=1.5
 def print_for_file():
     for i in range (0,dp+1):
         for j in range (0,dp+1):
