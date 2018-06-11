@@ -2323,7 +2323,6 @@ long double volume_segment(site *a1,site *a2,site *a3,long double r)
 	long double A=E*r*r;
 	long double rm=r-r_cut;
 	return E/3.*(r*r*r-rm*rm*rm);
-	
 ////cout<<"E==\t"<<E<<"\n";
 ////r=r-r_cut;
 ////a=r*theta;	
@@ -2340,7 +2339,7 @@ long double volume_of_roling_probe(long double ra,long double theta,long double 
 {
 	long double x=2.*r_cut*sinl(alpha)/(3.*alpha);
 	long double R=ra-x;
-	long double volume=r_cut*r_cut*alpha*theta*R;
+	long double volume=0.5*r_cut*r_cut*alpha*theta*R;
 	if(R<0.)
 		return 0.;
 	return volume;
@@ -2422,11 +2421,11 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
     if(rB<r && r<rE)
     {
 		long double ra=sqrtl(r*r-rB*rB);
-	////if(ra>r_cut)
-	////{
-	////	cout<<"ra>r_cut\n";
-	////}
-	////cout<<"2nd\n";
+	  //if(ra<r_cut)
+	  //{
+	  //	cout<<"ra<r_cut\n";
+	  //}
+	  //cout<<"2nd\n";
 		long double l=r/rV;
 		AVs=new site;	
 		BVs=new site;	
@@ -2449,12 +2448,14 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
 		long double alpha=M_PI/2.-acosl((BEs->x*Bx+BEs->y*By+BEs->z*Bz)/(r*rB));		
 		alpha=abs(alpha);
 		long double V_rp=volume_of_roling_probe(ra,theta,alpha);	
+		//cout<<"ra=\t"<<ra<<"\n";
 		//cout<<Vc<<"\n";
 		Vc=Vc+volume_segment(AVs,BVs,BEs,r);
 		//cout<<Vc<<"\n";
 		Vc=Vc+volume_segment(AVs,AEs,BEs,r);
 		//cout<<Vc<<"\n";
 		Vc=Vc+V_rp;
+		//cout<<Vc<<"\n";
         if(debug)
         {
         	cout<<"###\n";
@@ -2497,8 +2498,10 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
     if(rE<r && r<rV)
     {
 		long double ra=sqrtl(r*r-rB*rB);
-	////if(ra>r_cut)
-	////	cout<<"ra>r_cut\n";
+	////if(ra<r_cut)
+	////{
+	////	cout<<"ra<r_cut\n";
+	////}
 	    //cout<<"3rd\n";
 		long double l=r/rV;
 		AVs=new site;	
@@ -2510,7 +2513,9 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
 		BVs->x=x0;
 		BVs->y=ra*cosl(theta);
 		BVs->z=ra*sinl(theta);
+		//theta = <VBE
 		long double theta_1=asinl(Ey/ra);
+		//theta_1 = < BEVsE
 		theta_1=abs(theta_1);
 		EVs->x=Ex;
 		EVs->y=Ey;
@@ -2560,6 +2565,9 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
 		long double a=theta_1;	
 		long double b=alpha;	
 		long double c=gamma;
+		a=abs(a);
+		b=abs(b);
+		c=abs(c);
 		long double s=0.5*(a+b+c);
 		long double tanquE=sqrtl(tan(0.5*s)*tan(0.5*(s-a))*tan(0.5*(s-b))*tan(0.5*(s-c)));
 		long double E=4.*atanl(tanquE);
@@ -2570,12 +2578,12 @@ long double removesurface(long double Ax,long double Ay,long double Az,long doub
 		Vc=Vc+V_rp;
         //Vc=0.5*(theta-M_PI/2.+asin(y0/sqrtl(r*r-x0sq)))*(r*r*x0-x0*x0*x0/3.)+x0*y0/6.*sqrtl(r*r-rE*rE)+r*r*r/6.*asinl((x2*x2-y2*y2-x0sq)/(r*r-x0sq))-r*r*r/6.*asinl((z0sq*x0sq-y0sq*rV*rV)/(rE*rE*(y0sq+z0sq)));
     }
-	if(Vc<0.)
-		cout<<"error\n";
-////if(Vc>Vt)
-////{
-////  	cout<<"help \t"<<Vt<<"\t"<<Vc<<"\t"<<Vt-Vc<<"\n";
-////}
+////if(Vc<0.)
+////	cout<<"error\n";
+    if(Vc>Vt)
+    {
+      	//cout<<"help \t"<<Vt<<"\t"<<Vc<<"\t"<<Vt-Vc<<"\n";
+    }
 	return -1.*Vc;
  // if(Vt<Vc)
  // {
@@ -3459,7 +3467,8 @@ int main( int argc, char * argv[] )
                 r2=Atoms[cavity_list[j]->D->AT[1]].radius+r_cut;
                 r3=Atoms[cavity_list[j]->D->AT[2]].radius+r_cut;
                 r4=Atoms[cavity_list[j]->D->AT[3]].radius+r_cut;
-
+				if(r1!=1.0+r_cut && r2!=1.0+r_cut && r3!=1.0+r_cut && r4!=1.0+r_cut)
+					continue;
                 site E123,E124,E134,E234;
                 site B12,B13,B14,B23,B34,B24;
                 long double MIDP234x,MIDP234y,MIDP234z;
