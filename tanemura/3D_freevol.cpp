@@ -22,7 +22,7 @@ long double DMIN=0.000000000001;//std::numeric_limits<long double>::min();
 long double epsilon=0.00000000000;
 int void_vert_count=0;
 int **contigous;
-int PBC=0;
+int PBC=1;
 long double *radius;
 long double convex_vol=0.;
 int nAtoms=0;
@@ -76,8 +76,8 @@ long double distancesq(site p,site q)
 	pqx=p.x-q.x;
 	pqy=p.y-q.y;
 	pqz=p.z-q.z;
-    pqx=(pqx-(tilt*PBC*PBC*lroundl(pqy/twob)));
-    pqx=(pqx-(twob*PBC*PBC*lroundl(pqx/twob)));
+    pqx=(pqx-(tilt*PBC*lroundl(pqy/twob)));
+    pqx=(pqx-(twob*PBC*lroundl(pqx/twob)));
     pqy=(pqy-(twob*PBC*lroundl(pqy/twob)));
     pqz=(pqz-(twob*PBC*lroundl(pqz/twob)));
 	dist=pqx*pqx+pqy*pqy+pqz*pqz;
@@ -471,37 +471,6 @@ void vert_list::delete_vertice(vertice *v,int type,int debug=0)
     }
     //delete v->p;
     //delete v;
-}
-void vert_list::display_vertex(vertice *start)
-{
-    display_SITE(start->p);
-    if(start->next)
-        display_vertex(start->next);
-    else
-        return;
-    ;
-}
-void vert_list::display_conn(vertice *ve)
-{
-    if(ve->v_neigh_count==2)
-    {
-        cout<<"#"<<ve->v_neigh_count<<"\n";
-        for(int i=0; i<ve->v_neigh_count; i++)
-        {
-            long double Sx,Sy;
-            Sx=ve->neib_vert[i]->p->x-ve->p->x;
-            Sy=ve->neib_vert[i]->p->y-ve->p->y;
-            Sx=(Sx-(tilt*PBC*lroundl(Sy/twob)));
-            Sx=(Sx-(twob*PBC*lroundl(Sx/twob)));
-            Sy=(Sy-(twob*PBC*lroundl(Sy/twob)));
-            cout<<ve->p->x<<"\t"<<ve->p->y<<"\t"<<Sx+ve->p->x<<"\t"<<Sy+ve->p->y<<"\n";
-        }
-    }
-    if(ve->next)
-        display_conn(ve->next);
-    else
-        return;
-
 }
 void update_neighbours(atom Atoms[],int nAtoms)
 {
@@ -1338,7 +1307,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     A1=ATOM->index;
     A2=nearest;
     long double DIS_MIN=box*box;
-    int DIS_atom;
+    int DIS_atom=-1;
     long double dis;
     long double X,Y,Z;
     long double circx,circy,circz;
@@ -1363,6 +1332,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
     }
 //	cout<<"dis\t"<<DIS_atom<<"\n";
     A3=DIS_atom;
+	DIS_atom=-1;
     DIS_MIN=box*box*box;
     long double circx_s=circx;
     long double circy_s=circy;
@@ -1370,7 +1340,7 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
 //	cout<<DIS_atom<<"\n";
     atom L=*ATOM;
     atom M=Atoms[nearest];
-    atom N=Atoms[DIS_atom];
+    atom N=Atoms[A3];
     site center;
     for(int i=0; i<ATOM->neighbours; i++)
     {
@@ -1446,6 +1416,8 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             {
                 DIS_MIN=tan_sq;
                 DIS_atom=ATOM->neighlist[i];
+				if(DIS_atom==A3)
+					cout<<"what why\n";
                 circx_s=center.x+L.p.x;
                 circy_s=center.y+L.p.y;
                 circz_s=center.z+L.p.z;
@@ -1473,7 +1445,6 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
         //previously. If this delunay was acceptable then this atoms delunay should have been found before and we wouldn't be here
         //I have to do this to get this thing working. A good progrmmer would find some other way
         // All that is left in front of me this ad hoc trick.
-        //cout<<"error\n";
         return;
     }
     D->circum_x=circx_s;
@@ -1626,6 +1597,8 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
         D->circum_x=circx;
         D->circum_y=circy;
         D->circum_z=circz;
+		if(A1==1 && A2==96 && A3==422 && A4==422)
+			cout<<"whatcompl\n";
         create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
         return D;
     }
@@ -1663,10 +1636,8 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE,int ignore_atom=
         {
             s=s+ATOM->part_c[i][p];
         }
-
         for(int j=0; j<ATOM->conti; j++)
         {
-
             if(i!=j)
             {
                 if(ATOM->part_c[i][j]==1)
@@ -3595,17 +3566,44 @@ int main( int argc, char * argv[] )
 
                 }
             }
-			cout<<convex_vol<<"\t"<<twob*twob*twob<<"\n";
-			cout<<"over\n";
-			return 0;
+		////cout<<convex_vol<<"\t"<<twob*twob*twob<<"\n";
+		////cout<<"over\n";
+            vertice *temp;
+            temp=V->initial;
+            void_vert_count=0;
+            int vert_count=0;
+            int color;
+            while(1)
+            {
+                if(temp->is_void==1)
+                {
+                    temp->cluster_index=void_vert_count;
+                    void_vert_count=void_vert_count+1;
+                }
+                vert_count++;
+				if(temp->v_neigh_count!=4 )//and !temp->D->hull)
+				{
+					cout<<temp->D->AT[0]<<"\t"<<temp->D->AT[1]<<"\t"<<temp->D->AT[2]<<"\t"<<temp->D->AT[3]<<"\n";
+                  //cout<<"draw sphere \t{";
+                  //cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
+					cout<<"error\t"<<temp->v_neigh_count<<"\n";;
+				}
+
+                if(temp->next)
+                {
+                    temp=temp->next;
+                }
+                else
+                    break;
+            }
 		    for(int SAM=0;SAM<nAtoms;SAM++)
 		    {
 				if(abs(Atoms[SAM].radius-r_cut)<0.0001)
 				//if(Atoms[SAM].radius!=1.0)
 				{
 					container_delunay *temp_d=nullptr;
-					cout<<"##\t"<<SAM<<"\n";
-					cout<<Atoms[SAM].conti<<"\n";
+					//cout<<"##\t"<<SAM<<"\n";
+					//cout<<Atoms[SAM].conti<<"\n";
 					int *temp_list=new (nothrow) int[Atoms[SAM].conti];
 				    for(int i=0;i<Atoms[SAM].conti;i++)
 				    {
@@ -3705,7 +3703,7 @@ int main( int argc, char * argv[] )
 							container_vertice *cv;
 							cv = new container_vertice;
 							cv->V=temp_end->v;
-							if(temp_end->v->is_void)cout<<"this\n";
+							//if(temp_end->v->is_void)cout<<"this\n";
 							NVERTICES.insert_cvert(cv);
 							cv->V->cluster_index=0;
 						}
@@ -3758,11 +3756,11 @@ int main( int argc, char * argv[] )
 					long double freevol=0.;
 					while(ctemp)
 					{
-						if(!ctemp->V->is_void)cout<<"error\n";
+						//if(!ctemp->V->is_void)cout<<"error\n";
 						freevol=freevol+void_vol(ctemp->V,Atoms);
 						ctemp=ctemp->next;
 					}
-					cout<<freevol<<"\n";
+					cout<<SAM<<"\t"<<freevol<<"\n";
 					/* und hear */
 					temp_end=end->next;
 					while(temp_end)
@@ -3805,7 +3803,6 @@ int main( int argc, char * argv[] )
 					////}
 					}
 					display_cell(SAM,Atoms);
-					cout<<"no of vertices\t"<<V->no_of_vertices<<"\n";
 				////for(int i=0;i<nAtoms;i++)
 				////{
 				////	if(Atoms[SAM].conti_index[i]!=-1)
@@ -3815,31 +3812,6 @@ int main( int argc, char * argv[] )
 				}
 		    }
             //cout<<"draw color red\n";
-            vertice *temp;
-            temp=V->initial;
-            void_vert_count=0;
-            int vert_count=0;
-            int color;
-            while(1)
-            {
-                if(temp->is_void==1)
-                {
-                    temp->cluster_index=void_vert_count;
-                    ////cout<<"draw sphere \t{";
-                    ////cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
-                    void_vert_count=void_vert_count+1;
-                }
-                vert_count++;
-				if(temp->v_neigh_count!=4 and !temp->D->hull)
-					cout<<"error\n";
-
-                if(temp->next)
-                {
-                    temp=temp->next;
-                }
-                else
-                    break;
-            }
 			return 0;
             //cout<<void_vert_count<<"\n";
             vertice **cavity_list=nullptr;
