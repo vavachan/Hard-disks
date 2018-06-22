@@ -469,6 +469,8 @@ void vert_list::delete_vertice(vertice *v,int type,int debug=0)
         }
         v_neib->v_neigh_count=v_neib->v_neigh_count-1;
     }
+	v->next=nullptr;
+	v->prev=nullptr;
     //delete v->p;
     //delete v;
 }
@@ -936,6 +938,12 @@ void delete_delunay(atom Atoms[],delunay *D)
 		ATOM->part_c[Aj_index][Ai_index]=ATOM->part_c[Aj_index][Ai_index]-1;	
 		ATOM->part_c[Ak_index][Ai_index]=ATOM->part_c[Ak_index][Ai_index]-1;	
 		ATOM->part_c[Ak_index][Aj_index]=ATOM->part_c[Ak_index][Aj_index]-1;	
+		ATOM->bond_c[Ai_index][Aj_index]=0;	
+		ATOM->bond_c[Ai_index][Ak_index]=0;	
+		ATOM->bond_c[Aj_index][Ak_index]=0;	
+		ATOM->bond_c[Aj_index][Ai_index]=0;	
+		ATOM->bond_c[Ak_index][Ai_index]=0;	
+		ATOM->bond_c[Ak_index][Aj_index]=0;	
 		if(!ATOM->part_c[Ai_index][Aj_index])
 		{
 			ATOM->edge_index[Ai_index]--;
@@ -1037,15 +1045,20 @@ void create_delunay(atom Atoms[],int A1,int A2,int A3,int A4,delunay *D,int TYPE
 {
     //cout<<"ghere\n";
     convex_vol=convex_vol+volume_delunay(D,Atoms);
-    vertice *temp_v=nullptr;
-    temp_v=new vertice;
-    temp_v->p=new site;
-    temp_v->p->x=D->circum_x;
-    temp_v->p->y=D->circum_y;
-    temp_v->p->z=D->circum_z;
-    temp_v->D=D;
-    D->v=temp_v;
-    V->insert_vertice(temp_v,TYPE);
+	if(!D->v)
+	{
+		vertice *temp_v=nullptr;
+		temp_v=new vertice;
+		temp_v->p=new site;
+		temp_v->p->x=D->circum_x;
+		temp_v->p->y=D->circum_y;
+		temp_v->p->z=D->circum_z;
+		temp_v->D=D;
+		D->v=temp_v;
+		V->insert_vertice(temp_v,TYPE);
+	}
+	else
+		V->insert_vertice(D->v,TYPE);
     for(int a=0; a<4; a++)
     {
         for(int b=a+1; b<4; b++)
@@ -1320,9 +1333,29 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             atom L=*ATOM;
             atom M=Atoms[nearest];
             atom R=Atoms[ATOM->neighlist[i]];
-            site center;
-            center=center_of_triangle(L.p,M.p,R.p,L.radius,M.radius,R.radius);
-            long double tan_sq=distancesq(center,L.p)-L.radius*L.radius;
+			site a1,a2,a3;
+			a1.x=0.;
+			a1.y=0.;
+			a1.z=0.;
+			a2.x=M.p.x-L.p.x;
+			a2.y=M.p.y-L.p.y;
+			a2.z=M.p.z-L.p.z;
+			a3.x=R.p.x-L.p.x;
+			a3.y=R.p.y-L.p.y;
+			a3.z=R.p.z-L.p.z;
+			a2.x=(a2.x-(tilt*PBC*lroundl(a2.y/twob)));
+			a2.x=(a2.x-(twob*PBC*lroundl(a2.x/twob)));
+			a2.y=(a2.y-(twob*PBC*lroundl(a2.y/twob)));
+			a2.z=(a2.z-(twob*PBC*lroundl(a2.z/twob)));
+			a3.x=(a3.x-(tilt*PBC*lroundl(a3.y/twob)));
+			a3.x=(a3.x-(twob*PBC*lroundl(a3.x/twob)));
+			a3.y=(a3.y-(twob*PBC*lroundl(a3.y/twob)));
+			a3.z=(a3.z-(twob*PBC*lroundl(a3.z/twob)));
+			site center;
+			center=center_of_triangle(a1,a2,a3,L.radius+r_cut,M.radius+r_cut,R.radius+r_cut);
+//long double tan_sq=distancesq(center,a1.x)-(L.radius+r_cut)*(L.radius+r_cut);
+			long double tan_sq=(center.x-a1.x)*(center.x-a1.x)+(center.y-a1.y)*(center.y-a1.y)+(center.z-a1.z)*(center.z-a1.z)-(L.radius+r_cut)*(L.radius+r_cut);
+
             if(DIS_MIN > tan_sq)
             {
                 DIS_MIN=tan_sq;
@@ -1363,10 +1396,12 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
             ax=(ax-(twob*PBC*lroundl(ax/twob)));
             ay=(ay-(twob*PBC*lroundl(ay/twob)));
             az=(az-(twob*PBC*lroundl(az/twob)));
+
             bx=(bx-(tilt*PBC*lroundl(by/twob)));
             bx=(bx-(twob*PBC*lroundl(bx/twob)));
             by=(by-(twob*PBC*lroundl(by/twob)));
             bz=(bz-(twob*PBC*lroundl(bz/twob)));
+
             cx=(cx-(tilt*PBC*lroundl(cy/twob)));
             cx=(cx-(twob*PBC*lroundl(cx/twob)));
             cy=(cy-(twob*PBC*lroundl(cy/twob)));
@@ -1445,11 +1480,14 @@ void first_delunay(atom *ATOM,atom Atoms[],int TYPE)
         //previously. If this delunay was acceptable then this atoms delunay should have been found before and we wouldn't be here
         //I have to do this to get this thing working. A good progrmmer would find some other way
         // All that is left in front of me this ad hoc trick.
+		cout<<"error\n";
         return;
     }
     D->circum_x=circx_s;
     D->circum_y=circy_s;
     D->circum_z=circz_s;
+		//if(EV1[0]==15 && EV1[1]==297 && EV1[2]==305 && EV1[3]==335 )
+		//	cout<<"here\n";
 
     create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
 }
@@ -1597,8 +1635,11 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
         D->circum_x=circx;
         D->circum_y=circy;
         D->circum_z=circz;
-		if(A1==1 && A2==96 && A3==422 && A4==422)
-			cout<<"whatcompl\n";
+	////if(EV1[0]==15 && EV1[1]==196 && EV1[2]==297 && EV1[3]==335 )
+	////{
+	////	cout<<"here\n";
+	////	cout<<circx<<"\t"<<circy<<"\t"<<circz<<"\n";
+	////}
         create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
         return D;
     }
@@ -2171,6 +2212,12 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE,int ignore_atom=
                                         ATOM->D3bondinvoid[i][j]=1;
                                         ATOM->D3bondinvoid[j][i]=1;
                                     }
+								    else
+    								{
+    								    ATOM->D3bondinvoid[i][j]=0;
+         								ATOM->D3bondinvoid[j][i]=0;
+     								}			
+
                                     ////cout<<"draw sphere\t{";
                                     ////cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"} radius 0.3\t resolution 10\n";
                                 }
@@ -2181,6 +2228,11 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE,int ignore_atom=
                                         ATOM->D3bondinvoid[i][j]=1;
                                         ATOM->D3bondinvoid[j][i]=1;
                                     }
+								    else
+    								{
+    								    ATOM->D3bondinvoid[i][j]=0;
+         								ATOM->D3bondinvoid[j][i]=0;
+     								}			
                                     ////cout<<"draw sphere\t{";
                                     ////cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"} radius 0.3\t resolution 10\n";
                                 }
@@ -2205,6 +2257,11 @@ void complete_del_2(atom *ATOM,atom Atoms[],int nAtoms,int TYPE,int ignore_atom=
                                     ATOM->D3bondinvoid[i][j]=1;
                                     ATOM->D3bondinvoid[j][i]=1;
                                 }
+								else
+    							{
+    							    ATOM->D3bondinvoid[i][j]=0;
+         							ATOM->D3bondinvoid[j][i]=0;
+     							}			
                             }
                             atom* Ai;
                             atom* Aj;
@@ -3358,6 +3415,12 @@ void display_cell(int SAM,atom Atoms[])
                                         ATOM->D3bondinvoid[i][j]=1;
                                         ATOM->D3bondinvoid[j][i]=1;
                                     }
+									else
+                                    {
+
+                                        ATOM->D3bondinvoid[i][j]=0;
+                                        ATOM->D3bondinvoid[j][i]=0;
+                                    }
                                     ////cout<<"draw sphere\t{";
                                     ////cout<<temp_vert_o->p->x<<"\t"<<temp_vert_o->p->y<<"\t"<<temp_vert_o->p->z<<"} radius 0.3\t resolution 10\n";
                                 }
@@ -3367,6 +3430,12 @@ void display_cell(int SAM,atom Atoms[])
                                     {
                                         ATOM->D3bondinvoid[i][j]=1;
                                         ATOM->D3bondinvoid[j][i]=1;
+                                    }
+									else
+                                    {
+
+                                        ATOM->D3bondinvoid[i][j]=0;
+                                        ATOM->D3bondinvoid[j][i]=0;
                                     }
                                     ////cout<<"draw sphere\t{";
                                     ////cout<<temp_vert_d->p->x<<"\t"<<temp_vert_d->p->y<<"\t"<<temp_vert_d->p->z<<"} radius 0.3\t resolution 10\n";
@@ -3391,6 +3460,12 @@ void display_cell(int SAM,atom Atoms[])
 
                                     ATOM->D3bondinvoid[i][j]=1;
                                     ATOM->D3bondinvoid[j][i]=1;
+                                }
+								else
+                                {
+
+                                    ATOM->D3bondinvoid[i][j]=0;
+                                    ATOM->D3bondinvoid[j][i]=0;
                                 }
                             }
                             if(ATOM->D3bondinvoid[i][j])// && !temp_vert_o->is_void)
@@ -3465,7 +3540,7 @@ int main( int argc, char * argv[] )
     {
         counter=0;
         infile>>box;
-        infile>>resno;
+        //infile>>resno;
         twob=2.0*box;
         while(infile>>b>>c>>d>>e>>f)
         {
@@ -3473,6 +3548,7 @@ int main( int argc, char * argv[] )
             Atoms[counter].p.y=c;
             Atoms[counter].p.z=d;
             Atoms[counter].radius=e-epsilon;
+			//cout<<counter<<"\t"<<b<<"\t"<<c<<"\t"<<d<<"\n";
             Atoms[counter].index=counter;
             Atoms[counter].neighbours=0;
             counter++;
@@ -3586,7 +3662,7 @@ int main( int argc, char * argv[] )
 					cout<<temp->D->AT[0]<<"\t"<<temp->D->AT[1]<<"\t"<<temp->D->AT[2]<<"\t"<<temp->D->AT[3]<<"\n";
                   //cout<<"draw sphere \t{";
                   //cout<<temp->p->x<<"\t"<<temp->p->y<<"\t"<<temp->p->z<<"}\t radius 0.05\t resolution 100\n";
-					cout<<"error\t"<<temp->v_neigh_count<<"\n";;
+					cout<<"error before freevolume \t"<<temp->v_neigh_count<<"\n";;
 				}
 
                 if(temp->next)
@@ -3618,13 +3694,11 @@ int main( int argc, char * argv[] )
                         //	print_delunay(temp_d->D,Atoms,nAtoms);
                         container_vertice *temp=nullptr;
                         temp = new container_vertice;
-						temp->V=new vertice;
-                        *temp->V=*temp_d->D->v;
+						//temp->V=new vertice;
+                        temp->V=temp_d->D->v;
                         S.insert_cvert(temp);
                         temp_d=temp_d->next;
                     }
-					temp_d=Atoms[SAM].D_FIRST;
-					container_delunay *D_temp_start=nullptr;
 					
 				////for(int i=0;i<nAtoms;i++)
 				////{
@@ -3633,22 +3707,10 @@ int main( int argc, char * argv[] )
 				////}
 					//D_temp=D_temp_start;
 					//cout<<"no of vertices\t"<<V->no_of_vertices<<"\n";
+					temp_d=Atoms[SAM].D_FIRST;
+					container_delunay *D_temp_start=nullptr;
 					while(temp_d)
 					{
-						//cout<<temp_d->D->AT[0]<<"\t"<<temp_d->D->AT[1]<<"\t"<<temp_d->D->AT[2]<<"\t"<<temp_d->D->AT[3]<<"\n";
-	    		    ////for(int i=0;i<temp_conti;i++)
-	        		////{
-	            	////	for(int j=0;j<temp_conti;j++)
-		        	////	{		
-		        	////		cout<<Atoms[0].part_c[i][j]<<"\t";
-		        	////	}
-		        	////	cout<<"\n";
-		        	////}			
-					////for(int i=0;i<nAtoms;i++)
-					////{
-					////	if(Atoms[0].conti_index[i]!=-1)
-					////	cout<<i<<"\t"<<Atoms[0].conti_index[i]<<"\t"<<Atoms[0].edge_index[Atoms[0].conti_index[i]]<<"\n";
-					////}
 						cout<<std::flush;
 						delete_delunay(Atoms,temp_d->D);
 
@@ -3685,6 +3747,21 @@ int main( int argc, char * argv[] )
                         complete_del_2(&(Atoms[temp_list[i]]),Atoms,nAtoms,TYPE,SAM);
 				   // 	cout<<Atoms[1].contigous[i]<<"\t"<<Atoms[1].edge_index[i]<<"\n";
 				    }
+
+				    temp=V->initial;
+				    //cout<<"begining\n";
+				    while(temp)
+				    {
+				    	if(temp->v_neigh_count!=4 )//and !temp->D->hull)
+				    	{
+				    		cout<<temp<<"\n";
+				    		cout<<temp->D->AT[0]<<"\t"<<temp->D->AT[1]<<"\t"<<temp->D->AT[2]<<"\t"<<temp->D->AT[3]<<"\n";
+				    		cout<<"error while freevol\t"<<temp->v_neigh_count<<"\n";;
+				    	}
+				    	//cout<<temp<<"\t"<<temp->next<<"\n";
+				    	temp=temp->next;
+				    }
+
 					//cout<<"no of vertices\t"<<V->no_of_vertices<<"\n";
 				////cout<<"aftyert2\n";
 				////for(int i=0;i<nAtoms;i++)
@@ -3789,7 +3866,7 @@ int main( int argc, char * argv[] )
 							add_connected(D_temp->D->v,ctemp->V->neib_vert[i],ctemp->V->neib_ed[i]);
 							add_connected(ctemp->V->neib_vert[i],D_temp->D->v,ctemp->V->neib_ed[i]);	
 					  	}
-						D_temp->D->v->is_void=ctemp->V->is_void;
+						//D_temp->D->v->is_void=ctemp->V->is_void;
 						ctemp=ctemp->next;
 						D_temp=D_temp->next;
 					////cout<<Atoms[SAM].conti<<"  ###\n";
