@@ -478,8 +478,8 @@ void update_neighbours(atom Atoms[],int nAtoms)
 {
     long double R_CUT;
     //R_CUT=sqrtl(200./(4*3.14*density));
-    //R_CUT=powl(20./((4./3.)*3.14*density),1./3.);
-    R_CUT=100;
+    R_CUT=powl(40./((4./3.)*3.14*density),1./3.);
+    //R_CUT=100;
     for(int i=0; i<nAtoms-1; i++)
     {
         for(int j=i+1; j<nAtoms; j++)
@@ -644,12 +644,12 @@ void print_delunay(delunay *D,atom Atoms[],int TYPE)
     {
         cout<<D->AT[i]<<"\t";
     }
-    //for(int i=0;i<4;i++)
-    //	for(int j=0;j<4;j++)
-    //		for(int k=0;k<4;k++)
-    //			for(uu
-    cout<<"\n";
-    //return ;
+  ////for(int i=0;i<4;i++)
+  ////	for(int j=0;j<4;j++)
+  ////		for(int k=0;k<4;k++)
+  ////			for(uu
+  cout<<"\n";
+  ////return ;
     atom *ATOM;
     ATOM=&(Atoms[D->AT[0]]);
     long double Sx,Sy,Sz;
@@ -1608,6 +1608,21 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             X=X+a;
             Y=Y+b;
             Z=Z+c;
+			
+		    if(A1==101 && A2==123 && A3==88)
+			{
+				cout<<ATOM->neighlist[j]<<"\t"<<Y_AXIS<<"\n";	
+				cout<<"draw sphere\t{";
+				cout<<a<<"\t"<<b<<"\t"<<c<<"}\t radius 0.1\n";
+				cout<<"draw sphere\t{";
+				cout<<p+a<<"\t"<<q+b<<"\t"<<r+c<<"} radius 0.1\n";
+				cout<<"draw sphere\t{";
+				cout<<Sx+a<<"\t"<<Sy+b<<"\t"<<Sz+c<<"} radius 0.1\n";
+				cout<<"draw sphere\t{";
+				cout<<x+a<<"\t"<<y+b<<"\t"<<z+c<<"} radius 0.1\n";
+				cout<<"draw sphere\t{";
+				cout<<X+a<<"\t"<<Y+b<<"\t"<<Z+c<<"} radius 0.1\n";
+			}
 
             if(Y_AXIS<Y_MIN)
             {
@@ -1620,10 +1635,13 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
             }
         }
     }//j loop
+////if(A1==64 && A2==88 && A3==101 && A4==123)
+////{
+////	cout<<"herye\n";
+////}
     if(DIS_atom != -1)
     {
         A4=DIS_atom;
-        //cout<<A1<<"\t"<<A2<<"\t"<<A3<<"\t"<<A4<<"\n";
         std::vector<int> EV1 {A1,A2,A3,A4};
         std::sort(EV1.begin(),EV1.end());
         D=new delunay;
@@ -1635,11 +1653,12 @@ delunay* constr_del(atom *ATOM,atom Atoms[],int TYPE,long double p,long double q
         D->circum_x=circx;
         D->circum_y=circy;
         D->circum_z=circz;
-	////if(EV1[0]==15 && EV1[1]==196 && EV1[2]==297 && EV1[3]==335 )
-	////{
-	////	cout<<"here\n";
-	////	cout<<circx<<"\t"<<circy<<"\t"<<circz<<"\n";
-	////}
+	    if(EV1[0]==64 && EV1[1]==88 && EV1[2]==101 && EV1[3]==123)
+	    {
+        	cout<<A1<<"\t"<<A2<<"\t"<<A3<<"\t"<<A4<<"\n";
+	    	cout<<"here\n";
+	    	cout<<circx<<"\t"<<circy<<"\t"<<circz<<"\n";
+	    }
         create_delunay(Atoms,A1,A2,A3,A4,D,TYPE);
         return D;
     }
@@ -4067,16 +4086,16 @@ int main( int argc, char * argv[] )
             double ca_per_tot=0.;
             for(int i=0; i<void_vert_count; i++)
             {
-                //if(cav_vol[i])
-                //    cout<<i<<"\t"<<cav_vol[i]<<"\t"<<resno<<"\t"<<pocket[i]<<"\n";
                 cav_tot=cav_tot+cav_vol[i];
                 ca_per_tot=ca_per_tot+cav_area[i];
+            //  if(cav_vol[i])
+            //      cout<<i<<"\t"<<cav_vol[i]<<"\t"<<resno<<"\t"<<pocket[i]<<"\n";
                 //cout<<i<<"\t"<<cav_area[i]<<"\t"<<cav_lenght[i]<<"\n";
             }
             cout<<r_cut<<"\t"<<cav_tot<<"\t"<<ca_per_tot<<"\n";
 			//cout<<convex_vol<<"\t"<<twob*twob*twob<<"\n";
 		////cout<<"over\n";
-		    for(int SAM=5;SAM<6;SAM++)
+		    for(int SAM=100;SAM<101;SAM++)
 		    {
 				if(abs(Atoms[SAM].radius-r_cut)<0.0001)
 				//if(Atoms[SAM].radius!=1.0)
@@ -4146,9 +4165,32 @@ int main( int argc, char * argv[] )
 				////	if(Atoms[SAM].conti_index[i]!=-1)
 				////	cout<<i<<"\t"<<Atoms[SAM].conti_index[i]<<"\t"<<Atoms[SAM].edge_index[Atoms[SAM].conti_index[i]]<<"\n";
 				////}
+					cout<<"till here its fine\n";
+				////for(int i=temp_conti-1;i>-1;i--)  //THIS IS NO DEBUG LOOP
+				//////for(int i=0;i<temp_conti;i++)  //THIS IS NO DEBUG LOOP
+				////{
+				////	cout<<i<<"\t"<<temp_list[i]<<"\t"<<Atoms[temp_list[i]].conti<<"\n";
+				////}
+					cout<<"mememem\n";
+				    //for(int i=temp_conti-1;i>-1;i--)  //THIS IS NO DEBUG LOOP
 				    for(int i=0;i<temp_conti;i++)  //THIS IS NO DEBUG LOOP
 				    {
+						//cout<<i<<"\t"<<temp_list[i]<<"\t"<<Atoms[temp_list[i]].conti<<"\n";
                         complete_del_2(&(Atoms[temp_list[i]]),Atoms,nAtoms,TYPE,SAM);
+                    	cout<<std::flush;
+						if(temp_list[i]==101)
+						{
+						  //for(int i=0;i<Atoms[101].conti;i++)
+						  //{		
+						  //	cout<<i<<"\t"<<Atoms[101].contigous[i]<<"\n";
+						  //}
+						 // temp_d=Atoms[101].D_FIRST;
+						 // while(temp_d)
+						 // {
+						 // 	print_delunay(temp_d->D,Atoms,nAtoms);
+						 // 	temp_d=temp_d->next;
+						 // }
+						}
 				   // 	cout<<Atoms[1].contigous[i]<<"\t"<<Atoms[1].edge_index[i]<<"\n";
 				    }
 
@@ -4235,7 +4277,7 @@ int main( int argc, char * argv[] )
 					}
 					container_vertice *ctemp;
 					ctemp=NVERTICES.initial;
-					cout<<no_of_vert<<"\n";
+					//cout<<no_of_vert<<"\n";
 					long double freevol=0.;
 					long double freearea=0.;
 					while(ctemp)
