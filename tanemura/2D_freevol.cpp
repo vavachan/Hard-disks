@@ -1383,7 +1383,7 @@ int main( int argc , char * argv[] )
     nAtoms=2000;
     cout<<std::setprecision(26);
     //No of configurations in the input file
-    config_count=1;
+    config_count=2000;
     //No of types of particle
     int ntypes=2;
     int SAM=0;
@@ -1404,7 +1404,7 @@ int main( int argc , char * argv[] )
   //ofstream fdist;
   //fdist.open(buffer);
     //This loop is over all the configurations
-	ofstream fdist;
+    ofstream fdist;
     for(int nconfig=0; nconfig<config_count; nconfig++)
     {
         //start[TYPE]is a list that stores all the voronoi vertices calculate with disks of radius radius[TYPE]
@@ -1421,12 +1421,12 @@ int main( int argc , char * argv[] )
         infile>>dummy;
         infile>>dummy;
         infile>>tilt;
-		if(nconfig==0)
-		{
-				cout<<tilt<<"\n";
-			snprintf(buffer,sizeof(char)*64,"free_dist_%f",float(tilt));//_%d_%f.dat",int(nAtoms),Press);
-			fdist.open(buffer);
-		}
+	if(nconfig==0)
+	{
+	    cout<<"here\n"<<tilt<<"\n";
+	    snprintf(buffer,sizeof(char)*64,"free_dist_%f.dat",float(density));//_%d_%f.dat",int(nAtoms),Press);
+	    fdist.open(buffer);
+	}
         while(infile>>b>>c>>d)
         {
             /* The loops puts the first nAtoms lines in the input file to list in the descending order*/

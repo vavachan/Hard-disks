@@ -2584,7 +2584,7 @@ int main( int argc, char * argv[] )
             vor.open(buffer);
             //r_cut=radius;
 			//r_cut=0.0;
-			r_cut=1.1;
+			r_cut=1.4;
 			int max_conti=0;
 			int max_conti_index=-1;
             for(SAM=0; SAM< nAtoms; SAM++)
